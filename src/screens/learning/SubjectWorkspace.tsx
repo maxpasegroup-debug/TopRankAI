@@ -17,24 +17,21 @@ type SubjectWorkspaceProps = {
 };
 
 export function SubjectWorkspace({ subject, contentSubject, contentChapters }: SubjectWorkspaceProps) {
+  if (contentSubject) return <PageContainer><main className="journey-shell">
+    <nav aria-label="Learning breadcrumb"><Button href="/learn" variant="secondary">Learning</Button></nav>
+    <h1>{contentSubject.name}</h1>
+    {(contentChapters ?? []).length ? <ul className="journey-task-list">{contentChapters!.map(chapter => <li key={chapter.slug}><div><strong>{chapter.title}</strong><p>{chapter.summary}</p></div><Button href={chapter.href}>Open chapter</Button></li>)}</ul> : <p>No published chapters yet.</p>}
+  </main></PageContainer>;
   const progress = subject === "Physics" ? 62 : subject === "Chemistry" ? 44 : 100;
-  const mappedChapters = contentChapters?.map((chapter) => ({
-    title: chapter.title,
-    completion: 0,
-    time: "Foundation",
-    difficulty: "Easy" as const,
-    href: chapter.href,
-  }));
-  const isProduction = Boolean(contentSubject);
-  const displayChapters = isProduction ? (mappedChapters ?? []) : chapters;
+  const displayChapters = chapters;
 
   return (
     <PageContainer>
       <div className="screen-stack">
         <SectionHeader
-          eyebrow={contentSubject?.name ?? subject}
-          title={`${contentSubject?.name ?? subject} workspace`}
-          subtitle={isProduction ? "Chapters are loaded from published TopRank content." : "Your learning mission, chapters, and activity in one clean place."}
+          eyebrow={subject}
+          title={`${subject} workspace`}
+          subtitle="Your learning mission, chapters, and activity in one clean place."
           action={<Button href={displayChapters[0]?.href ?? "/learn"}>Continue Learning</Button>}
         />
         <Card>
@@ -57,19 +54,12 @@ export function SubjectWorkspace({ subject, contentSubject, contentChapters }: S
             <ChapterCard chapter={chapter} key={chapter.title} />
           ))}
         </div>
-        {isProduction && displayChapters.length === 0 ? (
-          <EmptyState title="Content is being prepared" text="Published chapters for this subject are not available yet." actionLabel="Back to Learn" actionHref="/learn" />
-        ) : null}
         <SectionHeader eyebrow="Recent Activity" title="Fresh from your study table" />
-        {isProduction ? (
-          <EmptyState title="No recent learning yet" text="Real activity will appear after lesson tracking is added." actionLabel="Continue" actionHref={displayChapters[0]?.href ?? "/learn"} />
-        ) : (
           <div className="grid grid-2">
             {quickRevision.slice(0, 2).map((resource) => (
               <ResourceCard resource={resource} key={resource.title} />
             ))}
           </div>
-        )}
       </div>
     </PageContainer>
   );

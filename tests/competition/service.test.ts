@@ -4,11 +4,11 @@ import type { AuthUser } from "@/server/auth/session";
 const db = vi.hoisted(() => {
  const model = () => ({ findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), upsert: vi.fn() });
  return { $transaction: vi.fn(), $queryRaw: vi.fn(), competition: model(), competitionEntry: model(), achievementDefinition: model(), earnedAchievement: model(), prizeAward: model(),
-   mockAttempt: model(), mockExam: model(), studentProfile: model(), studentLessonProgress: model(), studySession: model(), auditEvent: model() };
+   mockAttempt: model(), mockExam: model(), studentProfile: model(), studentLessonProgress: model(), studySession: model(), auditEvent: model(), commerceNotification: model() };
 });
-const mock = vi.hoisted(() => ({ start: vi.fn(), reconcile: vi.fn(), validate: vi.fn() }));
+const mock = vi.hoisted(() => ({ start: vi.fn(), reconcile: vi.fn(), validate: vi.fn(), review: vi.fn() }));
 vi.mock("@/server/db", () => ({ prisma: db }));
-vi.mock("@/server/mock/service", () => ({ mutateMock: mock.start, reconcileCompetitionAttempt: mock.reconcile, mutateAdminMock: mock.validate }));
+vi.mock("@/server/mock/service", () => ({ mutateMock: mock.start, reconcileCompetitionAttempt: mock.reconcile, mutateAdminMock: mock.validate, requireMockReview: mock.review }));
 import { participate, competitionLeaderboard, overallLeaderboard, adminCompetitionMutation } from "@/server/competition/service";
 import { checkAchievements, mutateAchievement, getSharedAchievement, getAchievements, qualification } from "@/server/competition/achievements";
 const student: AuthUser = { id: "student", role: "STUDENT", name: "Private name", email: "private@example.com" };
@@ -38,6 +38,12 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 describe("competition lifecycle (mocked persistence)", () => {
+ it("student refresh cannot verify or rewrite completed legacy results", async () => { db.competitionEntry.findUnique.mockResolvedValue(entry); db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", resultsVerifiedAt: null }); await participate(student, { action: "sync", id: "c" }); expect(db.competition.updateMany).not.toHaveBeenCalled(); expect(db.competitionEntry.update).not.toHaveBeenCalled(); expect(db.commerceNotification.upsert).not.toHaveBeenCalled(); expect(mock.reconcile).not.toHaveBeenCalled(); });
+ it("requires independent mock review before publishing a challenge", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "DRAFT", startsAt: new Date(now.getTime() + 1000) }); mock.review.mockRejectedValue(new Error("Review required")); await expect(adminCompetitionMutation(admin, { action: "publish", id: "c", version: 0 })).rejects.toThrow("Review required"); expect(db.competition.updateMany).not.toHaveBeenCalled(); });
+ it("provisional settlement neither verifies results nor sends result notices", async () => { db.competitionEntry.findUnique.mockResolvedValue(entry); db.competitionEntry.findMany.mockResolvedValue([entry]); await participate(student, { action: "sync", id: "c" }); expect(db.competition.updateMany.mock.calls[0][0].data.resultsVerifiedAt).toBeNull(); expect(db.commerceNotification.upsert).not.toHaveBeenCalled(); });
+ it("closing finalized results records verification and an in-app notice", async () => { vi.setSystemTime(new Date(now.getTime() + 20000)); db.competitionEntry.findMany.mockResolvedValue([entry]); await adminCompetitionMutation(admin, { action: "close", id: "c", version: 0 }); expect(db.competition.updateMany.mock.calls[0][0].data).toMatchObject({ status: "COMPLETED", resultsVerifiedAt: new Date() }); expect(db.commerceNotification.upsert.mock.calls[0][0]).toMatchObject({ create: { userId: student.id, template: "COMPETITION_VERIFIED", channel: "IN_APP" } }); });
+ it("legacy completed results with a pending attempt cannot gain verification", async () => { vi.setSystemTime(new Date(now.getTime() + 20000)); db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED" }); db.competitionEntry.findMany.mockResolvedValue([entry]); mock.reconcile.mockResolvedValue({ ...finished, status: "IN_PROGRESS" }); await expect(adminCompetitionMutation(admin, { action: "recalculate", id: "c", version: 0, reason: "Review old result" })).rejects.toThrow("finish or expire"); expect(db.competition.updateMany).not.toHaveBeenCalled(); });
+ it("does not verify a legacy completed competition before its closing time", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED" }); await expect(adminCompetitionMutation(admin, { action: "recalculate", id: "c", version: 0, reason: "Review old result" })).rejects.toThrow(); expect(db.competition.updateMany).not.toHaveBeenCalled(); });
  it("joins using server eligibility, a unique entry and internal reserved-mock path", async () => {
    expect(await participate(student, { action: "join", id: "c", requestKey: entry.requestKey })).toEqual({ attemptId: "attempt" });
    expect(db.competitionEntry.create.mock.calls[0][0].data).toMatchObject({ userId: "student", competitionId: "c" });
@@ -61,6 +67,10 @@ describe("competition lifecycle (mocked persistence)", () => {
  it("uses bounded serialization retries without exposing driver errors", async () => { db.$transaction.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("secret driver", { code: "P2034", clientVersion: "7" })); await expect(participate(student, { action: "sync", id: "c" })).rejects.toThrow("Concurrent update"); expect(db.$transaction).toHaveBeenCalledTimes(3); });
 });
 describe("leaderboard privacy and pagination", () => {
+ it("marks legacy completed results provisional until verified", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", resultsVerifiedAt: null }); expect((await competitionLeaderboard(student, "c")).competition.rankingState).toBe("PROVISIONAL"); });
+ it("labels verified completed results with their verification time", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", resultsVerifiedAt: now }); expect((await competitionLeaderboard(student, "c")).competition).toMatchObject({ rankingState: "VERIFIED", resultsVerifiedAt: now.toISOString() }); });
+ it("cancelled leaderboards hide stale rankings and scores but preserve private attempt history", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "CANCELLED" }); db.competitionEntry.findUnique.mockResolvedValue({ ...entry, rank: 1, score: new Prisma.Decimal(10) }); const result = await competitionLeaderboard(student, "c"); expect(result.rows).toEqual([]); expect(result.mine).toMatchObject({ attemptId: "attempt", rank: null, score: null }); expect(result.competition.rankingState).toBe("CANCELLED"); expect(db.competitionEntry.findMany).not.toHaveBeenCalled(); });
+ it("excludes unverified results from overall SQL rankings", async () => { await overallLeaderboard(student); expect(db.$queryRaw.mock.calls[0][0].sql).toContain('c."resultsVerifiedAt" IS NOT NULL'); });
  it("redacts hidden scores and never serializes identities", async () => { db.competitionEntry.findMany.mockResolvedValue([{ alias: "safe-alias", visible: false, rank: 1, score: new Prisma.Decimal(4), timeSeconds: 1, userId: "secret-id", email: "secret@example.com" }]); const result = await competitionLeaderboard(student, "c"); expect(result.rows[0]).toEqual({ name: "Private participant", rank: 1, score: null, timeSeconds: null }); expect(JSON.stringify(result)).not.toMatch(/secret-id|secret@example/); });
  it("exposes only an opted-in generated alias and competition result", async () => { db.competitionEntry.findMany.mockResolvedValue([{ alias: "safe-alias", visible: true, rank: 1, score: new Prisma.Decimal(4), timeSeconds: 1 }]); expect((await competitionLeaderboard(student, "c")).rows[0]).toEqual({ name: "Participant safe-alias", rank: 1, score: "4", timeSeconds: 1 }); });
  it("paginates with a sentinel and stable order", async () => { db.competitionEntry.findMany.mockResolvedValue(Array.from({ length: 26 }, (_, i) => ({ alias: `a${i}`, visible: false, rank: i + 1, score: null, timeSeconds: null }))); const result = await competitionLeaderboard(student, "c", 2); expect(result.rows).toHaveLength(25); expect(result.hasNext).toBe(true); expect(db.competitionEntry.findMany.mock.calls[0][0]).toMatchObject({ skip: 25, take: 26 }); });
@@ -68,6 +78,12 @@ describe("leaderboard privacy and pagination", () => {
  it("maps SQL overall rankings without account identifiers or bigint serialization failures", async () => { db.$queryRaw.mockResolvedValue([{ alias: "safe", points: 1000n, rank: 1n, userId: "private" }]); expect(await overallLeaderboard(student)).toEqual({ page: 1, hasNext: false, rows: [{ rank: 1, name: "Participant safe", points: "1000" }] }); });
 });
 describe("achievement evidence, idempotency and sharing", () => {
+ it("verified placement links project no student identity or private evidence", async () => { db.earnedAchievement.findFirst.mockResolvedValue({ title: "Placement", badge: "rank", explanation: "Placed under saved rules", userId: student.id, scope: "c", definition: { ...definition, kind: "PLACEMENT" }, awardedAt: now }); db.competitionEntry.findFirst.mockResolvedValue({ id: "entry", rank: 1, competition: { title: "Challenge", config: { ...config, awards: [{ definitionId: definition.id, fromRank: 1, toRank: 1, prizeLabel: "" }] } } }); expect(await getSharedAchievement("a".repeat(43))).toEqual({ title: "Placement", badge: "rank", explanation: "Placed under saved rules", awardedAt: now.toISOString() }); });
+ it("new achievements emit one generic notice and replay emits none", async () => { db.achievementDefinition.findMany.mockResolvedValue([definition]); db.mockAttempt.findMany.mockResolvedValue([finished]); await checkAchievements(student); await checkAchievements(student); expect(db.commerceNotification.upsert).toHaveBeenCalledTimes(1); expect(db.commerceNotification.upsert.mock.calls[0][0]).toMatchObject({ create: { userId: student.id, template: "ACHIEVEMENT_EARNED", channel: "IN_APP" } }); });
+ it("placement qualification requires verified completed results", async () => { expect(await qualification(db as never, student.id, { id: "definition", kind: "PLACEMENT", threshold: 1 }, "c")).toBeNull(); expect(db.competitionEntry.findFirst.mock.calls[0][0].where.competition).toEqual({ status: "COMPLETED", resultsVerifiedAt: { not: null } }); });
+ it("cannot enable sharing a legacy placement without verified evidence", async () => { db.earnedAchievement.findFirst.mockResolvedValue({ id: "earned", scope: "c", definition: { ...definition, kind: "PLACEMENT" } }); await expect(mutateAchievement(student, { action: "share", id: "earned", enabled: true })).rejects.toThrow("Verified results"); expect(db.earnedAchievement.update).not.toHaveBeenCalled(); });
+ it("a legacy placement link fails closed without verified evidence", async () => { db.earnedAchievement.findFirst.mockResolvedValue({ title: "Placement", userId: student.id, scope: "c", definition: { ...definition, kind: "PLACEMENT" }, awardedAt: now }); expect(await getSharedAchievement("a".repeat(43))).toBeNull(); });
+ it("unverified placement sharing may always be turned off", async () => { db.earnedAchievement.findFirst.mockResolvedValue({ id: "earned", scope: "c", definition: { ...definition, kind: "PLACEMENT" } }); expect(await mutateAchievement(student, { action: "share", id: "earned", enabled: false })).toEqual({ href: null }); expect(db.competitionEntry.findFirst).not.toHaveBeenCalled(); });
  it("does not award merely because a screen was read", async () => { await getAchievements(student); expect(db.earnedAchievement.create).not.toHaveBeenCalled(); });
  it("grants first mock only from persisted nonblank finalized activity", async () => { db.achievementDefinition.findMany.mockResolvedValue([definition]); db.mockAttempt.findMany.mockResolvedValue([finished]); await checkAchievements(student); expect(db.earnedAchievement.create.mock.calls[0][0].data).toMatchObject({ userId: "student", scope: "GLOBAL", evidence: { attemptId: "attempt" } }); });
  it("does not invent achievement eligibility for empty activity", async () => { db.achievementDefinition.findMany.mockResolvedValue([definition]); await checkAchievements(student); expect(db.earnedAchievement.create).not.toHaveBeenCalled(); });
@@ -86,6 +102,7 @@ describe("achievement evidence, idempotency and sharing", () => {
 describe("moderation and prize safeguards", () => {
  it("repeated recalculation creates one placement achievement and keeps its prize pending review", async () => {
    const placement = { ...definition, kind: "PLACEMENT" };
+   vi.setSystemTime(new Date(now.getTime() + 20000));
    db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", config: { ...config, awards: [{ definitionId: definition.id, fromRank: 1, toRank: 1, prizeLabel: "Review-only prize" }] } });
    db.achievementDefinition.findFirst.mockResolvedValue(placement); db.competitionEntry.findMany.mockResolvedValue([{ ...entry }]);
    await adminCompetitionMutation(admin, { action: "recalculate", id: "c", version: 0, reason: "Results review" });
@@ -95,17 +112,20 @@ describe("moderation and prize safeguards", () => {
  });
  it("same evidence with reordered JSON keys does not invalidate a share link", async () => {
    earned = { id: "earned", status: "ACTIVE", evidence: { competitionId: "c", rank: 1, entryId: "entry" } };
+   vi.setSystemTime(new Date(now.getTime() + 20000));
    db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", config: { ...config, awards: [{ definitionId: definition.id, fromRank: 1, toRank: 1, prizeLabel: "" }] } });
    db.achievementDefinition.findFirst.mockResolvedValue({ ...definition, kind: "PLACEMENT" }); db.competitionEntry.findMany.mockResolvedValue([{ ...entry }]);
    await adminCompetitionMutation(admin, { action: "recalculate", id: "c", version: 0, reason: "Results review" }); expect(db.earnedAchievement.update).not.toHaveBeenCalled();
  });
  it("recalculation corrects a changed placement claim and invalidates its previous share link", async () => {
    earned = { id: "earned", status: "ACTIVE", evidence: { competitionId: "c", rank: 2, entryId: "entry" } };
+   vi.setSystemTime(new Date(now.getTime() + 20000));
    db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", config: { ...config, awards: [{ definitionId: definition.id, fromRank: 1, toRank: 1, prizeLabel: "" }] } });
    db.achievementDefinition.findFirst.mockResolvedValue({ ...definition, kind: "PLACEMENT" }); db.competitionEntry.findMany.mockResolvedValue([{ ...entry }]);
    await adminCompetitionMutation(admin, { action: "recalculate", id: "c", version: 0, reason: "Results correction" }); expect(db.earnedAchievement.update.mock.calls[0][0].data).toMatchObject({ shareHash: null, evidence: { rank: 1 } });
  });
  it("disqualification withdraws a previously eligible placement without recreating it", async () => {
+   vi.setSystemTime(new Date(now.getTime() + 20000));
    db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED" }); db.competitionEntry.findMany.mockResolvedValue([{ ...entry, disqualified: true }]); db.earnedAchievement.findMany.mockResolvedValue([{ id: "earned" }]);
    await adminCompetitionMutation(admin, { action: "recalculate", id: "c", version: 0, reason: "Entry review" }); expect(db.earnedAchievement.create).not.toHaveBeenCalled(); expect(db.earnedAchievement.update.mock.calls[0][0].data).toMatchObject({ status: "REVOKED", revocationSource: "AUTO", shareHash: null });
  });

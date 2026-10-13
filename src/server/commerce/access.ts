@@ -7,7 +7,7 @@ export async function requireFeature(user: AuthUser, code: string, db: Tx = pris
  assertStudent(user);
  const entitlement = await db.entitlement.findFirst({ where: { userId: user.id, featureCode: code, status: "ACTIVE",
    startsAt: { lte: now }, endsAt: { gt: now }, OR: [{ source: { in: ["ADMIN", "TRIAL"] }, orderId: null },
-     { source: "PURCHASE", order: { status: { in: ["CAPTURED", "PARTIALLY_REFUNDED"] }, capturedAt: { not: null } } }] }, select: { id: true } });
+     { source: "PURCHASE", order: { userId: user.id, status: "CAPTURED", capturedAt: { not: null } } }] }, select: { id: true } });
  if (!entitlement) throw new AuthorizationApiError("An active entitlement is required");
 }
 export async function requireResourceAccess(kind: "MOCK" | "LESSON", resourceId: string, user?: AuthUser, db: Tx = prisma) {

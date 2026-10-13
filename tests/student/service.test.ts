@@ -92,7 +92,6 @@ describe("student service", () => {
       targetYear: 2028,
       dreamCollege: "AIIMS Delhi",
       dailyStudyHours: 2,
-      completeOnboarding: true,
     });
 
     expect(mocks.prisma.exam.findFirst).toHaveBeenCalledWith({
@@ -109,6 +108,12 @@ describe("student service", () => {
     const { updateStudentProfile } = await import("@/server/student/service");
 
     await expect(updateStudentProfile(student, { targetExamId: "missing_exam" })).rejects.toBeInstanceOf(ValidationApiError);
+  });
+
+  it("cannot finish onboarding by manipulating a profile flag", async () => {
+    const { updateStudentProfile } = await import("@/server/student/service");
+    await expect(updateStudentProfile(student, { completeOnboarding: true })).rejects.toBeInstanceOf(ValidationApiError);
+    expect(mocks.tx.studentProfile.upsert).not.toHaveBeenCalled();
   });
 
   it("rejects parent access to student profile mutation", async () => {

@@ -85,7 +85,7 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
     }
 
     if (practicePath.kind === "question") {
-      return <QuestionExperience question={await getQuestion(practicePath.questionId)} />;
+      return <QuestionExperience ownerId={context.user.id} question={await getQuestion(practicePath.questionId)} />;
     }
   }
 
@@ -156,7 +156,7 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
       if (!context.user) {
         redirect("/login");
       }
-      return <QuestionExperience question={(await listQuestions({ exam: (await getStudentPracticeHome(context.user)).exam?.code })).at(0) ?? null} />;
+      return <QuestionExperience ownerId={context.user.id} question={(await listQuestions({ exam: (await getStudentPracticeHome(context.user)).exam?.code })).at(0) ?? null} />;
     case "practiceComplete":
     case "practiceReview":
       return <PracticeReview />;
@@ -306,7 +306,7 @@ function Unauthorized() {
         <div className="auth-form">
           <h1 className="section-title">Access restricted</h1>
           <p className="section-subtitle">Your account does not have access to this area yet.</p>
-          <a className="button button-primary" href="/home">Back to Mission Control</a>
+          <a className="button button-primary" href="/workspace">Back to Workspace</a>
         </div>
       </section>
     </main>

@@ -1,16 +1,19 @@
 import { Prisma } from "@/generated/prisma/client";
 import { createHash } from "node:crypto";
-import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
+import { AuthorizationApiError, ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { assertStudent } from "@/server/student/service";
+import { requireResourceAccess } from "@/server/commerce/access";
 import { previewStudyPlan } from "./planner";
 import { journeySchema, learningProgressSchema, planSchema, sessionSchema, taskSchema } from "./validation";
 import type { z } from "zod";
+import { assertDailyCapacity, assertFutureStudyDate } from "./schedule";
+import { calendarDay } from "@/shared/study-calendar";
 
 const published = { status: "PUBLISHED" as const, active: true };
 const profileSelect = { aspiration: true, targetExamId: true, targetYear: true, dreamCollege: true,
-  targetScore: true, dailyStudyMins: true, preparationStart: true, focusSubjectIds: true };
+  targetScore: true, dailyStudyMins: true, preparationStart: true, focusSubjectIds: true, onboardingCompletedAt: true };
 
 export async function getJourney(user: AuthUser) {
   assertStudent(user);
@@ -44,7 +47,7 @@ export async function saveJourney(user: AuthUser, input: z.infer<typeof journeyS
   });
 }
 
-export async function previewJourneyPlan(user: AuthUser, db: Prisma.TransactionClient = prisma) {
+export async function previewJourneyPlan(user: AuthUser, db: Prisma.TransactionClient = prisma, startDate?: Date) {
   assertStudent(user);
   const profile = await db.studentProfile.findUnique({ where: { userId: user.id } });
   if (!profile?.targetExamId || !profile.targetYear || !profile.dreamCollege || !profile.dailyStudyMins || !profile.preparationStart) {
@@ -54,18 +57,30 @@ export async function previewJourneyPlan(user: AuthUser, db: Prisma.TransactionC
     where: { examId: profile.targetExamId, exam: published, ...published,
       subjectId: profile.focusSubjectIds.length ? { in: profile.focusSubjectIds } : undefined, subject: published },
     orderBy: [{ order: "asc" }, { id: "asc" }],
-    select: { subject: { select: { name: true, slug: true,
+    select: { subject: { select: { id: true, name: true, slug: true,
       chapters: { where: published, orderBy: [{ order: "asc" }, { id: "asc" }], take: 10,
         select: { slug: true, lessons: { where: published, orderBy: [{ order: "asc" }, { id: "asc" }],
-          take: 10, select: { title: true, slug: true } } } },
+          take: 10, select: { id: true, title: true, slug: true } } } },
     } } },
   });
-  const lessons = links.flatMap(({ subject }) => subject.chapters.flatMap((chapter) => chapter.lessons.map((lesson) => ({
-    title: lesson.title, subject: subject.name, href: `/learn/${subject.slug}/${chapter.slug}/${lesson.slug}`,
-  }))));
-  if (!lessons.length) throw new ValidationApiError("No published lessons are available for this exam yet");
-  const preview = { examId: profile.targetExamId, startDate: profile.preparationStart, dailyMinutes: profile.dailyStudyMins,
-    tasks: previewStudyPlan(profile.preparationStart, profile.dailyStudyMins, lessons) };
+  const lessons = [];
+  for (const { subject } of links) for (const chapter of subject.chapters) for (const lesson of chapter.lessons) {
+    if (lessons.length >= 21) continue;
+    try { await requireResourceAccess("LESSON", lesson.id, user, db); }
+    catch (error) { if (error instanceof AuthorizationApiError) continue; throw error; }
+    lessons.push({ title: lesson.title, subject: subject.name, href: `/learn/${subject.slug}/${chapter.slug}/${lesson.slug}` });
+  }
+  for (const { subject } of links) {
+    if (lessons.length >= 21) break;
+    if (await db.questionExam.findFirst({ where: { examId: profile.targetExamId, ...published, exam: published, scoringMode: { not: null }, question: { ...published, reviewStatus: "REVIEWED", subjectId: subject.id, subject: published, chapter: { ...published, subject: published } } }, select: { id: true } })) {
+      lessons.push({ title: `Practice: ${subject.name}`, subject: subject.name, href: `/practice/subjects/${subject.slug}/questions` });
+    }
+  }
+  if (!lessons.length) throw new ValidationApiError("No available lessons or reviewed practice activities are published for this exam yet");
+  const effectiveStart = startDate ?? new Date(Math.max(profile.preparationStart.getTime(), new Date(calendarDay(new Date(), "Asia/Kolkata")).getTime()));
+  if (startDate) assertFutureStudyDate(startDate, "UTC");
+  const preview = { examId: profile.targetExamId, startDate: effectiveStart, dailyMinutes: profile.dailyStudyMins,
+    tasks: previewStudyPlan(effectiveStart, profile.dailyStudyMins, lessons) };
   return { ...preview, previewToken: createHash("sha256").update(JSON.stringify(preview)).digest("hex") };
 }
 
@@ -75,7 +90,7 @@ export async function confirmJourneyPlan(user: AuthUser, input: z.infer<typeof p
     try { return await prisma.$transaction(async (tx) => {
     const existing = await tx.studyPlan.findUnique({ where: { userId_requestKey: { userId: user.id, requestKey: input.requestKey } } });
     if (existing) return { id: existing.id };
-    const preview = await previewJourneyPlan(user, tx);
+    const preview = await previewJourneyPlan(user, tx, input.startDate);
     if (preview.previewToken !== input.previewToken) throw new ConflictApiError("Your goals or lessons changed. Review the plan again");
     await tx.studyPlan.updateMany({ where: { userId: user.id, active: true }, data: { active: false } });
     const plan = await tx.studyPlan.create({ data: { userId: user.id, title: input.title, requestKey: input.requestKey,
@@ -94,22 +109,28 @@ export async function confirmJourneyPlan(user: AuthUser, input: z.infer<typeof p
 export async function getMissionBoard(user: AuthUser) {
   assertStudent(user);
   return prisma.studyPlan.findFirst({ where: { userId: user.id, active: true }, orderBy: { createdAt: "desc" },
-    include: { tasks: { orderBy: [{ dueDate: "asc" }, { id: "asc" }], take: 100 } } });
+    include: { tasks: { orderBy: [{ dueDate: "asc" }, { id: "asc" }], take: 500 } } });
 }
 
 export async function changeMissionTask(user: AuthUser, input: z.infer<typeof taskSchema>) {
   assertStudent(user);
   return prisma.$transaction(async (tx) => {
-    const task = await tx.missionTask.findFirst({ where: { id: input.id, plan: { userId: user.id } } });
+    const task = await tx.missionTask.findFirst({ where: { id: input.id, plan: { userId: user.id, active: true } }, include: { plan: true } });
     if (!task) throw new ValidationApiError("Mission task was not found");
     const status = input.status ?? task.status;
     const dueDate = input.dueDate ?? task.dueDate;
-    if (status === task.status && dueDate.getTime() === task.dueDate.getTime()) return { id: task.id, version: task.version };
-    const changed = await tx.missionTask.updateMany({ where: { id: task.id, version: input.version, plan: { userId: user.id } },
-      data: { status, dueDate, completedAt: status === "COMPLETED" ? new Date() : null, version: { increment: 1 } } });
+    const minutes = input.minutes ?? task.minutes;
+    if (status === task.status && dueDate.getTime() === task.dueDate.getTime() && minutes === task.minutes) return { id: task.id, version: task.version };
+    if (input.dueDate) assertFutureStudyDate(dueDate, input.timezone ?? "Asia/Kolkata");
+    if (status !== "SKIPPED" && (input.dueDate || input.minutes !== undefined || task.status === "SKIPPED")) await assertDailyCapacity(tx, task.planId, task.plan.dailyMinutes, dueDate, minutes, task.id);
+    const changed = await tx.missionTask.updateMany({ where: { id: task.id, version: input.version, plan: { userId: user.id, active: true } },
+      data: { status, dueDate, minutes, completedAt: status === "COMPLETED" ? task.completedAt ?? new Date() : null, version: { increment: 1 } } });
     if (changed.count !== 1) throw new ConflictApiError("This task changed. Refresh and try again");
     await tx.missionTaskEvent.create({ data: { taskId: task.id, status, dueDate } });
     return { id: task.id, version: input.version + 1 };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }).catch(error => {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && ["P2034", "P2002"].includes(error.code)) throw new ConflictApiError("Your schedule changed. Refresh before retrying.");
+    throw error;
   });
 }
 
@@ -119,9 +140,13 @@ export async function updateStudySession(user: AuthUser, input: z.infer<typeof s
     for (let attempt = 0; attempt < 3; attempt++) {
       try { return await prisma.$transaction(async (tx) => {
         const existing = await tx.studySession.findUnique({ where: { userId_requestKey: { userId: user.id, requestKey: input.requestKey } } });
-        if (existing) return { id: existing.id, topic: existing.topic, startedAt: existing.startedAt, endedAt: existing.endedAt };
+        if (existing) {
+          if (existing.topic !== input.topic || (existing.taskId ?? null) !== (input.taskId ?? null)) throw new ConflictApiError("This session identifier was used for different work");
+          return { id: existing.id, topic: existing.topic, startedAt: existing.startedAt, endedAt: existing.endedAt };
+        }
+        if (input.taskId && !await tx.missionTask.findFirst({ where: { id: input.taskId, status: "TODO", plan: { userId: user.id, active: true } } })) throw new ValidationApiError("Choose an unfinished mission from your current plan");
         if (await tx.studySession.findFirst({ where: { userId: user.id, endedAt: null } })) throw new ConflictApiError("Finish your current study session first");
-        return tx.studySession.create({ data: { userId: user.id, requestKey: input.requestKey, topic: input.topic },
+        return tx.studySession.create({ data: { userId: user.id, requestKey: input.requestKey, topic: input.topic, taskId: input.taskId },
           select: { id: true, topic: true, startedAt: true, endedAt: true } });
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
       } catch (error) {
@@ -149,6 +174,7 @@ export async function updateLearningProgress(user: AuthUser, input: z.infer<type
   const lesson = await prisma.lesson.findFirst({ where: { id: input.lessonId, ...published,
     chapter: { ...published, subject: published } }, select: { id: true } });
   if (!lesson) throw new ValidationApiError("Lesson was not found");
+  await requireResourceAccess("LESSON", input.lessonId, user);
   const existing = await prisma.studentLessonProgress.findUnique({ where: { userId_lessonId: { userId: user.id, lessonId: input.lessonId } } });
   const completedAt = input.completed === undefined ? undefined : input.completed ? existing?.completedAt ?? new Date() : null;
   return prisma.studentLessonProgress.upsert({ where: { userId_lessonId: { userId: user.id, lessonId: input.lessonId } },

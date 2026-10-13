@@ -1,7 +1,280 @@
 # TopRank AI master build: implementation status
-Date: 2026-10-10 (Asia/Calcutta)
+Date: 2026-10-13 (Asia/Calcutta)
 
-## Current increment: parent and institution portals
+## Current task: Phase 1 foundation refresh / public launch NOT STARTED
+
+2026-10-13: Honored the requested starting point of Phase 1; retained existing
+JEE Main/NEET UG, all-ages safeguarded India/UAE free-pilot scope. Updated eight-
+vertical source map/acceptance checklist rather than rebuilding previous increments.
+Canonical source, lockfile, Prisma config and environment planning templates present.
+Dedicated DB config missing; offline preflight refused before connecting. Safe
+infrastructure exit NOT MET. Local auth/consent/recovery flags remain disabled,
+payment/knowledge factories null. Independent activation approvals remain required.
+
+Documentation-only refresh; no code, schema, package, environment or guard changed.
+No new test/build/pilot outcome; no DB, provisioning, install, publication, invitation,
+deployment, stage/commit/push or activation. Original 15 staged paths retained.
+Phase 10 remains incomplete, Phase 11 not started, Phase 12 public/advanced expansion
+not approved. See LAUNCH_PROGRAMME_PHASE1_REFRESH.md for current map and evidence.
+
+## Previous phase: Phase 11 pilot NOT STARTED / Phase 10 gates unresolved
+
+2026-10-13: Rechecked read-only Railway metadata: authentication unavailable.
+Dedicated database configuration still missing; local auth/consent/recovery approval
+flags disabled. No approved target/artifact/cohort or completed Phase 10 evidence
+verified. No deployment, student invitation, observation, pilot fix or recovery drill.
+
+Prepared CONTROLLED_STUDENT_PILOT_PHASE11.md: go/no-go matrix, proposed limited cohort,
+voluntary/guardian/privacy boundaries, rollout and measurement protocol, bounded
+capability claims, incident/recovery/retest and explicit pilot/public-launch approvals.
+Recommendations are not cohort authorization, measured outcomes or statistical proof.
+School/teacher expansion remains outside this free invited student pilot.
+
+Documentation-only increment; no source/schema/guard/flag or dependency changes.
+No test/build rerun or new pilot outcomes; Phase 10's 1,555 passing offline tests/2
+skips remain prior evidence only. Original 15 staged paths preserved; no stage,
+commit/push, deployment, provisioning, data access or production activation.
+Pilot exit NOT MET. Real database/journey/security/mobile/recovery/content/legal and
+operational gates must close before any student rollout. See pilot protocol for details.
+
+## Previous phase: Phase 10 verification INCOMPLETE / release BLOCKED
+
+2026-10-13: Fresh offline suite 1,555 passed/2 live tests explicitly skipped;
+TypeScript, offline Prisma schema validation, isolated optimized build (64 generation
+entries), anonymous private boundaries and whitespace PASS. No live PostgreSQL,
+authenticated student/guardian/admin journey, mobile/accessibility/load or restore
+acceptance is claimed. Paid checkout is outside the free invited pilot, not live-tested.
+
+Dedicated .env.verification.local missing; offline preflight refused before connection.
+Normal datasource has a loopback pattern and remains unidentified. Railway deployment
+config and CLI 5.44.1 exist, but CLI authentication unavailable; no hosted database or
+disposable target verified. No browser surface/IAB available; Playwright/axe absent.
+Dedicated Upstash REST credentials/target confirmation missing. All 20 migration SQL
+files remain unexecuted in this assessment; existing harness checks empty identity only.
+
+No database, migration/seed/import, fixture, install, cloud provisioning, CLI login/link,
+production activation, commit/push or deployment. Original 15 staged paths retained.
+Only added isolated verification output and evidence; no product guards weakened.
+Release exit NOT MET: real persistence/concurrency/journeys, legal/content/operations,
+trusted ingress, live authentication and recovery evidence remain blocking gates.
+See FULL_PRODUCT_VERIFICATION_PHASE10.md for exact evidence and safe continuation.
+
+## Previous increment: Phase 9 commerce and operational completion
+
+2026-10-13: Added immutable fixed zero-price pilot packages and administrator-only
+account-bound bundle grants using canonical ADMIN entitlements, atomic audits/in-app
+notice, changed-intent conflicts and expiry/revocation-safe replay. No financial
+records or public self-claim. Purchase access now requires owned CAPTURED orders,
+consistent with any-confirmed-refund withdrawal. Scheduled/expired/blocked access
+is explicit; historical owned attempts remain accessible.
+
+Added /admin/operations queue counters, paginated exact-ID grant administration,
+filtered privacy-safe audit summaries, and configuration flags separate from external
+acceptance. Commerce offers free invited access and visibly disabled paid actions.
+Monitoring, encrypted backup/isolated restore, deployment and incident procedures
+prepared in LAUNCH_OPERATIONS_RUNBOOK.md, not executed or provisioned.
+
+Focused 744 passed; full 1,555 passed/2 gated tests skipped (94 added). TypeScript,
+offline Prisma validation/generation, isolated optimized build (64 generation entries),
+anonymous route boundaries and whitespace PASS. New free-package CHECK migration
+CREATED, NOT APPLIED. No schema model/field or historical migration changed.
+Original 15 staged paths and prior work preserved; no DB/provider, install,
+publication, seed/import, migration, production activation, commit/push or deploy.
+
+Code increment delivered for FREE INVITED PILOT, NOT release acceptance or a paid
+launch. Real database/browser/concurrency/recovery, licensed reviewed content,
+guardian/legal procedures, monitor/backup/restore drills and operator ownership remain
+gates. Railway ingress/live Upstash unresolved; auth/payments/AI/messaging disabled.
+See COMMERCE_OPERATIONAL_COMPLETION_PHASE9.md for exact evidence and Git commands.
+
+## Previous increment: Phase 8 competitions, support and partnerships
+
+2026-10-11: Canonical challenges now require independent mock review before
+publication, distinguish provisional/verified/cancelled rankings, and exclude
+unverified legacy results from overall ranks and placement sharing. Students cannot
+verify completed results by refreshing. Final results require persisted settlement.
+Support replies use versioned CAS, replay-safe generic notices and a prioritized
+bounded operator queue. Private student in-app inbox provides unread/read/pagination.
+Guardian decisions notify both people; expiry and dual acceptance are visible.
+School/teacher expansion remains outside the free invited JEE Main/NEET UG pilot.
+
+Focused: 729 passed. Full: 1,461 passed/2 gated tests skipped (77 added).
+TypeScript, offline Prisma validate/generate, isolated optimized build (63 static
+generation entries), anonymous route guards and whitespace PASS. New forward-only
+engagement migration NOT APPLIED. Earlier migrations/dependencies remain unapplied.
+No database/provider, publication, seed/import, install, activation, staging,
+commit/push or deployment. Original 15 staged paths and prior dirty work preserved.
+
+Code increment delivered, NOT production acceptance. Real PostgreSQL concurrency,
+authenticated desktop/mobile acceptance, reviewed launch content, support operations,
+guardian verification/legal approval and trusted-ingress/live rate-limit gates remain.
+Production auth/payment/AI/messaging remain disabled. See
+COMPETITIONS_SUPPORT_PARTNERSHIPS_PHASE8.md for commands, limitations and Git inventory.
+
+## Previous increment: Phase 7 progress, digital profile and SIA
+
+2026-10-11: Added a private consolidated evidence view using canonical learning,
+missions, sessions, practice and finalized mock records. Displays all-time recorded
+counts, timezone-aware 28-day weekly trends, subject practice accuracy, distinct
+questions, recent results and a bounded learning timeline. No mastery/rank claims.
+SIA validates due lesson/practice links, publication, target exam and lesson access;
+uses pending practice/mock revision, future schedule, accessible unfinished lessons
+and reviewed practice fallback. Live AI remains absent and explicitly disabled.
+
+Focused: 715 passed. Full: 1,384 passed/2 gated tests skipped (79 added).
+TypeScript, offline Prisma validation/generation, isolated production build and
+whitespace checks pass. Anonymous progress/SIA APIs deny and pages redirect.
+No schema/migration added; prior migrations remain unapplied. No database, provider,
+publication/import, install, production activation, staging, commit/push or deployment.
+
+Code increment delivered, NOT production acceptance. Approved PostgreSQL persistence,
+authenticated desktop/mobile acceptance, reviewed launch content and future AI
+privacy/quality/cost approval remain external gates. Statistics are bounded and
+reported as activity/attempt evidence, not a certified immutable success passport.
+See PROGRESS_DIGITAL_PROFILE_SIA.md for exact commands, limits and Git inventory.
+
+## Previous increment: Phase 6 timed mock exams
+
+2026-10-11: Added independent, version/fingerprint-bound blueprint review using
+existing editorial records. New starts/publication require review; edits invalidate
+it. Frozen ongoing attempts remain independent of blueprint changes. Added debounced
+autosave, owner/attempt-scoped tab-local recovery, stale-version comparison,
+reconnect reconciliation and suspend-aware server-anchored timer display. Finalized
+question explanations follow the frozen disclosure policy; revision handoff retained.
+
+Focused: 611 passed. Full: 1,305 passed/2 gated tests skipped (29 added).
+TypeScript, offline Prisma generation/validation, isolated production build and
+whitespace checks passed. Anonymous loopback pages redirect/APIs deny access.
+No Phase 6 migration added; prior migrations remain unapplied. No database/provider,
+content publication, seed/import, dependency installation or production activation.
+
+Code increment delivered, NOT production acceptance. Real PostgreSQL concurrency,
+authenticated desktop/mobile recovery tests and licensed reviewed mocks remain
+release gates. Offline navigation waits for saves; unsent post-expiry edits cannot
+be accepted. See TIMED_MOCK_EXAMS_PHASE6.md for commands and detailed limitations.
+
+## Previous increment: Phase 5 practice and Mistake-to-Mastery
+
+Added administrator-only immutable question drafts/successors, protected answer
+inspection, independent explanation/rights review and fingerprint-bound publication.
+Closed the older client-supplied REVIEWED/scoring publication bypass. Added owned
+practice bookmarks, latest-attempt mistake revision, focused retry/lesson links,
+paginated history and tab-local owner-scoped recovery of uncertain submissions.
+Canonical scoring, mock snapshots and frozen practice results were preserved.
+
+770 focused tests passed/1 skipped; full suite 1,276 passed/2 skipped (67 added).
+TypeScript, Prisma generation/validation, isolated production build and whitespace
+checks passed. Anonymous protected pages redirect and APIs deny access.
+New forward-only migration NOT APPLIED. No database, provider, import or publication
+was executed. Production activation unchanged; authentication/payment gates disabled.
+
+This is a coherent Phase 5 code increment, NOT production acceptance or a reviewed
+content library. Real PostgreSQL/concurrency, authenticated browser acceptance,
+legacy question provenance audit and management UX/import improvements remain.
+See PRACTICE_MISTAKE_TO_MASTERY.md for evidence, limitations and Git commands.
+
+## Previous increment: Phase 4 daily study command centre
+
+2026-10-11: Connected Today/Week/Overdue views, realistic distinct-content previews,
+reviewed practice-only planning, canonical activity selection, daily capacity
+validation, active owner-bound task edits, stable completion timestamps, linked
+session recording and capacity-aware revision missions. Existing history preserved.
+New forward-only migration NOT APPLIED; session/active-plan uniqueness guards
+require explicit legacy-row review before any migration execution.
+
+614 focused tests passed/1 skipped. Full unit suite: 1,209 passed/2 skipped.
+TypeScript, Prisma generation/validation, isolated build and whitespace checks pass.
+Database behavior is mocked; authenticated browser/PostgreSQL acceptance remains
+NOT VERIFIED. Production activation unchanged. No database or provider accessed.
+See DAILY_STUDY_COMMAND_CENTRE.md for limitations, evidence and scoped Git commands.
+Phase 4 code increment complete; student production exit is NOT signed off.
+
+## Previous increment: Content & Knowledge Studio, first coherent increment
+
+2026-10-10: Extended /admin/content into eight named workspaces, reusing canonical
+content and student services. Added immutable syllabus version records and review
+transitions, source/licence verification, strict import preview/confirmation,
+answer-free question browsing, minimal audit history and blocked SIA refresh jobs.
+Future publication of the six editorial content types requires separately verified
+source/licence evidence. Reviewed/published authoring is immutable in this increment.
+New forward-only Studio migration NOT APPLIED. No content was imported or published.
+
+Focused checks: 353 passed. Full unit suite: 1,173 passed/2 gated tests skipped.
+TypeScript, Prisma generation/validation, isolated production build and whitespace
+checks passed. Persistence is mocked. Production authentication/payments remain
+disabled. No browser acceptance or PostgreSQL verification is claimed.
+
+NOT the complete Studio: question authoring, staged lesson revisions, CSV/import
+jobs, delegated editorial permissions and student syllabus pinning remain pending.
+No reviewed/licensed launch library was supplied. See CONTENT_KNOWLEDGE_STUDIO.md
+for complete evidence, limitations, Git inventory and scoped commit/push commands.
+
+## Previous increment: Phase 3 exam catalogue and learning
+
+2026-10-10: Added catalogue/saved-resource navigation, structured escaped lessons,
+student-owned resource persistence, entitlement-checked progress, draft authoring/
+import, independent revision/fingerprint review and shared publication gates.
+Coverage reporting and ambiguous slug handling added. Production subject views
+no longer show invented progress or demo missions. New migration NOT APPLIED.
+
+1,119 full-suite tests passed/2 skipped; focused content/student/auth/portal
+668 passed/1 skipped. TSX rendering tests execute. TypeScript, Prisma generation/
+validation, isolated build and whitespace checks passed. Anonymous protected
+routes redirect/deny. Database tests are mocked; browser inventory is empty.
+
+32 original draft records include 8 lessons, NOT educator-reviewed or imported.
+Licensed reviewed corpus, approved coverage matrix, disposable PostgreSQL and
+authenticated acceptance remain required. Phase 3 exit NOT VERIFIED.
+Production activation unchanged; no commit/push/deploy/install/database access.
+See EXAM_CATALOGUE_LEARNING.md for evidence, operations and scoped Git commands.
+
+## Previous increment: Phase 2 student accounts and onboarding
+
+2026-10-10: Added versioned account consent, reviewed guardian registration grants,
+atomic STUDENT signup/profile/receipt/session creation, consent-aware routing and
+withdrawal, reviewed adulthood transition, encrypted recovery queue and bounded
+delivery/reset workflows. Reused existing journey planning; blocked the profile
+flag shortcut around plan confirmation. Policies remain draft and review/delivery
+gates were not activated. Added forward-only accounts migration (NOT APPLIED).
+
+1,037 tests passed, 2 gated tests skipped; focused auth/student/portal checks passed
+572 tests with 1 skipped. TypeScript, Prisma generation/validation and isolated
+production build passed. Anonymous pages returned HTTP 200. Persistence and email
+transport are mocked; browser/mobile acceptance, live PostgreSQL, legal/operator
+verification and real delivery remain NOT VERIFIED. No production activation.
+
+See STUDENT_ACCOUNTS_ONBOARDING.md for exact commands and required release gates.
+Phase 2's production exit is not signed off. Existing staged/untracked work is
+preserved; no commit/push/deploy/install/migration/seed or database connection.
+
+## Previous increment: portal continuation and consent integrity
+
+2026-10-10: Reused the already committed portal module at main HEAD 38f2c50.
+Added server-session-derived `/workspace` entry after login, portal POST logout
+and workspace return navigation without changing student primary navigation.
+Stored consent scopes now fail closed on malformed/duplicate values; enrollment
+scope expansion is rejected before transfer writes and activation requires a
+verification actor. Added forward-only `20261010000500_portal_scope_integrity`
+CHECKs and the PostgreSQL migration provider lock. Schema/historical SQL unchanged.
+New migration is NOT APPLIED; NOT VALID guards require approved legacy-row review.
+
+242 portal tests passed (38 new), and 932 broad focused tests passed with the
+dedicated Upstash live test skipped. TypeScript, Prisma validation/generation,
+production build and tracked whitespace checks passed. Persistence is mocked;
+new migration tests inspect SQL contracts only. Real PostgreSQL and authenticated
+browser acceptance remain NOT VERIFIED. Process/local configuration inspection
+confirmed production activation disabled. Anonymous preview on loopback port
+3004 only; no database, provider or credential-based flow exercised.
+
+See PORTALS_CONSENT_TENANTS.md for exact commands, changed files and limitations.
+All 324 files outside scoped edits remain byte-for-byte preserved, including the
+pre-existing untracked CONTROLLED_VERIFICATION_REPORT.md. No commit/push/deploy,
+installation, migration/seed, database access or destructive cleanup occurred.
+
+Single next task: guarded disposable-PostgreSQL configuration and real migration,
+authorization/concurrency and authenticated role acceptance verification.
+
+## Previous increment: parent and institution portals
 
 2026-10-10: Connected guardian, school, teacher/mentor/counsellor and student
 consent workspaces, verified operator proposals, scoped reporting/exports,
@@ -102,7 +375,7 @@ changes remain intact. Historical migrations were not changed.
 | Packages/entitlements/payments | Commerce foundation connected; runtime disabled | Immutable catalogue, resource gates/grants, verified-capture fulfilment, receipts/refund operations; test-only Razorpay adapter; migration unapplied; checkout hand-off/live verification/recurring billing pending |
 | Notifications/delivery | Persisted foundation; external delivery disabled | In-app messages, consent, event/channel deduplication, bounded claims/retries, delivery states and expiry checks; no external provider connected or remote delivery claimed |
 | Parent/school/teacher portals | Connected code; live verification pending | Fresh tenant/guardian/assignment scopes, dual consent, provisioning, scoped summaries/exports, private feedback and announcements; migration unapplied; external legal verification/policy and authenticated DB/browser tests pending |
-| Operations | Partial implemented workspace | Platform-admin-only publication, question review/scoring-mode selection, exam draft creation and help responses; audited; authoring, staff provisioning and pagination remain |
+| Operations | Partial implemented workspace | Platform-admin-only publication, question review/scoring-mode selection, exam draft creation and help responses; audited; controlled staff provisioning connected; authoring and full pagination remain |
 | SIA | Deterministic fallback implemented; AI disabled | Uses saved goals/missions/revision and observed active challenge suggestions; no invented eligibility or provider calls |
 | Navigation/polish | Partial | Six requested primary destinations, real Learn/Practice paths, responsive CSS and loading/error/empty states; browser/accessibility QA not performed |
 | Railway | Configuration prepared only | Node 22 family, build/start, database-free liveness, setup/recovery guide; not deployed or staging-ready |
@@ -214,7 +487,8 @@ The full programme has not reached its final staging-deployment boundary.
 Additional safe code implementation remains; missing credentials do not explain
 all unfinished features in the matrix. Commerce foundation now exists but requires
 controlled database/provider/browser staging verification. Consent/tenant portals
-and controlled staff provisioning are the single next recommended build module.
+and controlled staff provisioning are connected; guarded disposable-database and
+authenticated authorization verification are the single next recommended task.
 
 Live PostgreSQL verification is needed before relying on new persistence,
 constraints or concurrency behavior. No migration drift/checksum audit against

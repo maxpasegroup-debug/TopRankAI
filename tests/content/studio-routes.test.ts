@@ -1,0 +1,30 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ user: vi.fn(), mutate: vi.fn(), overview: vi.fn(), questions: vi.fn(), importDrafts: vi.fn() }));
+vi.mock("@/server/auth/session", () => ({ getCurrentUser: mocks.user }));
+vi.mock("@/server/db", () => ({ prisma: { question: { findMany: mocks.questions } } }));
+vi.mock("@/server/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock("@/server/content/studio", () => ({ mutateStudio: mocks.mutate, getStudioOverview: mocks.overview }));
+vi.mock("@/server/content/authoring", () => ({ importContentDrafts: mocks.importDrafts }));
+import { GET, POST } from "@/app/api/admin/content/studio/route";
+import { GET as QUESTIONS } from "@/app/api/admin/content/questions/route";
+import { POST as PREVIEW } from "@/app/api/admin/content/import/preview/route";
+import { POST as IMPORT } from "@/app/api/admin/content/import/route";
+import { previewContentImport } from "@/server/content/import-preview";
+const admin = { id: "admin", name: "Admin", email: "admin@example.test", role: "PLATFORM_ADMIN" };
+function request(body: unknown, origin = "https://toprank.test") { return new Request("https://toprank.test/api/admin/content/studio", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) }); }
+beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("APP_URL", "https://toprank.test"); mocks.user.mockResolvedValue(admin); mocks.overview.mockResolvedValue({ providerConnected: false }); mocks.questions.mockResolvedValue([]); });
+afterEach(() => vi.unstubAllEnvs());
+describe("Studio HTTP boundaries (mocked persistence)", () => {
+  it.each([GET, QUESTIONS, POST, PREVIEW, IMPORT])("rejects anonymous access", async handler => { mocks.user.mockResolvedValue(null); expect((await handler(request({}))).status).toBe(401); expect(mocks.questions).not.toHaveBeenCalled(); expect(mocks.mutate).not.toHaveBeenCalled(); });
+  it.each(["STUDENT", "TEACHER", "PARENT", "SCHOOL_ADMIN"])("denies %s sensitive reads and all writes", async role => { mocks.user.mockResolvedValue({ ...admin, role }); for (const handler of [GET, QUESTIONS, POST, PREVIEW, IMPORT]) expect((await handler(request({}))).status).toBe(403); expect(mocks.overview).not.toHaveBeenCalled(); expect(mocks.questions).not.toHaveBeenCalled(); });
+  it.each([POST, PREVIEW, IMPORT])("rejects foreign-origin mutations", async handler => { expect((await handler(request({}, "https://evil.test"))).status).toBe(403); expect(mocks.mutate).not.toHaveBeenCalled(); });
+  it("rejects forged roles, review identities and completion states", async () => { for (const property of ["role", "reviewerId", "state", "completedAt"]) expect((await POST(request({ action: "SIA_REFRESH", id: "source", [property]: "forged" }))).status).toBe(400); expect(mocks.mutate).not.toHaveBeenCalled(); });
+  it("sanitizes failures and prevents private caching", async () => { mocks.mutate.mockRejectedValue(new Error("secret database details")); const response = await POST(request({ action: "SIA_REFRESH", id: "source" })); expect(response.status).toBe(500); expect(await response.text()).not.toMatch(/secret|database|stack/); expect((await GET(request({}))).headers.get("cache-control")).toBe("no-store"); });
+  it("question directory does not select protected answers, correctness or option keys", async () => { const response = await QUESTIONS(request({})); expect(response.status).toBe(200); const select = mocks.questions.mock.calls[0][0].select; expect(select).not.toHaveProperty("numericalAnswer"); expect(select).not.toHaveProperty("options"); expect(select).not.toHaveProperty("solutionRef"); expect(response.headers.get("cache-control")).toBe("no-store"); });
+  it("returns row-level dry-run errors without calling the importer", async () => { const response = await PREVIEW(request({ version: 1, records: [{ key: "invalid", draft: { entity: "LESSON" } }] })); expect(response.status).toBe(200); const body = await response.json(); expect(body.data.valid).toBe(false); expect(body.data.rows[0].errors.length).toBeGreaterThan(0); expect(mocks.importDrafts).not.toHaveBeenCalled(); });
+  it("requires explicit same-batch confirmation and rejects old direct imports", async () => { const pack = { version: 1 as const, records: [{ key: "subject", draft: { entity: "SUBJECT" as const, code: "PHYSICS", name: "Physics", slug: "physics" } }] }; const fingerprint = previewContentImport(pack).fingerprint!;
+    expect((await IMPORT(request(pack))).status).toBe(400); expect((await IMPORT(request({ pack, previewFingerprint: fingerprint, confirmed: false }))).status).toBe(400); expect((await IMPORT(request({ pack, previewFingerprint: "0".repeat(64), confirmed: true }))).status).toBe(400); expect(mocks.importDrafts).not.toHaveBeenCalled();
+    mocks.importDrafts.mockResolvedValue({ imported: 1 }); expect((await IMPORT(request({ pack, previewFingerprint: fingerprint, confirmed: true }))).status).toBe(200); expect(mocks.importDrafts).toHaveBeenCalledWith(admin, pack);
+  });
+  it("bounds large requests before validation or mutation", async () => { expect((await POST(request({ data: "x".repeat(256 * 1024) }))).status).toBe(413); expect(mocks.mutate).not.toHaveBeenCalled(); });
+});

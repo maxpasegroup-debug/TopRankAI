@@ -16,6 +16,7 @@ export const adminMockSchema = z.discriminatedUnion("action", [
  z.object({ action: z.literal("create"), blueprint: blueprintSchema }).strict(),
  z.object({ action: z.literal("edit"), id: idSchema, version: z.number().int().nonnegative(), blueprint: blueprintSchema }).strict(),
  z.object({ action: z.enum(["validate", "publish", "unpublish"]), id: idSchema, version: z.number().int().nonnegative() }).strict(),
+ z.object({ action: z.literal("review"), id: idSchema, version: z.number().int().nonnegative(), evidence: z.string().trim().min(8).max(1000) }).strict(),
 ]);
 export const answerSchema = z.object({ optionIds: z.array(idSchema).min(1).max(50).optional(),
  numerical: z.string().max(60).regex(decimalPattern).optional() }).strict()

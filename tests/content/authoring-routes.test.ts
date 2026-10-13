@@ -1,0 +1,30 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ user: vi.fn(), save: vi.fn(), review: vi.fn(), importDrafts: vi.fn(), list: vi.fn(), saved: vi.fn(), listSaved: vi.fn(), state: vi.fn() }));
+vi.mock("@/server/auth/session", () => ({ getCurrentUser: mocks.user }));
+vi.mock("@/server/db", () => ({ prisma: {} }));
+vi.mock("@/server/logger", () => ({ logger: { error: vi.fn() } }));
+vi.mock("@/server/content/authoring", () => ({ saveContentDraft: mocks.save, reviewContent: mocks.review, importContentDrafts: mocks.importDrafts, listEditorialContent: mocks.list }));
+vi.mock("@/server/content/saved-resources", async importOriginal => ({ ...await importOriginal<typeof import("@/server/content/saved-resources")>(), saveResource: mocks.saved, listSavedResources: mocks.listSaved, getSavedResourceState: mocks.state }));
+import { POST, GET } from "@/app/api/admin/content/route";
+import { POST as IMPORT } from "@/app/api/admin/content/import/route";
+import { POST as REVIEW } from "@/app/api/admin/content/review/route";
+import { PUT as SAVE_RESOURCE, GET as SAVED } from "@/app/api/student/saved-resources/route";
+const admin = { id: "admin", name: "Admin", email: "admin@example.com", role: "PLATFORM_ADMIN" };
+const draft = { entity: "SUBJECT", code: "PHYSICS", name: "Physics", slug: "physics" };
+function req(body: unknown, origin = "https://toprank.test") { return new Request("https://toprank.test/api/admin/content", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) }); }
+beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("APP_URL", "https://toprank.test"); mocks.user.mockResolvedValue(admin); mocks.list.mockResolvedValue({ records: [], nextCursor: null }); });
+afterEach(() => vi.unstubAllEnvs());
+describe("content request boundaries (mocked services)", () => {
+  it.each([POST, IMPORT, REVIEW])("requires authentication", async handler => { mocks.user.mockResolvedValue(null); expect((await handler(req({}))).status).toBe(401); expect(mocks.save).not.toHaveBeenCalled(); expect(mocks.importDrafts).not.toHaveBeenCalled(); expect(mocks.review).not.toHaveBeenCalled(); });
+  it.each(["STUDENT", "PARENT", "TEACHER", "SCHOOL_ADMIN"])("denies %s administrative writes", async role => { mocks.user.mockResolvedValue({ ...admin, role }); expect((await POST(req(draft))).status).toBe(403); expect(mocks.save).not.toHaveBeenCalled(); });
+  it.each([POST, IMPORT, REVIEW])("rejects foreign origins", async handler => { expect((await handler(req({}, "https://evil.test"))).status).toBe(403); expect(mocks.save).not.toHaveBeenCalled(); expect(mocks.review).not.toHaveBeenCalled(); expect(mocks.importDrafts).not.toHaveBeenCalled(); });
+  it("rejects oversized imports before service calls", async () => { expect((await IMPORT(req({ records: "x".repeat(512 * 1024) }))).status).toBe(413); expect(mocks.importDrafts).not.toHaveBeenCalled(); });
+  it("rejects role/status/ownership injection", async () => { expect((await POST(req({ ...draft, status: "PUBLISHED", authorId: "other" }))).status).toBe(400); expect(mocks.save).not.toHaveBeenCalled(); });
+  it("passes validated drafts and only session identity", async () => { mocks.save.mockResolvedValue({ id: "s1", revision: 1 }); expect((await POST(req(draft))).status).toBe(200); expect(mocks.save).toHaveBeenCalledWith(admin, draft); });
+  it("requires an explicit revision and review attestations", async () => { expect((await REVIEW(req({ entity: "LESSON", id: "l1", revision: 1, evidence: "review-evidence", accuracyConfirmed: true, rightsConfirmed: false }))).status).toBe(400); expect(mocks.review).not.toHaveBeenCalled(); });
+  it("sanitizes internal errors", async () => { mocks.save.mockRejectedValue(new Error("private database details")); const response = await POST(req(draft)); expect(response.status).toBe(500); expect(await response.text()).not.toMatch(/private|database|stack/); });
+  it("uses bounded cursor validation and no-store reads", async () => { expect((await GET(new Request("https://toprank.test/api/admin/content?entity=LESSON&cursor=last"))).headers.get("cache-control")).toBe("no-store"); expect(mocks.list).toHaveBeenCalledWith(admin, "LESSON", "last"); });
+  it("blocks unauthenticated and privileged student-resource mutations", async () => { expect((await SAVE_RESOURCE(req({ resourceId: "r1", saved: true }))).status).toBe(403); mocks.user.mockResolvedValue(null); expect((await SAVE_RESOURCE(req({ resourceId: "r1", saved: true }))).status).toBe(401); expect(mocks.saved).not.toHaveBeenCalled(); });
+  it("enforces student-resource origin and owner-derived input", async () => { mocks.user.mockResolvedValue({ ...admin, role: "STUDENT" }); expect((await SAVE_RESOURCE(req({ resourceId: "r1", saved: true }, "https://evil.test"))).status).toBe(403); expect((await SAVE_RESOURCE(req({ resourceId: "r1", saved: true, userId: "other" }))).status).toBe(400); expect(mocks.saved).not.toHaveBeenCalled(); });
+  it("returns only the student's requested bookmark state with no-store", async () => { const student = { ...admin, role: "STUDENT" }; mocks.user.mockResolvedValue(student); mocks.state.mockResolvedValue({ saved: true }); const response = await SAVED(new Request("https://toprank.test/api/student/saved-resources?resourceId=r1")); expect(response.status).toBe(200); expect(response.headers.get("cache-control")).toBe("no-store"); expect(mocks.state).toHaveBeenCalledWith(student, "r1"); });
+});

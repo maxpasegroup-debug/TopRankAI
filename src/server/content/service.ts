@@ -3,6 +3,7 @@ import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { safeResourceUrl } from "./resource-url";
 import { requireResourceAccess } from "@/server/commerce/access";
+import { lessonBodySchema, type LessonBody } from "@/shared/lesson-content";
 
 const publishedActive = {
   status: "PUBLISHED" as const,
@@ -39,6 +40,7 @@ export type ContentLessonDto = {
 };
 
 export type ContentResourceDto = {
+  id: string;
   title: string;
   slug: string;
   type: string;
@@ -49,6 +51,7 @@ export type ContentResourceDto = {
 
 export type LessonDetailDto = ContentLessonDto & {
   id: string;
+  body: LessonBody | null;
   chapter: ContentChapterDto;
   subject: ContentSubjectDto;
   resources: ContentResourceDto[];
@@ -143,8 +146,14 @@ export async function listChaptersForSubject(subjectSlug: string): Promise<{ sub
 }
 
 export async function listLessonsForChapter(chapterSlug: string, subjectSlug?: string): Promise<{ subject: ContentSubjectDto; chapter: ContentChapterDto; lessons: ContentLessonDto[] }> {
+  let chapterId: string | undefined;
+  if (!subjectSlug) {
+    const matches = await prisma.chapter.findMany({ where: { slug: chapterSlug, ...publishedActive, subject: publishedActive }, take: 2, select: { id: true } });
+    if (matches.length !== 1) throw new ValidationApiError("Chapter content was not found or requires a subject context");
+    chapterId = matches[0].id;
+  }
   const chapter = await prisma.chapter.findFirst({
-    where: { slug: chapterSlug, ...publishedActive, subject: { ...publishedActive, slug: subjectSlug } },
+    where: { id: chapterId, slug: chapterSlug, ...publishedActive, subject: { ...publishedActive, slug: subjectSlug } },
     select: {
       title: true,
       slug: true,
@@ -187,11 +196,18 @@ export async function listLessonsForChapter(chapterSlug: string, subjectSlug?: s
 }
 
 export async function getLessonDetail(lessonSlug: string, path?: { subjectSlug: string; chapterSlug: string }): Promise<LessonDetailDto> {
+  let lessonId: string | undefined;
+  if (!path) {
+    const matches = await prisma.lesson.findMany({ where: { slug: lessonSlug, ...publishedActive, chapter: { ...publishedActive, subject: publishedActive } }, take: 2, select: { id: true } });
+    if (matches.length !== 1) throw new ValidationApiError("Lesson content was not found or requires its full path context");
+    lessonId = matches[0].id;
+  }
   const lesson = await prisma.lesson.findFirst({
-    where: { slug: lessonSlug, ...publishedActive, chapter: { ...publishedActive, slug: path?.chapterSlug, subject: { ...publishedActive, slug: path?.subjectSlug } } },
+    where: { id: lessonId, slug: lessonSlug, ...publishedActive, chapter: { ...publishedActive, slug: path?.chapterSlug, subject: { ...publishedActive, slug: path?.subjectSlug } } },
     select: {
       id: true,
       title: true,
+      body: true,
       slug: true,
       summary: true,
       order: true,
@@ -207,7 +223,7 @@ export async function getLessonDetail(lessonSlug: string, path?: { subjectSlug: 
       resources: {
         where: publishedActive,
         orderBy: { order: "asc" },
-        select: { title: true, slug: true, type: true, url: true, reference: true, order: true },
+        select: { id: true, title: true, slug: true, type: true, url: true, reference: true, order: true },
       },
     },
   });
@@ -235,6 +251,7 @@ export async function getLessonDetail(lessonSlug: string, path?: { subjectSlug: 
 
   return {
     id: lesson.id,
+    body: (() => { const parsed = lessonBodySchema.safeParse(lesson.body); return parsed.success ? parsed.data : null; })(),
     title: lesson.title,
     slug: lesson.slug,
     summary: lesson.summary,

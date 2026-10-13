@@ -3,6 +3,7 @@ import { POST as login } from "@/app/api/auth/login/route";
 import { POST as signup } from "@/app/api/auth/signup/route";
 import { GET as getLogout, POST as logout } from "@/app/api/auth/logout/route";
 import { hashSessionToken, SESSION_COOKIE } from "@/server/auth/session";
+import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
 
 const mocks = vi.hoisted(() => ({
   findUser: vi.fn(), createSession: vi.fn(), revoke: vi.fn(), transaction: vi.fn(),
@@ -20,6 +21,7 @@ vi.mock("@/server/auth/rate-limit", () => ({
 }));
 
 const credentials = { email: "student@example.com", password: "password123" };
+const signupFields = { name: "Student", country: "IN", ageBand: "18_PLUS", termsAccepted: true, privacyAccepted: true, termsVersion: ACCOUNT_POLICY_VERSION, privacyVersion: ACCOUNT_POLICY_VERSION };
 function request(path: string, body: unknown = credentials, headers: Record<string, string> = {}) {
   return new Request(`http://internal/api/auth/${path}`, {
     method: "POST", headers: { origin: "https://toprank.test", "content-type": "application/json", "x-toprank-client-ip": "192.0.2.1", ...headers },
@@ -115,7 +117,7 @@ describe("signup/login hardening with mocked persistence and limiter", () => {
   });
   it.each([["login", login], ["signup", signup]] as const)("%s cannot bypass an identity denial", async (path, handler) => {
     mocks.consume.mockResolvedValueOnce({ allowed: true }).mockResolvedValueOnce({ allowed: false, retryAfterSeconds: 30 });
-    const response = await handler(request(path, { name: "Student", ...credentials }));
+    const response = await handler(request(path, { ...signupFields, ...credentials }));
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("30");
     expectNoPersistence();
@@ -128,7 +130,7 @@ describe("signup/login hardening with mocked persistence and limiter", () => {
   });
   it.each([["login", login], ["signup", signup]] as const)("%s cannot bypass identity provider failure", async (path, handler) => {
     mocks.consume.mockResolvedValueOnce({ allowed: true }).mockRejectedValueOnce(new Error("private provider detail"));
-    const response = await handler(request(path, { name: "Student", ...credentials }));
+    const response = await handler(request(path, { ...signupFields, ...credentials }));
     expect(response.status).toBe(503);
     expect(await response.text()).not.toContain("private");
     expectNoPersistence();

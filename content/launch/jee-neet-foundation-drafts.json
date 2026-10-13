@@ -1,0 +1,601 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "key": "jee-main",
+      "draft": {
+        "entity": "EXAM",
+        "code": "JEE_MAIN",
+        "name": "JEE Main",
+        "category": "ENGINEERING",
+        "description": "Engineering entrance preparation. This draft starter pack is not full syllabus coverage.",
+        "officialUrl": "https://jeemain.nta.nic.in/document/syllabus-2026/"
+      }
+    },
+    {
+      "key": "neet-ug",
+      "draft": {
+        "entity": "EXAM",
+        "code": "NEET",
+        "name": "NEET UG",
+        "category": "MEDICAL",
+        "description": "Medical entrance preparation. This draft starter pack requires educator review and syllabus mapping.",
+        "officialUrl": "https://neet.nta.nic.in/document/syllabus-for-neet-ug-2026-examination/"
+      }
+    },
+    {
+      "key": "physics",
+      "draft": {
+        "entity": "SUBJECT",
+        "code": "PHYSICS",
+        "name": "Physics",
+        "slug": "physics"
+      }
+    },
+    {
+      "key": "chemistry",
+      "draft": {
+        "entity": "SUBJECT",
+        "code": "CHEMISTRY",
+        "name": "Chemistry",
+        "slug": "chemistry"
+      }
+    },
+    {
+      "key": "mathematics",
+      "draft": {
+        "entity": "SUBJECT",
+        "code": "MATHEMATICS",
+        "name": "Mathematics",
+        "slug": "mathematics"
+      }
+    },
+    {
+      "key": "biology",
+      "draft": {
+        "entity": "SUBJECT",
+        "code": "BIOLOGY",
+        "name": "Biology",
+        "slug": "biology"
+      }
+    },
+    {
+      "key": "jee-main-physics",
+      "draft": {
+        "entity": "EXAM_SUBJECT",
+        "examId": "@jee-main",
+        "subjectId": "@physics",
+        "order": 1
+      }
+    },
+    {
+      "key": "jee-main-chemistry",
+      "draft": {
+        "entity": "EXAM_SUBJECT",
+        "examId": "@jee-main",
+        "subjectId": "@chemistry",
+        "order": 2
+      }
+    },
+    {
+      "key": "jee-main-mathematics",
+      "draft": {
+        "entity": "EXAM_SUBJECT",
+        "examId": "@jee-main",
+        "subjectId": "@mathematics",
+        "order": 3
+      }
+    },
+    {
+      "key": "neet-ug-physics",
+      "draft": {
+        "entity": "EXAM_SUBJECT",
+        "examId": "@neet-ug",
+        "subjectId": "@physics",
+        "order": 1
+      }
+    },
+    {
+      "key": "neet-ug-chemistry",
+      "draft": {
+        "entity": "EXAM_SUBJECT",
+        "examId": "@neet-ug",
+        "subjectId": "@chemistry",
+        "order": 2
+      }
+    },
+    {
+      "key": "neet-ug-biology",
+      "draft": {
+        "entity": "EXAM_SUBJECT",
+        "examId": "@neet-ug",
+        "subjectId": "@biology",
+        "order": 3
+      }
+    },
+    {
+      "key": "physics-foundations",
+      "draft": {
+        "entity": "CHAPTER",
+        "subjectId": "@physics",
+        "title": "Physics foundations",
+        "slug": "physics-foundations",
+        "summary": "Core introductory concepts and worked checks. Draft material; complete syllabus coverage is not implied.",
+        "order": 1
+      }
+    },
+    {
+      "key": "chemistry-foundations",
+      "draft": {
+        "entity": "CHAPTER",
+        "subjectId": "@chemistry",
+        "title": "Chemistry foundations",
+        "slug": "chemistry-foundations",
+        "summary": "Core introductory concepts and worked checks. Draft material; complete syllabus coverage is not implied.",
+        "order": 1
+      }
+    },
+    {
+      "key": "mathematics-foundations",
+      "draft": {
+        "entity": "CHAPTER",
+        "subjectId": "@mathematics",
+        "title": "Mathematics foundations",
+        "slug": "mathematics-foundations",
+        "summary": "Core introductory concepts and worked checks. Draft material; complete syllabus coverage is not implied.",
+        "order": 1
+      }
+    },
+    {
+      "key": "biology-foundations",
+      "draft": {
+        "entity": "CHAPTER",
+        "subjectId": "@biology",
+        "title": "Biology foundations",
+        "slug": "biology-foundations",
+        "summary": "Core introductory concepts and worked checks. Draft material; complete syllabus coverage is not implied.",
+        "order": 1
+      }
+    },
+    {
+      "key": "physics-distance-displacement",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@physics-foundations",
+        "title": "Distance and displacement",
+        "slug": "distance-displacement",
+        "summary": "Distinguish the length of a travelled path from the change in position.",
+        "order": 1,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "By the end of this lesson, calculate distance and signed displacement for motion along one line. Choose an origin and a positive direction before assigning coordinates."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "Distance is the total length of the travelled path and cannot be negative. Displacement is final position minus initial position; in one dimension its sign indicates direction relative to the chosen axis. The magnitude of displacement never exceeds distance. A return to the starting point gives zero displacement, even though a nonzero distance may have been travelled. Do not add signed displacements when a question asks for total path length."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "Take east as positive. A student moves from x=0 m to x=8 m, then returns to x=3 m. The first path has length 8 m and the second has length 5 m. Total distance is 8+5=13 m. Displacement is 3-0=+3 m, or 3 m east. The return segment's displacement is -5 m; the sum of segment displacements is +8-5=+3 m."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "Try this before checking: a walker goes 6 m west and then 2 m east. With east positive, the final coordinate is -6+2=-4 m. Distance is 6+2=8 m. Displacement is -4 m, so its magnitude is 4 m and direction is west. Reversing the positive axis changes the sign of displacement, not the physical distance or motion."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Distance counts path length; displacement compares endpoints. Always state units, axis choice and direction for signed quantities. Use a sketch or number line to avoid treating a negative segment displacement as a negative distance."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "physics-distance-displacement-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@physics-distance-displacement",
+        "title": "Distance and displacement recap",
+        "slug": "distance-displacement-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Distance counts path length; displacement compares endpoints. Always state units, axis choice and direction for signed quantities. Use a sketch or number line to avoid treating a negative segment displacement as a negative distance.",
+        "order": 1
+      }
+    },
+    {
+      "key": "physics-average-speed-velocity",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@physics-foundations",
+        "title": "Average speed and velocity",
+        "slug": "average-speed-velocity",
+        "summary": "Use the correct numerator and the total elapsed time when comparing motion.",
+        "order": 2,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Calculate average speed and one-dimensional average velocity for an entire trip, including rest intervals if they occur within the specified time interval."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "Average speed equals total distance divided by total elapsed time. Average velocity equals displacement divided by the same elapsed time. Average velocity is signed in one dimension and can be zero for a moving object that returns to its start. Average speed cannot be negative. A simple arithmetic average of two speeds is generally wrong when time intervals differ. Keep instantaneous and average quantities distinct."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "A cyclist travels 120 m east in 30 s and 80 m west in 20 s. Total distance is 200 m, displacement is +40 m and total time is 50 s. Average speed is 200/50=4 m/s. Average velocity is +40/50=+0.8 m/s. If a further 10 s rest at the end is included, the numerators stay the same but the elapsed time becomes 60 s."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "For equal distances travelled at 2 m/s and 6 m/s, choose each distance as 6 m. Times are 3 s and 1 s; total distance is 12 m and total time is 4 s. Average speed is 3 m/s, not the arithmetic mean 4 m/s. Check that the answer lies between the two speeds."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Build a table of segment distance, displacement and duration. Sum the appropriate numerator and all relevant time intervals before dividing. Include stationary time when the requested interval includes it."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "physics-average-speed-velocity-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@physics-average-speed-velocity",
+        "title": "Average speed and velocity recap",
+        "slug": "average-speed-velocity-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Build a table of segment distance, displacement and duration. Sum the appropriate numerator and all relevant time intervals before dividing. Include stationary time when the requested interval includes it.",
+        "order": 1
+      }
+    },
+    {
+      "key": "chemistry-mole-particle-count",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@chemistry-foundations",
+        "title": "Moles and particle counts",
+        "slug": "mole-particle-count",
+        "summary": "Relate amount of substance to the number of specified entities.",
+        "order": 1,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Convert between moles, mass and particle count while explicitly naming atoms, molecules, ions or formula units."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "One mole contains exactly 6.02214076 x 10^23 specified elementary entities. The entity must be stated: a mole of oxygen atoms differs from a mole of O2 molecules. Amount in moles is n=m/M when mass m and molar mass M use compatible units. Number of entities is N=n times the Avogadro constant. Use rounded atomic masses only when they are supplied or appropriate to the precision of the exercise."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "Using a rounded molar mass of water of 18 g/mol, a 9 g sample has n=9/18=0.5 mol of H2O molecules. Its molecule count is about 3.011 x 10^23. Each molecule contains two hydrogen atoms, so the hydrogen-atom amount is 1 mol and its atom count is about 6.022 x 10^23. Do not confuse molecules with constituent atoms."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "Using C=12 g/mol and O=16 g/mol, the rounded molar mass of CO2 is 44 g/mol. A 22 g sample contains 0.5 mol of CO2 molecules. It contains 0.5 mol of carbon atoms and 1 mol of oxygen atoms. Verify that counting all atoms gives 1.5 mol of atoms, not 1.5 mol of CO2 molecules."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Write the chemical formula and the requested entity first. Use n=m/M for amount and N=n times the Avogadro constant for entities. Apply formula subscripts only when converting molecular or formula-unit counts to constituent-atom counts."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "chemistry-mole-particle-count-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@chemistry-mole-particle-count",
+        "title": "Moles and particle counts recap",
+        "slug": "mole-particle-count-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Write the chemical formula and the requested entity first. Use n=m/M for amount and N=n times the Avogadro constant for entities. Apply formula subscripts only when converting molecular or formula-unit counts to constituent-atom counts.",
+        "order": 1
+      }
+    },
+    {
+      "key": "chemistry-atomic-number-isotopes",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@chemistry-foundations",
+        "title": "Atomic number, ions and isotopes",
+        "slug": "atomic-number-isotopes",
+        "summary": "Use proton count to identify an element and separate mass number from average atomic mass.",
+        "order": 2,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Find proton, neutron and electron counts from atomic number, mass number and ionic charge."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "Atomic number Z is the proton count and identifies the element. Mass number A is the integer count of protons plus neutrons for a particular isotope, so neutron count is A-Z. A neutral atom has Z electrons. Positive ions have lost electrons; negative ions have gained electrons. Isotopes share Z but differ in neutron count. The periodic table's relative atomic mass is not the integer mass number of every isotope."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "For an isotope with Z=11 and A=23, proton count is 11 and neutron count is 23-11=12. A neutral atom has 11 electrons. Its singly positive ion has 10 electrons because one electron was removed; neither proton count nor mass number changes in forming this ion."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "An ion has Z=17, A=35 and charge -1. It has 17 protons, 18 neutrons and 18 electrons. A second isotope with A=37 and the same Z has 20 neutrons. Both belong to the same element. Check that a negative charge means more electrons than protons, not fewer."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Separate nuclear counts from electronic charge. Proton count defines the element; neutron count distinguishes isotopes; electron count determines the charge state for fixed Z."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "chemistry-atomic-number-isotopes-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@chemistry-atomic-number-isotopes",
+        "title": "Atomic number, ions and isotopes recap",
+        "slug": "atomic-number-isotopes-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Separate nuclear counts from electronic charge. Proton count defines the element; neutron count distinguishes isotopes; electron count determines the charge state for fixed Z.",
+        "order": 1
+      }
+    },
+    {
+      "key": "mathematics-sets-venn-counting",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@mathematics-foundations",
+        "title": "Sets and overlap counting",
+        "slug": "sets-venn-counting",
+        "summary": "Count a union without double-counting an intersection.",
+        "order": 1,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Use set notation and the two-set inclusion-exclusion formula to determine union, overlap and neither counts in a finite universal set."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "The union A union B contains elements in either set or both. The intersection A intersection B contains elements in both. For finite sets, n(A union B)=n(A)+n(B)-n(A intersection B). Adding the separate counts counts intersection elements twice; subtracting the intersection once corrects this. Complements depend on the explicitly chosen universal set."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "In a class of 40 students, 22 study one subject, 18 study another and 8 study both. The union has 22+18-8=32 students. Only the first subject has 22-8=14 students; only the second has 18-8=10. Neither has 40-32=8. Check that 14+8+10+8=40."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "Of 50 participants, 30 choose activity A and 25 choose activity B; 10 choose neither. The union is 50-10=40, so the intersection is 30+25-40=15. The overlap cannot exceed either individual set count. A negative or oversized overlap signals inconsistent data or arithmetic."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Draw disjoint Venn regions before filling totals. Distinguish 'either' including both from 'exactly one', which excludes the intersection. State the universe before calculating a complement."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "mathematics-sets-venn-counting-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@mathematics-sets-venn-counting",
+        "title": "Sets and overlap counting recap",
+        "slug": "sets-venn-counting-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Draw disjoint Venn regions before filling totals. Distinguish 'either' including both from 'exactly one', which excludes the intersection. State the universe before calculating a complement.",
+        "order": 1
+      }
+    },
+    {
+      "key": "mathematics-quadratic-discriminant",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@mathematics-foundations",
+        "title": "Quadratic roots and the discriminant",
+        "slug": "quadratic-discriminant",
+        "summary": "Determine the nature of real-coefficient quadratic roots before computing them.",
+        "order": 2,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Apply the quadratic formula for a nonzero leading coefficient and interpret the discriminant over the real numbers."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "For ax^2+bx+c=0 with real coefficients and a not equal to zero, the roots are (-b plus or minus sqrt(b^2-4ac))/(2a). The discriminant D=b^2-4ac determines whether there are two distinct real roots (D>0), one repeated real root (D=0), or no real roots (D<0). In the last case complex roots exist, but they are not elements of the real solution set. Keep parentheses around the entire numerator and denominator."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "For 2x^2-5x+2=0, D=(-5)^2-4(2)(2)=25-16=9. The roots are (5 plus or minus 3)/4, giving 2 and 1/2. Substituting x=2 gives 8-10+2=0; substituting x=1/2 gives 1/2-5/2+2=0."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "For x^2+4x+4=0, D=16-16=0 and the repeated root is -4/2=-2. For x^2+1=0, D=-4, so there is no real root. Do not conclude that a quadratic with negative D has no roots in every number system."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Check a is nonzero before using the quadratic formula. Compute D carefully, especially when b is negative. State the number system and verify candidate roots by substitution."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "mathematics-quadratic-discriminant-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@mathematics-quadratic-discriminant",
+        "title": "Quadratic roots and the discriminant recap",
+        "slug": "quadratic-discriminant-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Check a is nonzero before using the quadratic formula. Compute D carefully, especially when b is negative. State the number system and verify candidate roots by substitution.",
+        "order": 1
+      }
+    },
+    {
+      "key": "biology-cell-types",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@biology-foundations",
+        "title": "Prokaryotic and eukaryotic cells",
+        "slug": "cell-types",
+        "summary": "Compare cell organisation without assuming every cell has every organelle.",
+        "order": 1,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Identify shared cellular features and distinguish prokaryotic organisation from eukaryotic organisation."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "Both prokaryotic and eukaryotic cells have a plasma membrane, cytoplasm, genetic material and ribosomes. Prokaryotes lack a membrane-bound nucleus; their genetic material occupies a nucleoid region. Eukaryotic cells characteristically have a membrane-bound nucleus and membrane-bound organelles, though specialised cells may lose particular structures during differentiation. A cell wall alone does not identify a cell as prokaryotic."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "A bacterial cell with genetic material in a nucleoid and no membrane-bound nucleus is prokaryotic. A plant leaf cell with a nucleus, chloroplasts and a large central vacuole is eukaryotic. Both may have a cell wall, so cell-wall presence is not the distinguishing feature. Ribosomes occur in both categories."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "Consider the claim 'All eukaryotic cells contain chloroplasts.' It is false: animal cells do not, and many plant cells, such as many root cells, do not photosynthesise. Consider 'Prokaryotes have no ribosomes.' This is also false. Test statements against the specific cell type and avoid treating characteristic structures as universal."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Use nucleus and membrane-bound organisation as key comparisons. Shared structures support basic life functions in both groups. Read universal words such as 'all' and 'never' carefully and account for specialised exceptions."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "biology-cell-types-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@biology-cell-types",
+        "title": "Prokaryotic and eukaryotic cells recap",
+        "slug": "cell-types-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Use nucleus and membrane-bound organisation as key comparisons. Shared structures support basic life functions in both groups. Read universal words such as 'all' and 'never' carefully and account for specialised exceptions.",
+        "order": 1
+      }
+    },
+    {
+      "key": "biology-enzymes-and-conditions",
+      "draft": {
+        "entity": "LESSON",
+        "chapterId": "@biology-foundations",
+        "title": "Enzymes and reaction conditions",
+        "slug": "enzymes-and-conditions",
+        "summary": "Explain catalytic action and distinguish temperature effects from permanent damage.",
+        "order": 2,
+        "body": {
+          "version": 1,
+          "sourceNote": "Original TopRank AI-authored draft (2026-10-10). Not independently educator-reviewed; requires scientific accuracy, syllabus alignment and rights review before publication.",
+          "sections": [
+            {
+              "kind": "OBJECTIVE",
+              "title": "Learning objective",
+              "text": "Describe how enzyme activity depends on active-site interactions, temperature, pH and substrate availability without assigning one optimum to every enzyme."
+            },
+            {
+              "kind": "CONCEPT",
+              "title": "Core concept",
+              "text": "Enzymes catalyse reactions by lowering the activation barrier; they do not change the reaction's equilibrium position. Many enzymes are proteins, while some catalytic RNA molecules also exist. Active-site structure influences specificity. Increasing temperature can increase reaction rate within a suitable range, but excessive heat may disrupt structure and reduce activity. Each enzyme has its own response to temperature and pH."
+            },
+            {
+              "kind": "EXAMPLE",
+              "title": "Worked example",
+              "text": "Suppose an experiment measures activity of one enzyme at several temperatures while keeping pH and substrate concentration constant. Activity rising and then falling supports a temperature-dependent response for that enzyme under those conditions. It does not prove that every enzyme has the same optimum. A fair comparison requires controlled conditions and repeated measurements."
+            },
+            {
+              "kind": "CHECK",
+              "title": "Check your understanding",
+              "text": "Evaluate 'An enzyme makes an energetically unfavourable reaction favourable by changing equilibrium.' This is incorrect: a catalyst accelerates approach to equilibrium without changing its position. Evaluate 'Low temperature always permanently denatures an enzyme.' This is also incorrect; reduced activity at low temperature is often reversible when suitable conditions return."
+            },
+            {
+              "kind": "SUMMARY",
+              "title": "Key takeaways",
+              "text": "Separate rate, equilibrium and structural stability. Control other conditions when testing one variable. Avoid universal numerical optima unless the specific enzyme and experimental conditions are provided."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "biology-enzymes-and-conditions-notes",
+      "draft": {
+        "entity": "RESOURCE",
+        "lessonId": "@biology-enzymes-and-conditions",
+        "title": "Enzymes and reaction conditions recap",
+        "slug": "enzymes-and-conditions-recap",
+        "type": "NOTES",
+        "url": "",
+        "reference": "Separate rate, equilibrium and structural stability. Control other conditions when testing one variable. Avoid universal numerical optima unless the specific enzyme and experimental conditions are provided.",
+        "order": 1
+      }
+    }
+  ]
+}

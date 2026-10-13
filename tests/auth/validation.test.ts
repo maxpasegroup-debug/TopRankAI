@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loginSchema, signupSchema } from "@/server/auth/validation";
+import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
+const consent = { country: "IN", ageBand: "18_PLUS", termsAccepted: true, privacyAccepted: true, termsVersion: ACCOUNT_POLICY_VERSION, privacyVersion: ACCOUNT_POLICY_VERSION };
 
 describe("auth validation", () => {
   it("normalizes signup email and defaults to student role", () => {
@@ -7,6 +9,7 @@ describe("auth validation", () => {
       name: "Rahul",
       email: "RAHUL@example.com",
       password: "password123",
+      ...consent,
     });
 
     expect(result.email).toBe("rahul@example.com");
@@ -24,7 +27,7 @@ describe("auth validation", () => {
   });
 
   it("accepts an explicit student role", () => {
-    expect(signupSchema.parse({ name: "Rahul", email: "rahul@example.com", password: "password123", role: "STUDENT" }).role).toBe("STUDENT");
+    expect(signupSchema.parse({ name: "Rahul", email: "rahul@example.com", password: "password123", role: "STUDENT", ...consent }).role).toBe("STUDENT");
   });
 
   it.each(["PLATFORM_ADMIN", "TEACHER", "PARENT", "SCHOOL_ADMIN"])("rejects public signup with role %s", (role) => {

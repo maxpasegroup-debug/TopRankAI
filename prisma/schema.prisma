@@ -115,7 +115,9 @@ model User {
   studyPlans           StudyPlan[]
   studySessions        StudySession[]
   lessonProgress       StudentLessonProgress[]
+  savedResources       StudentSavedResource[]
   practiceAttempts     PracticeAttempt[]
+  practiceRevisions    PracticeRevisionState[]
   mockAttempts         MockAttempt[]
   competitionEntries   CompetitionEntry[]
   earnedAchievements   EarnedAchievement[]
@@ -131,6 +133,15 @@ model User {
   portalInvitations PortalInvitation[] @relation("PortalInviter")
   acceptedPortalInvitations PortalInvitation[] @relation("PortalInviteAccepted")
   portalFeedback PortalFeedback[]
+  accountConsent AccountConsent?
+  guardianRegistrationGrants GuardianRegistrationGrant[] @relation("RegistrationGuardian")
+  issuedRegistrationGrants GuardianRegistrationGrant[] @relation("RegistrationVerifier")
+  passwordResets PasswordReset[]
+  authoredSyllabuses SyllabusVersion[] @relation("SyllabusAuthor")
+  reviewedSyllabuses SyllabusVersion[] @relation("SyllabusReviewer")
+  authoredContentSources ContentSource[] @relation("ContentSourceAuthor")
+  reviewedContentSources ContentSource[] @relation("ContentSourceReviewer")
+  requestedKnowledgeJobs ContentKnowledgeJob[]
 
   @@index([role])
   @@index([status])
@@ -149,6 +160,55 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model GuardianRegistrationGrant {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  childEmailHash String
+  country String
+  policyVersion String
+  guardianId String
+  verifiedById String
+  verificationReference String
+  verifiedAt DateTime @default(now())
+  expiresAt DateTime
+  usedAt DateTime?
+  revokedAt DateTime?
+  guardian User @relation("RegistrationGuardian", fields: [guardianId], references: [id], onDelete: Restrict)
+  verifiedBy User @relation("RegistrationVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
+  receipt AccountConsent?
+  @@index([guardianId, revokedAt])
+  @@index([expiresAt])
+}
+
+model AccountConsent {
+  userId String @id
+  country String
+  ageBand String
+  termsVersion String
+  privacyVersion String
+  acceptedAt DateTime @default(now())
+  revokedAt DateTime?
+  guardianGrantId String? @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guardianGrant GuardianRegistrationGrant? @relation(fields: [guardianGrantId], references: [id], onDelete: Restrict)
+}
+
+model PasswordReset {
+  id String @id @default(cuid())
+  userId String
+  tokenHash String @unique
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime @default(now())
+  deliveryPayload String?
+  deliveryState String @default("PENDING")
+  deliveryAttempts Int @default(0)
+  deliveryLeaseUntil DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, expiresAt])
+  @@index([deliveryState, expiresAt])
 }
 
 model StudentProfile {
@@ -273,6 +333,7 @@ model Exam {
   studyPlans      StudyPlan[]
   practiceAttempts PracticeAttempt[]
   mockExams        MockExam[]
+  syllabusVersions SyllabusVersion[]
 
   @@index([status, active])
 }
@@ -339,6 +400,7 @@ model Lesson {
   title     String
   slug      String
   summary   String?
+  body      Json?
   order     Int           @default(0)
   status    ContentStatus @default(DRAFT)
   active    Boolean       @default(true)
@@ -370,10 +432,102 @@ model LearningResource {
   updatedAt DateTime             @updatedAt
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  savedBy StudentSavedResource[]
 
   @@unique([lessonId, slug])
   @@index([lessonId])
   @@index([status, active])
+}
+
+model ContentEditorialRecord {
+  entity String
+  entityId String
+  revision Int @default(1)
+  authorId String
+  reviewerId String?
+  reviewedRevision Int?
+  reviewedFingerprint String?
+  reviewEvidence String?
+  reviewedAt DateTime?
+  updatedAt DateTime @updatedAt
+
+  @@id([entity, entityId])
+}
+
+model SyllabusVersion {
+  id String @id @default(cuid())
+  examId String
+  label String
+  sourceUrl String
+  evidence String
+  effectiveFrom DateTime?
+  supersedesId String?
+  outline Json
+  state String @default("DRAFT")
+  authorId String
+  reviewerId String?
+  reviewedAt DateTime?
+  decision String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  author User @relation("SyllabusAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewer User? @relation("SyllabusReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  supersedes SyllabusVersion? @relation("SyllabusSuccession", fields: [supersedesId], references: [id], onDelete: Restrict)
+  successors SyllabusVersion[] @relation("SyllabusSuccession")
+  @@unique([examId, label])
+  @@index([state, examId])
+}
+
+model ContentSource {
+  id String @id @default(cuid())
+  entity String
+  entityId String
+  title String
+  url String?
+  rightsHolder String
+  origin String
+  licence String
+  attribution String
+  permissionEvidence String
+  authorId String
+  reviewerId String?
+  reviewedAt DateTime?
+  contentFingerprint String
+  siaIncluded Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  jobs ContentKnowledgeJob[]
+  author User @relation("ContentSourceAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewer User? @relation("ContentSourceReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  @@unique([entity, entityId])
+}
+
+model ContentKnowledgeJob {
+  id String @id @default(cuid())
+  sourceId String
+  fingerprint String
+  state String @default("BLOCKED")
+  reason String
+  requestedById String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  completedAt DateTime?
+  source ContentSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  requestedBy User @relation(fields: [requestedById], references: [id], onDelete: Restrict)
+  @@unique([sourceId, fingerprint])
+  @@index([state, createdAt])
+}
+
+model StudentSavedResource {
+  userId String
+  resourceId String
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resource LearningResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([userId, resourceId])
+  @@index([resourceId])
 }
 
 model Question {
@@ -390,6 +544,7 @@ model Question {
   explanation   String?
   solutionRef   String?
   numericalAnswer String?
+  supersedesId  String?
   source        String?
   sourceYear    Int?
   language      String               @default("en")
@@ -404,12 +559,16 @@ model Question {
   options QuestionOption[]
   exams   QuestionExam[]
   attempts PracticeAttempt[]
+  revisionStates PracticeRevisionState[]
+  supersedes Question? @relation("QuestionSuccession", fields: [supersedesId], references: [id], onDelete: Restrict)
+  successors Question[] @relation("QuestionSuccession")
 
   @@index([subjectId])
   @@index([chapterId])
   @@index([lessonId])
   @@index([type])
   @@index([difficulty])
+  @@index([supersedesId])
   @@index([status, active])
 }
 
@@ -489,11 +648,14 @@ model MissionTask {
   status       MissionTaskStatus @default(TODO)
   completedAt  DateTime?
   version      Int @default(0)
+  requestKey   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   plan         StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
   events       MissionTaskEvent[]
   mockRevision MockAnswer?
+  studySessions StudySession[]
+  @@unique([planId, requestKey])
   @@index([planId, dueDate])
 }
 
@@ -512,9 +674,11 @@ model StudySession {
   userId    String
   requestKey String
   topic     String
+  taskId    String?
   startedAt DateTime @default(now())
   endedAt   DateTime?
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      MissionTask? @relation(fields: [taskId], references: [id], onDelete: Restrict)
   @@unique([userId, requestKey])
   @@index([userId, startedAt])
 }
@@ -538,6 +702,7 @@ model HelpRequest {
   message   String
   status    HelpRequestStatus @default(OPEN)
   response  String?
+  version   Int @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -579,6 +744,17 @@ model PracticeAttempt {
   @@unique([userId, requestKey])
   @@index([userId, submittedAt])
   @@index([userId, questionId])
+}
+
+model PracticeRevisionState {
+  userId String
+  questionId String
+  bookmarked Boolean @default(false)
+  reviewedAt DateTime?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Restrict)
+  @@id([userId, questionId])
+  @@index([userId, bookmarked])
 }
 
 model StudentLessonProgress {
@@ -664,6 +840,7 @@ model Competition {
   endsAt      DateTime
   config      Json
   version     Int @default(0)
+  resultsVerifiedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   mockExam    MockExam @relation(fields: [mockExamId], references: [id], onDelete: Restrict)
@@ -891,6 +1068,7 @@ model CommerceNotification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, eventKey, channel])
   @@index([status, nextAttemptAt])
+  @@index([userId, channel, status, createdAt], map: "CommerceNotification_inbox_idx")
 }
 
 model SchoolEnrollment {

@@ -62,6 +62,27 @@ describe("invitation privilege boundaries", () => {
  it("accepted invitation must remove membership instead", async () => { invitation.status = "ACCEPTED"; await expect(revokeInvitation(actor(), "invitation", "Verified removal request")).rejects.toMatchObject({ status: 409 }); });
 });
 describe("guardian and enrolment consent writes", () => {
+ it("notifies both parties of a guardian decision without exposing private content", async () => { await mutatePortal(identity("STUDENT"), { action: "guardianDecision", id: "guardian", version: 0, decision: "REJECT", reason: "Student declined sharing" }); const notices = db.commerceNotification.upsert.mock.calls.map(([args]) => args.create); expect(notices.map(n => n.userId).sort()).toEqual(["parent", "viewer"]); for (const notice of notices) { expect(notice.channel).toBe("IN_APP"); expect(notice.template).toBe("PORTAL_UPDATED"); expect(notice.message).not.toMatch(/Student declined|Learner|offline-case/); } });
+ it.each([{ scopes: null }, { scopes: [] }, { scopes: ["ACTIVITY", null] }, { scopes: ["ACTIVITY", "ACTIVITY"] }])("invalid pending guardian scopes cannot activate: %j", async change => {
+   Object.assign(guardian, change); guardian.parentAcceptedAt = new Date();
+   await expect(mutatePortal(identity("STUDENT"), { action: "guardianDecision", id: "guardian", version: 0, decision: "ACCEPT", reason: "Review pending guardian consent" })).rejects.toMatchObject({ status: 403 });
+   expect(db.studentParentRelationship.updateMany).not.toHaveBeenCalled(); expect(db.commerceNotification.upsert).not.toHaveBeenCalled();
+ });
+ it.each([{ scopes: null }, { scopes: [] }, { scopes: ["ACTIVITY", null] }, { scopes: ["ACTIVITY", "ACTIVITY"] }, { scopes: ["INVENTED"] }, { verifiedById: null }])("invalid enrolment cannot revoke an old tenant or activate: %j", async change => {
+   Object.assign(enrollment, change); db.schoolEnrollment.findMany.mockResolvedValue([{ id: "old", schoolId: "other-school" }]);
+   await expect(mutatePortal(identity("STUDENT"), { action: "enrollmentDecision", id: "enrollment", version: 0, decision: "ACCEPT", reason: "Review pending institution consent" })).rejects.toMatchObject({ status: 403 });
+   expect(db.schoolEnrollment.update).not.toHaveBeenCalled(); expect(db.schoolEnrollment.updateMany).not.toHaveBeenCalled(); expect(db.schoolStaffAssignment.updateMany).not.toHaveBeenCalled();
+ });
+ it("scope expansion is rejected before old-tenant transfer writes", async () => {
+   db.schoolEnrollment.findMany.mockResolvedValue([{ id: "old", schoolId: "other-school" }]);
+   await expect(mutatePortal(identity("STUDENT"), { action: "enrollmentDecision", id: "enrollment", version: 0, decision: "ACCEPT", scopes: ["COUNSELLING"], reason: "Attempt unapproved scope expansion" })).rejects.toMatchObject({ status: 403 });
+   expect(db.schoolEnrollment.update).not.toHaveBeenCalled(); expect(db.schoolStaffAssignment.updateMany).not.toHaveBeenCalled();
+ });
+ it("a malformed active guardian can still be revoked without inventing consent", async () => {
+   guardian.status = "ACTIVE"; guardian.scopes = [];
+   await mutatePortal(identity("STUDENT"), { action: "guardianDecision", id: "guardian", version: 0, decision: "REVOKE", reason: "Revoke invalid legacy relationship" });
+   expect(db.studentParentRelationship.updateMany.mock.calls[0][0].data).toMatchObject({ status: "REVOKED", scopes: [], studentConsentAt: null, parentAcceptedAt: null });
+ });
  it("counsellor reads only its own confidential feedback", async () => { enrollment.status = "ACTIVE"; enrollment.studentId = "student"; enrollment.studentConsentAt = new Date(); enrollment.scopes = ["COUNSELLING", "SUPPORT"]; db.schoolMembership.findMany.mockResolvedValue([{ id: "membership", schoolId: "school", userId: "viewer", role: "STAFF", duty: "COUNSELLING", status: "ACTIVE", school }]); db.schoolStaffAssignment.findUnique.mockResolvedValue({ enrollmentId: "enrollment", membershipId: "membership", schoolId: "school", active: true }); await readPortal(identity("TEACHER"), { mode: "feedback", schoolId: "school", studentId: "student", page: 1 }); expect(db.portalFeedback.findMany.mock.calls[0][0].where).toEqual({ enrollmentId: "enrollment", confidential: true, authorId: "viewer" }); });
  it("institution admin feedback query excludes confidential records", async () => { enrollment.status = "ACTIVE"; enrollment.studentId = "student"; enrollment.studentConsentAt = new Date(); await readPortal(identity("SCHOOL_ADMIN"), { mode: "feedback", schoolId: "school", studentId: "student", page: 1 }); expect(db.portalFeedback.findMany.mock.calls[0][0].where).toEqual({ enrollmentId: "enrollment", confidential: false }); });
  it("parent never reads feedback records", async () => { await expect(readPortal(identity("PARENT"), { mode: "feedback", schoolId: "school", studentId: "student", page: 1 })).rejects.toThrow(); expect(db.portalFeedback.findMany).not.toHaveBeenCalled(); });

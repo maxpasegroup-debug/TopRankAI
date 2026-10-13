@@ -10,3 +10,7 @@ vite.config.d.ts
 /src/generated/prisma
 .next/
 coverage/
+!src/app/api/admin/content/coverage/
+!src/app/api/admin/content/coverage/route.ts
+!src/app/api/admin/content/coverage/
+!src/app/api/admin/content/coverage/route.ts

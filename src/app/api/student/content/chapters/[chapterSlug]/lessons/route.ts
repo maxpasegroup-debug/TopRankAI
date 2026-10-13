@@ -13,8 +13,9 @@ export async function GET(request: Request, context: { params: Promise<{ chapter
     requireStudentContentAccess(user);
 
     const { chapterSlug } = slugParamSchema.required({ chapterSlug: true }).parse(await context.params);
+    const { subjectSlug } = slugParamSchema.parse({ subjectSlug: new URL(request.url).searchParams.get("subjectSlug") ?? undefined });
 
-    return apiOk(await listLessonsForChapter(chapterSlug), requestId);
+    return apiOk(await listLessonsForChapter(chapterSlug, subjectSlug), requestId, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return handleApiError(error, requestId);
   }

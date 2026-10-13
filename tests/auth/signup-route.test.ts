@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hashSessionToken, SESSION_COOKIE } from "@/server/auth/session";
 import { verifyPassword } from "@/server/auth/password";
 import { POST } from "@/app/api/auth/signup/route";
+import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
 
 const mocks = vi.hoisted(() => ({
   findUser: vi.fn(),
@@ -12,6 +13,10 @@ const mocks = vi.hoisted(() => ({
   createTeacherProfile: vi.fn(),
   createSession: vi.fn(),
   consume: vi.fn(),
+  consent: vi.fn(),
+  grant: vi.fn(),
+  claimGrant: vi.fn(),
+  audit: vi.fn(),
 }));
 
 vi.mock("@/server/db", () => ({
@@ -25,7 +30,7 @@ vi.mock("@/server/db", () => ({
 vi.mock("@/server/logger", () => ({ logger: { info: vi.fn(), error: vi.fn() } }));
 vi.mock("@/server/auth/rate-limit", () => ({ authRateLimiter: { consume: mocks.consume } }));
 
-const signup = { name: "Rahul", email: "RAHUL@example.com", password: "password123" };
+const signup = { name: "Rahul", email: "RAHUL@example.com", password: "password123", country: "IN", ageBand: "18_PLUS", termsAccepted: true, privacyAccepted: true, termsVersion: ACCOUNT_POLICY_VERSION, privacyVersion: ACCOUNT_POLICY_VERSION };
 const requestId = "signup-test";
 
 function request(payload: Record<string, unknown>, query = "") {
@@ -42,6 +47,8 @@ describe("public signup API", () => {
     vi.stubEnv("APP_URL", "http://localhost");
     vi.stubEnv("AUTH_TRUSTED_PROXY_VERIFIED", "true");
     vi.stubEnv("AUTH_TRUSTED_CLIENT_HEADER", "x-toprank-client-ip");
+    vi.stubEnv("ACCOUNT_POLICY_REVIEWED", "true");
+    vi.stubEnv("AUTH_CONSENT_HMAC_KEY", "test-only-consent-key-".repeat(3));
     mocks.consume.mockResolvedValue({ allowed: true });
     mocks.findUser.mockResolvedValue(null);
     mocks.createUser.mockImplementation(async ({ data }) => ({ id: "student_1", ...data }));
@@ -52,6 +59,10 @@ describe("public signup API", () => {
       studentProfile: { create: mocks.createStudentProfile },
       parentProfile: { create: mocks.createParentProfile },
       teacherProfile: { create: mocks.createTeacherProfile },
+      accountConsent: { upsert: mocks.consent },
+      session: { create: mocks.createSession },
+      guardianRegistrationGrant: { findFirst: mocks.grant, updateMany: mocks.claimGrant },
+      auditEvent: { create: mocks.audit },
     }));
   });
 
@@ -139,5 +150,22 @@ describe("public signup API", () => {
     expect(mocks.transaction).not.toHaveBeenCalled();
     expect(mocks.createSession).not.toHaveBeenCalled();
     expect(response.headers.get("set-cookie")).toBeNull();
+  });
+
+  it.each(["UNDER_13", "13_TO_17"])("registers %s only with a matched single-use guardian approval", async ageBand => {
+    mocks.grant.mockResolvedValue({ id: "grant1" }); mocks.claimGrant.mockResolvedValue({ count: 1 });
+    const response = await POST(request({ ...signup, ageBand, guardianApproval: "a".repeat(43) }));
+    expect(response.status).toBe(201); expect(mocks.createUser).toHaveBeenCalledOnce();
+    expect(mocks.consent).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ guardianGrantId: "grant1", ageBand }) }));
+    expect(mocks.claimGrant).toHaveBeenCalledOnce(); expect(mocks.createSession).toHaveBeenCalledOnce();
+  });
+  it.each(["missing", "invalid", "replayed"])("rejects %s guardian approval before user/profile/session creation", async failure => {
+    mocks.grant.mockResolvedValue(failure === "invalid" ? null : { id: "grant1" }); mocks.claimGrant.mockResolvedValue({ count: 0 });
+    const response = await POST(request({ ...signup, ageBand: "UNDER_13", ...(failure === "missing" ? {} : { guardianApproval: "a".repeat(43) }) }));
+    expect(response.status).toBe(400); expect(mocks.createUser).not.toHaveBeenCalled(); expect(mocks.createStudentProfile).not.toHaveBeenCalled(); expect(mocks.createSession).not.toHaveBeenCalled(); expect(mocks.consent).not.toHaveBeenCalled(); expect(response.headers.get("set-cookie")).toBeNull();
+  });
+  it("rejects missing or stale legal acceptance before database lookup", async () => {
+    for (const extra of [{ termsAccepted: false }, { privacyVersion: "old" }]) expect((await POST(request({ ...signup, ...extra }))).status).toBe(400);
+    expect(mocks.findUser).not.toHaveBeenCalled(); expect(mocks.createSession).not.toHaveBeenCalled();
   });
 });

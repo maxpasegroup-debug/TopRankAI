@@ -29,6 +29,11 @@ describe("fresh identities and tenant isolation (mocked persistence)", () => {
  it("verified institution admin is authorized", async () => { db.user.findUnique.mockResolvedValue({ ...actor("SCHOOL_ADMIN"), status: "ACTIVE" }); db.schoolMembership.findMany.mockResolvedValue([membership("ADMIN", "ADMIN")]); expect((await tenantContext(actor("SCHOOL_ADMIN"), "school", db as never, true)).isAdmin).toBe(true); });
 });
 describe("guardian scopes and live consent", () => {
+ it.each([{ scopes: null }, { scopes: undefined }, { scopes: [] }, { scopes: "ACTIVITY" }, { scopes: [null] }, { scopes: ["ACTIVITY", "INVENTED"] }, { scopes: ["ACTIVITY", "ACTIVITY"] }])("malformed guardian scopes deny before learner access: %j", async change => {
+   db.studentParentRelationship.findUnique.mockResolvedValue({ ...consent(), ...change });
+   await expect(guardianAccess(actor("PARENT"), "student")).rejects.toMatchObject({ status: 403 });
+   expect(db.user.findFirst).not.toHaveBeenCalled();
+ });
  it("reads only its verified linked learner", async () => { expect((await guardianAccess(actor("PARENT"), "student")).student.id).toBe("student"); });
  it.each(["PENDING", "REVOKED", "REJECTED", "EXPIRED"])("denies %s relationship", async status => { db.studentParentRelationship.findUnique.mockResolvedValue({ ...consent(), status }); await expect(guardianAccess(actor("PARENT"), "student")).rejects.toThrow(); });
  it.each(["expiresAt", "verifiedAt", "studentConsentAt", "parentAcceptedAt", "authorizationBasis", "verificationReference", "verifiedById"])("missing %s never authorizes", async field => { db.studentParentRelationship.findUnique.mockResolvedValue({ ...consent(), [field]: null }); await expect(guardianAccess(actor("PARENT"), "student")).rejects.toThrow(); });
@@ -43,6 +48,11 @@ describe("guardian scopes and live consent", () => {
  it("revocation applies without new login", async () => { await guardianAccess(actor("PARENT"), "student"); db.studentParentRelationship.findUnique.mockResolvedValue({ ...consent(), status: "REVOKED" }); await expect(guardianAccess(actor("PARENT"), "student")).rejects.toThrow(); });
 });
 describe("assigned staff / confidential scopes", () => {
+ it.each([{ scopes: null }, { scopes: undefined }, { scopes: [] }, { scopes: "ACTIVITY" }, { scopes: [null] }, { scopes: ["ACTIVITY", "INVENTED"] }, { scopes: ["ACTIVITY", "ACTIVITY"] }])("malformed enrolment scopes deny before assignment or learner access: %j", async change => {
+   db.schoolEnrollment.findUnique.mockResolvedValue({ ...consent(), ...change });
+   await expect(schoolStudentAccess(context() as never, "student", db as never)).rejects.toMatchObject({ status: 403 });
+   expect(db.schoolStaffAssignment.findUnique).not.toHaveBeenCalled(); expect(db.user.findFirst).not.toHaveBeenCalled();
+ });
  it.each(["TEACHING", "MENTOR"])("%s can read assigned activity", async duty => { expect((await schoolStudentAccess(context(duty) as never, "student", db as never, "ACTIVITY")).student.id).toBe("student"); });
  it.each(["TEACHING", "MENTOR"])("%s cannot read counselling", async duty => { await expect(schoolStudentAccess(context(duty) as never, "student", db as never, "COUNSELLING")).rejects.toThrow(); });
  it("counsellor can read assigned counselling scope", async () => { expect((await schoolStudentAccess(context("COUNSELLING") as never, "student", db as never, "COUNSELLING")).scopes).toEqual(["COUNSELLING"]); });

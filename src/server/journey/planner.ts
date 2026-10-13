@@ -5,13 +5,15 @@ export function previewStudyPlan(start: Date, dailyMinutes: number, lessons: Pla
   }
   // A seven-day draft based on selected content, not an exam-readiness estimate.
   const tasks = [];
-  const slots = Math.min(3, lessons.length);
+  const distinct = [...new Map(lessons.map(lesson => [lesson.href, lesson])).values()].slice(0, 21);
   for (let day = 0; day < 7; day++) {
+    const selected = distinct.filter((_, index) => index % 7 === day);
+    const slots = selected.length;
     for (let slot = 0; slot < slots; slot++) {
-      const lesson = lessons[(day * slots + slot) % lessons.length];
+      const lesson = selected[slot];
       const dueDate = new Date(start);
       dueDate.setUTCDate(start.getUTCDate() + day);
-      tasks.push({ ...lesson, dueDate, minutes: Math.floor(dailyMinutes / slots) + (slot === 0 ? dailyMinutes % slots : 0) });
+      tasks.push({ ...lesson, dueDate, minutes: Math.min(45, Math.floor(dailyMinutes / slots)) });
     }
   }
   return tasks;

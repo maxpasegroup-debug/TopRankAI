@@ -10,6 +10,8 @@ import { calculateResult, isAnswered, publicQuestion, publicResult, type Snapsho
 import type { z } from "zod";
 import { requireWindow } from "@/server/competition/rules";
 import { requireResourceAccess } from "@/server/commerce/access";
+import { nextRevisionDate } from "@/server/journey/schedule";
+import { editorialFingerprint } from "@/server/content/editorial";
 
 type Tx = Prisma.TransactionClient;
 type Attempt = Prisma.MockAttemptGetPayload<{ include: { answers: true } }>;
@@ -33,12 +35,15 @@ function answersOf(attempt: Attempt): SavedAnswer[] {
 }
 export function attemptDto(attempt: Attempt, now = new Date()) {
  const snapshot = snapshotOf(attempt);
- return { id: attempt.id, mockId: attempt.mockExamId, title: snapshot.title, status: attempt.status,
+ return { id: attempt.id, ownerId: attempt.userId, mockId: attempt.mockExamId, title: snapshot.title, status: attempt.status,
    startedAt: attempt.startedAt.toISOString(), deadline: attempt.deadline.toISOString(), serverNow: now.toISOString(),
    finalizedAt: attempt.finalizedAt?.toISOString() ?? null, revealPolicy: snapshot.revealPolicy,
    sections: snapshot.sections.map(({ title, questionCount, marks, negativeMarks, unansweredMarks }) => ({ title, questionCount, marks, negativeMarks, unansweredMarks })),
    questions: snapshot.questions.map(publicQuestion), answers: answersOf(attempt),
-   result: attempt.result ? publicResult(attempt.result as unknown as Result) : null };
+   result: attempt.result ? publicResult(attempt.result as unknown as Result) : null,
+   review: attempt.status !== "IN_PROGRESS" && attempt.result && snapshot.revealPolicy === "AFTER_SUBMISSION"
+     ? snapshot.questions.map((q, position) => ({ explanation: q.explanation,
+       ...(attempt.result as unknown as Result).outcomes[position] })) : [] };
 }
 async function eligible(tx: Tx, user: AuthUser) {
  const profile = await tx.studentProfile.findUnique({ where: { userId: user.id }, select: { targetExamId: true, onboardingCompletedAt: true } });
@@ -48,6 +53,12 @@ async function eligible(tx: Tx, user: AuthUser) {
 function blueprintOf(record: { examId: string; title: string; durationSeconds: number; maxAttempts: number; revealPolicy: string; sections: Prisma.JsonValue }): Blueprint {
  return blueprintSchema.parse({ examId: record.examId, title: record.title, durationSeconds: record.durationSeconds,
    maxAttempts: record.maxAttempts, revealPolicy: record.revealPolicy, sections: record.sections });
+}
+export async function requireMockReview(tx: Tx, mock: Parameters<typeof blueprintOf>[0] & { id: string; version: number }) {
+ const review = await tx.contentEditorialRecord.findUnique({ where: { entity_entityId: { entity: "MOCK_EXAM", entityId: mock.id } } });
+ if (!review?.reviewerId || review.authorId === review.reviewerId || !review.reviewedAt || !review.reviewEvidence ||
+   review.revision !== mock.version || review.reviewedRevision !== mock.version || review.reviewedFingerprint !== editorialFingerprint(blueprintOf(mock)))
+   throw new ValidationApiError("Independent review of this blueprint version is required");
 }
 async function freeze(tx: Tx, blueprint: Blueprint): Promise<Snapshot> {
  const exam = await tx.exam.findFirst({ where: { id: blueprint.examId, ...published }, select: { id: true } });
@@ -110,7 +121,7 @@ export async function listStudentMocks(user: AuthUser) {
    for (const a of history) { const finalized = await finalize(tx, a, new Date()); const snap = snapshotOf(finalized);
      attempts.push({ id: a.id, mockId: a.mockExamId, title: snap.title, status: finalized.status, startedAt: a.startedAt.toISOString(),
        result: finalized.result ? publicResult(finalized.result as unknown as Result) : null }); }
-   return { mocks: mocks.map((m) => { const b = blueprintOf(m); return { id: m.id, title: m.title, durationSeconds: m.durationSeconds,
+   return { ownerId: user.id, mocks: mocks.map((m) => { const b = blueprintOf(m); return { id: m.id, title: m.title, durationSeconds: m.durationSeconds,
      maxAttempts: m.maxAttempts, revealPolicy: m.revealPolicy, sections: b.sections.map(({ title, questionCount, marks, negativeMarks, unansweredMarks }) => ({ title, questionCount, marks, negativeMarks, unansweredMarks })) }; }), attempts };
  });
 }
@@ -136,6 +147,7 @@ export async function mutateMock(user: AuthUser, raw: z.infer<typeof mockMutatio
      if (active) { const current = await finalize(tx, active, new Date()); if (current.status === "IN_PROGRESS") return attemptDto(current); expired = current; }
      const count = await tx.mockAttempt.count({ where: { userId: user.id, mockExamId: mock.id } });
      if (count >= mock.maxAttempts) { if (expired) return attemptDto(expired); throw new ValidationApiError("Attempt limit reached"); }
+     await requireMockReview(tx, mock);
      const snapshot = await freeze(tx, blueprintOf(mock)); const startedAt = new Date();
      const attempt = await tx.mockAttempt.create({ data: { userId: user.id, mockExamId: mock.id, requestKey: input.requestKey,
        startedAt, deadline: new Date(startedAt.getTime() + mock.durationSeconds * 1000), snapshot: snapshot as unknown as Prisma.InputJsonValue,
@@ -173,7 +185,9 @@ export async function adminMocks(user: AuthUser, examId?: string) {
  const questions = examId ? await prisma.question.findMany({ where: { ...published, reviewStatus: "REVIEWED", subject: published,
    chapter: { ...published, subject: published }, exams: { some: { examId, ...published } } },
    take: 200, orderBy: { code: "asc" }, select: { id: true, code: true, text: true, type: true } }) : [];
- return { mocks, exams, questions };
+ const reviews = await prisma.contentEditorialRecord.findMany({ where: { entity: "MOCK_EXAM", entityId: { in: mocks.map(m => m.id) } } });
+ return { mocks: mocks.map(m => { const r = reviews.find(r => r.entityId === m.id); return { ...m,
+   reviewed: Boolean(r?.reviewerId && r.reviewerId !== r.authorId && r.reviewedAt && r.reviewEvidence && r.reviewedRevision === m.version && r.revision === m.version && r.reviewedFingerprint === editorialFingerprint(blueprintOf(m))) }; }), exams, questions };
 }
 export async function mutateAdminMock(user: AuthUser, raw: z.infer<typeof adminMockSchema>) {
  assertPlatformAdmin(user); const input = adminMockSchema.parse(raw);
@@ -181,6 +195,7 @@ export async function mutateAdminMock(user: AuthUser, raw: z.infer<typeof adminM
    if (input.action === "create") {
      if (!await tx.exam.findUnique({ where: { id: input.blueprint.examId }, select: { id: true } })) throw absent();
      const mock = await tx.mockExam.create({ data: { ...input.blueprint, sections: input.blueprint.sections }, select: { id: true, version: true } });
+     await tx.contentEditorialRecord.create({ data: { entity: "MOCK_EXAM", entityId: mock.id, revision: mock.version, authorId: user.id } });
      await tx.auditEvent.create({ data: { actorId: user.id, entity: "MOCK_EXAM", entityId: mock.id, action: "MOCK_CREATED_DRAFT" } }); return mock;
    }
    const mock = await tx.mockExam.findUnique({ where: { id: input.id } }); if (!mock) throw absent();
@@ -189,11 +204,29 @@ export async function mutateAdminMock(user: AuthUser, raw: z.infer<typeof adminM
      throw new ValidationApiError("This blueprint is reserved for a competition. Cancel the competition before changing it.");
    }
    if (input.action === "edit" && mock.status !== "DRAFT") throw new ValidationApiError("Unpublish before editing");
-   if (input.action === "validate" || input.action === "publish") await freeze(tx, blueprintOf(mock));
+   if (["validate", "publish", "review"].includes(input.action)) await freeze(tx, blueprintOf(mock));
    if (input.action === "validate") return { id: mock.id, version: mock.version, valid: true };
+   const reviewWhere = { entity_entityId: { entity: "MOCK_EXAM", entityId: mock.id } };
+   if (input.action === "review") {
+     const review = await tx.contentEditorialRecord.findUnique({ where: reviewWhere });
+     if (mock.status !== "DRAFT" || !review || review.revision !== mock.version || review.authorId === user.id) throw new ValidationApiError("A different reviewer must review the current saved draft");
+     await tx.contentEditorialRecord.update({ where: reviewWhere, data: { reviewerId: user.id, reviewedRevision: mock.version,
+       reviewedFingerprint: editorialFingerprint(blueprintOf(mock)), reviewEvidence: input.evidence, reviewedAt: new Date() } });
+     await tx.auditEvent.create({ data: { actorId: user.id, entity: "MOCK_EXAM", entityId: mock.id, action: "MOCK_REVIEWED", detail: JSON.stringify({ evidence: input.evidence, version: mock.version }) } });
+     return { id: mock.id, version: mock.version };
+   }
+   if (input.action === "publish") await requireMockReview(tx, mock);
    const changed = await tx.mockExam.updateMany({ where: { id: mock.id, version: input.version }, data: {
      ...(input.action === "edit" ? input.blueprint : {}), status: input.action === "publish" ? "PUBLISHED" : "DRAFT", version: { increment: 1 } } });
    if (changed.count !== 1) throw new ConflictApiError("Blueprint changed. Reload first.");
+   if (input.action === "edit") await tx.contentEditorialRecord.upsert({ where: reviewWhere,
+     create: { entity: "MOCK_EXAM", entityId: mock.id, revision: mock.version + 1, authorId: user.id },
+     update: { revision: mock.version + 1, authorId: user.id, reviewerId: null, reviewedAt: null, reviewedRevision: null, reviewedFingerprint: null, reviewEvidence: null } });
+   else {
+     const review = await tx.contentEditorialRecord.findUnique({ where: reviewWhere });
+     if (review) await tx.contentEditorialRecord.update({ where: reviewWhere, data: { revision: mock.version + 1,
+       reviewedRevision: review.reviewedRevision === mock.version ? mock.version + 1 : null } });
+   }
    await tx.auditEvent.create({ data: { actorId: user.id, entity: "MOCK_EXAM", entityId: mock.id, action: `MOCK_${input.action.toUpperCase()}` } });
    return { id: mock.id, version: mock.version + 1 };
  });
@@ -234,14 +267,15 @@ export async function mutateMockRevision(user: AuthUser, raw: z.infer<typeof rev
    const question = snapshotOf(attempt).questions[input.position]; if (!answer || !question) throw absent();
    if (input.action === "mission") {
      if (answer.revisionTaskId) return { taskId: answer.revisionTaskId };
-     const plan = await tx.studyPlan.findFirst({ where: { userId: user.id, active: true }, select: { id: true } });
+     const plan = await tx.studyPlan.findFirst({ where: { userId: user.id, active: true }, select: { id: true, dailyMinutes: true } });
      if (!plan) throw new ValidationApiError("Save a mission plan first");
      let href = "/practice/revision";
      if (question.lessonId) { const lesson = await tx.lesson.findFirst({ where: { id: question.lessonId, ...published, chapter: { ...published, subject: published } },
        select: { slug: true, chapter: { select: { slug: true, subject: { select: { slug: true } } } } } });
        if (lesson) href = `/learn/${lesson.chapter.subject.slug}/${lesson.chapter.slug}/${lesson.slug}`; }
+     const dueDate = await nextRevisionDate(tx, plan.id, plan.dailyMinutes);
      const task = await tx.missionTask.create({ data: { planId: plan.id, title: `Review ${question.subject}: ${snapshotOf(attempt).title}`.slice(0, 160),
-       subject: question.subject, href, dueDate: new Date(new Date().toISOString().slice(0, 10)), minutes: 15 }, select: { id: true } });
+       subject: question.subject, href, dueDate, minutes: 15 }, select: { id: true } });
      await tx.mockAnswer.update({ where: { id: answer.id }, data: { revisionTaskId: task.id } }); return { taskId: task.id };
    }
    await tx.mockAnswer.update({ where: { id: answer.id }, data: input.action === "reviewed" ? { reviewedAt: new Date() } : { bookmarked: input.bookmarked } });

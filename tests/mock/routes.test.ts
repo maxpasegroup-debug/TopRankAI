@@ -29,4 +29,11 @@ describe("mock API authorization and validation (mocked services)", () => {
  it("rejects admin payloads beyond 32 KiB", async () => { mocks.user.mockResolvedValue({ ...student, role: "PLATFORM_ADMIN" }); expect((await ADMIN(req({ data: "x".repeat(32769) }))).status).toBe(413); expect(mocks.adminMutate).not.toHaveBeenCalled(); });
  it("sanitizes unexpected database failures", async () => { mocks.mutate.mockRejectedValue(new Error("private SQL postgres://secret")); const response = await POST(req({ action: "submit", attemptId: "attempt" })); expect(response.status).toBe(500); expect(await response.text()).not.toMatch(/SQL|postgres|secret|stack/); });
  it("passes the session owner to attempt reads", async () => { const response = await GET(new Request("https://toprank.test/api/student/mocks?attemptId=attempt")); expect(response.status).toBe(200); expect(mocks.attempt).toHaveBeenCalledWith(student, "attempt"); expect(response.headers.get("cache-control")).toBe("no-store"); });
+ it("requires recorded review evidence and rejects reviewer identity claims", async () => {
+   mocks.user.mockResolvedValue({ ...student, role: "PLATFORM_ADMIN" });
+   const review = { action: "review", id: "mock", version: 0, evidence: "Reviewed duration and marking" };
+   expect((await ADMIN(req({ ...review, reviewerId: "forged" }))).status).toBe(400);
+   expect((await ADMIN(req({ action: "review", id: "mock", version: 0 }))).status).toBe(400);
+   expect((await ADMIN(req(review))).status).toBe(200); expect(mocks.adminMutate).toHaveBeenCalledWith(expect.objectContaining({ role: "PLATFORM_ADMIN" }), review);
+ });
 });

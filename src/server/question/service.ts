@@ -86,6 +86,7 @@ function questionWhere(filters: QuestionFilter = {}) {
     exams: {
       some: {
         ...publishedActive,
+        scoringMode: { not: null },
         exam: { ...publishedActive, code: filters.exam },
       },
     },

@@ -1,13 +1,16 @@
 import { z } from "zod";
+import { createHash } from "node:crypto";
 import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
 import { assertStudent } from "@/server/student/service";
 import { assertPlatformAdmin } from "@/server/operations/service";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { atomic, audit, type Tx } from "./transaction";
-import { packageSchema, studentCommerceSchema, adminCommerceSchema } from "./validation";
+import { packageSchema, studentCommerceSchema, adminCommerceSchema, money } from "./validation";
 import { configuredCommerceProvider, paymentUnavailable, type CommerceProvider, type ProviderPayment, type VerifiedEvent } from "./provider";
 import { notify, dispatchNotifications, expiryReminders } from "./notifications";
+import { inAppNotice } from "@/server/notifications/service";
+import { entitlementState } from "@/shared/entitlement-state";
 export function snapshotPackage(p: { code: string; revision: number; title: string; description: string; amountMinor: number; currency: string; interval: string; durationDays: number; features: string[] }) {
  return { code: p.code, revision: p.revision, title: p.title, description: p.description, amountMinor: p.amountMinor, currency: p.currency,
    interval: p.interval, durationDays: p.durationDays, features: p.features };
@@ -18,8 +21,8 @@ export async function commerceHome(user: AuthUser) {
  const [packages, orders, entitlements, notifications, preference] = await Promise.all([
    prisma.commercePackage.findMany({ where: { status: "PUBLISHED", availableFrom: { lte: now }, availableUntil: { gt: now } }, orderBy: [{ code: "asc" }, { revision: "desc" }], take: 100 }),
    prisma.commerceOrder.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 100, include: { receipt: true, refunds: true } }),
-   prisma.entitlement.findMany({ where: { userId: user.id }, orderBy: { endsAt: "desc" }, take: 100 }),
-   prisma.commerceNotification.findMany({ where: { userId: user.id, channel: "IN_APP" }, orderBy: { createdAt: "desc" }, take: 100 }),
+   prisma.entitlement.findMany({ where: { userId: user.id }, orderBy: { endsAt: "desc" }, take: 100, include: { order: { select: { userId: true, status: true, capturedAt: true } } } }),
+   prisma.commerceNotification.findMany({ where: { userId: user.id, channel: "IN_APP", status: "AVAILABLE" }, orderBy: { createdAt: "desc" }, take: 100 }),
    prisma.notificationPreference.findUnique({ where: { userId: user.id } }),
  ]);
  return { paymentsAvailable: false, packages: packages.map((p) => ({ id: p.id, ...snapshotPackage(p) })),
@@ -27,7 +30,7 @@ export async function commerceHome(user: AuthUser) {
      createdAt: o.createdAt.toISOString(), capturedAt: o.capturedAt?.toISOString() ?? null,
      receipt: o.receipt ? { id: o.receipt.id, amountMinor: o.receipt.amountMinor, currency: o.receipt.currency, issuedAt: o.receipt.issuedAt.toISOString(), type: "PAYMENT_RECEIPT" } : null,
      refunds: o.refunds.map((r) => ({ id: r.id, amountMinor: r.amountMinor, status: r.status, createdAt: r.createdAt.toISOString() })) })),
-   entitlements: entitlements.map((e) => ({ id: e.id, featureCode: e.featureCode, source: e.source, status: e.status === "ACTIVE" && e.endsAt <= now ? "EXPIRED" : e.status,
+   entitlements: entitlements.map((e) => ({ id: e.id, featureCode: e.featureCode, source: e.source, status: entitlementState(e, now),
      startsAt: e.startsAt.toISOString(), endsAt: e.endsAt.toISOString() })),
    notifications: notifications.map((n) => ({ id: n.id, message: n.message, read: Boolean(n.readAt), at: n.createdAt.toISOString() })),
    preferences: { email: preference?.email ?? false, whatsapp: preference?.whatsapp ?? false } };
@@ -44,6 +47,7 @@ export async function createPurchase(user: AuthUser, packageId: string, requestK
    const now = new Date(); const p = await tx.commercePackage.findFirst({ where: { id: packageId, status: "PUBLISHED", availableFrom: { lte: now }, availableUntil: { gt: now } } });
    if (!p) throw new ValidationApiError("Package unavailable");
    const checked = packageSchema.parse({ ...snapshotPackage(p), availableFrom: p.availableFrom.toISOString(), availableUntil: p.availableUntil.toISOString() });
+   if (checked.amountMinor === 0) throw new ValidationApiError("Free pilot access requires an administrator invitation");
    const created = await tx.commerceOrder.create({ data: { userId: user.id, packageId, requestKey, amountMinor: checked.amountMinor, currency: checked.currency, snapshot: snapshotPackage(checked) } });
    await notify(tx, user.id, `order:${created.id}`, "ORDER_CREATED", { reference: created.id }); return created;
  });
@@ -59,6 +63,7 @@ export async function createPurchase(user: AuthUser, packageId: string, requestK
  return { id: order.id, status: "PENDING" };
 }
 export async function applyVerifiedPayment(tx: Tx, payment: ProviderPayment) {
+ if (!money.safeParse(payment.amountMinor).success) throw new ConflictApiError("Payment accounting mismatch");
  const order = await tx.commerceOrder.findUnique({ where: { providerOrderId: payment.orderId } });
  if (!order || order.amountMinor !== payment.amountMinor || order.currency !== payment.currency) throw new ConflictApiError("Payment association mismatch");
  const previous = await tx.commercePayment.findUnique({ where: { id: payment.id } });
@@ -155,7 +160,7 @@ export async function studentCommerceMutation(user: AuthUser, raw: z.output<type
    return atomic((tx) => applyVerifiedPayment(tx, payment));
  }
  return atomic(async (tx) => {
-   if (input.action === "read") { await tx.commerceNotification.updateMany({ where: { id: input.id, userId: user.id, channel: "IN_APP" }, data: { readAt: new Date() } }); return { read: true }; }
+   if (input.action === "read") { await tx.commerceNotification.updateMany({ where: { id: input.id, userId: user.id, channel: "IN_APP", status: "AVAILABLE", readAt: null }, data: { readAt: new Date() } }); return { read: true }; }
    if (input.action === "preferences") return tx.notificationPreference.upsert({ where: { userId: user.id }, create: { userId: user.id, email: input.email, whatsapp: input.whatsapp }, update: { email: input.email, whatsapp: input.whatsapp } });
    const order = await ownerOrder(tx, user.id, input.orderId);
    if (input.action === "cancel") {
@@ -186,7 +191,7 @@ export async function adminCommerceData(user: AuthUser) {
    prisma.commerceNotification.findMany({ where: { channel: { not: "IN_APP" } }, take: 100, select: { id: true, channel: true, status: true, attempts: true, errorCode: true } }),
    prisma.auditEvent.findMany({ where: { entity: "COMMERCE" }, orderBy: { createdAt: "desc" }, take: 100 }),
  ]);
- return { features, packages, gates, orders: orders.map(({ providerOrderId: _provider, requestKey: _request, ...o }) => o), events, refunds: refunds.map(({ providerRefundId: _provider, paymentId: _payment, ...r }) => r), notifications, audits };
+ return { paymentsAvailable: false, features, packages, gates, orders: orders.map(({ providerOrderId: _provider, requestKey: _request, ...o }) => o), events, refunds: refunds.map(({ providerRefundId: _provider, paymentId: _payment, ...r }) => r), notifications, audits };
 }
 export async function adminCommerceMutation(user: AuthUser, raw: z.input<typeof adminCommerceSchema>, provider: CommerceProvider | null = configuredCommerceProvider()) {
  assertPlatformAdmin(user); const input = adminCommerceSchema.parse(raw);
@@ -213,6 +218,30 @@ export async function adminCommerceMutation(user: AuthUser, raw: z.input<typeof 
    return refreshRefund(saved.id, provider);
  }
  return atomic(async (tx) => {
+   if (input.action === "pilotGrant") {
+     if (!await tx.user.findFirst({ where: { id: input.userId, role: "STUDENT", status: "ACTIVE" }, select: { id: true } })) throw new ValidationApiError("Student unavailable");
+     const p = await tx.commercePackage.findUnique({ where: { id: input.packageId } });
+     if (!p || p.amountMinor !== 0) throw new ValidationApiError("A free pilot package is required");
+     const checked = packageSchema.parse({ ...snapshotPackage(p), availableFrom: p.availableFrom.toISOString(), availableUntil: p.availableUntil.toISOString() });
+     const endsAt = new Date(input.startsAt.getTime() + checked.durationDays * 86400000);
+     const intent = createHash("sha256").update(input.reason).digest("hex");
+     const prefix = `pilot:${input.requestKey}:`, provenance = (feature: string) => `${prefix}${p.id}:${feature}:${intent}`;
+     const existing = await tx.entitlement.findMany({ where: { provenance: { startsWith: prefix } }, take: 31 });
+     if (existing.length) {
+       if (existing.length !== checked.features.length || checked.features.some(feature => !existing.some(e => e.provenance === provenance(feature) && e.featureCode === feature && e.userId === input.userId && e.source === "ADMIN" && !e.orderId && e.startsAt.getTime() === input.startsAt.getTime() && e.endsAt.getTime() === endsAt.getTime()))) throw new ConflictApiError("Pilot invitation identifier was already used");
+       return { ids: existing.map(e => e.id), replayed: true };
+     }
+     const now = new Date();
+     if (p.status !== "PUBLISHED" || p.availableFrom > now || p.availableUntil <= now || endsAt <= now) throw new ValidationApiError("Pilot package or access window is unavailable");
+     if (await tx.commerceFeature.count({ where: { code: { in: checked.features } } }) !== checked.features.length) throw new ValidationApiError("Define all package features first");
+     const ids: string[] = [];
+     for (const featureCode of checked.features) {
+       const grant = await tx.entitlement.create({ data: { userId: input.userId, featureCode, source: "ADMIN", startsAt: input.startsAt, endsAt, reason: input.reason, provenance: provenance(featureCode) } });
+       ids.push(grant.id); await audit(tx, user.id, grant.id, "PILOT_PACKAGE_GRANTED", `Package ${p.id}; ${input.reason}`);
+     }
+     await inAppNotice(tx, input.userId, `pilot:${input.requestKey}:granted`, "PILOT_ACCESS_GRANTED");
+     return { ids, replayed: false };
+   }
    if (input.action === "feature") { const result = await tx.commerceFeature.upsert({ where: { code: input.code }, create: { code: input.code, title: input.title }, update: { title: input.title } }); await audit(tx, user.id, input.code, "FEATURE_SAVED"); return result; }
    if (input.action === "package") {
      const count = await tx.commerceFeature.count({ where: { code: { in: input.package.features } } });
@@ -250,8 +279,11 @@ export async function adminCommerceMutation(user: AuthUser, raw: z.input<typeof 
    }
    if (input.action === "revoke") {
      const e = await tx.entitlement.findUniqueOrThrow({ where: { id: input.id } });
+     if (e.status === "REVOKED") return { id: e.id };
      await tx.entitlement.update({ where: { id: e.id }, data: { status: "REVOKED", reason: input.reason } });
-     await audit(tx, user.id, e.id, "ACCESS_REVOKED", input.reason); await notify(tx, e.userId, `revoke:${e.id}`, "ACCESS_REVOKED", { reference: e.id }); return { id: e.id };
+     await audit(tx, user.id, e.id, "ACCESS_REVOKED", input.reason);
+     if (e.provenance.startsWith("pilot:")) await inAppNotice(tx, e.userId, `revoke:${e.id}`, "PILOT_ACCESS_REVOKED");
+     else await notify(tx, e.userId, `revoke:${e.id}`, "ACCESS_REVOKED", { reference: e.id }); return { id: e.id };
    }
    const r = await tx.commerceRefund.findUnique({ where: { id: input.id } });
    if (!r || r.status !== "REQUESTED") throw new ConflictApiError("Refund request changed");

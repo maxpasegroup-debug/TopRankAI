@@ -7,6 +7,7 @@ import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { studyStreak, verifiedScore } from "./rules";
 import { achievementSchema, configSchema } from "./validation";
 import type { z } from "zod";
+import { inAppNotice } from "@/server/notifications/service";
 export type Tx = Prisma.TransactionClient;
 export async function atomic<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
  for (let i = 0; i < 3; i++) { try { return await prisma.$transaction(fn, { isolationLevel: "Serializable" }); }
@@ -16,10 +17,10 @@ export async function atomic<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
 export async function audit(tx: Tx, actorId: string, entity: string, entityId: string, action: string, detail?: string) {
  await tx.auditEvent.create({ data: { actorId, entity, entityId, action, detail: detail?.slice(0, 500) } });
 }
-export async function qualification(tx: Tx, userId: string, definition: { id?: string; kind: string; threshold: number }, scope = "GLOBAL") {
+export async function qualification(tx: Pick<Tx, "competitionEntry" | "studentLessonProgress" | "studySession" | "mockAttempt">, userId: string, definition: { id?: string; kind: string; threshold: number }, scope = "GLOBAL") {
  if (definition.kind === "PLACEMENT") {
    const entry = await tx.competitionEntry.findFirst({ where: { userId, competitionId: scope, disqualified: false,
-     rank: { lte: definition.threshold }, competition: { status: "COMPLETED" } }, select: { rank: true, id: true, competition: { select: { config: true, title: true } } } });
+     rank: { lte: definition.threshold }, competition: { status: "COMPLETED", resultsVerifiedAt: { not: null } } }, select: { rank: true, id: true, competition: { select: { config: true, title: true } } } });
    const rule = entry ? configSchema.parse(entry.competition.config).awards.find((a) => a.definitionId === definition.id) : null;
    return entry?.rank && rule && entry.rank >= rule.fromRank && entry.rank <= rule.toRank ? { explanation: `Placed ${entry.rank} in ${entry.competition.title} under the saved ranking rules.`, evidence: { entryId: entry.id, rank: entry.rank, competitionId: scope } } : null;
  }
@@ -56,7 +57,8 @@ export async function earn(tx: Tx, userId: string, definition: { id: string; tit
  if (existing) return existing; // Explicit admin revocations are never undone by an eligibility recheck.
  const earned = await tx.earnedAchievement.create({ data: { userId, definitionId: definition.id, scope, title: definition.title,
    badge: definition.badge, explanation: proof.explanation, evidence: proof.evidence as Prisma.InputJsonValue } });
- await audit(tx, actorId, "ACHIEVEMENT", earned.id, "ACHIEVEMENT_EARNED"); return earned;
+ await audit(tx, actorId, "ACHIEVEMENT", earned.id, "ACHIEVEMENT_EARNED");
+ await inAppNotice(tx, userId, `achievement:${earned.id}:earned`, "ACHIEVEMENT_EARNED"); return earned;
 }
 export async function checkAchievements(user: AuthUser) {
  assertStudent(user);
@@ -81,8 +83,9 @@ export async function mutateAchievement(user: AuthUser, raw: z.infer<typeof achi
  assertStudent(user); const input = achievementSchema.parse(raw);
  if (input.action === "check") return checkAchievements(user);
  return atomic(async (tx) => {
-   const earned = await tx.earnedAchievement.findFirst({ where: { id: input.id, userId: user.id, status: "ACTIVE", definition: { status: "PUBLISHED" } } });
+   const earned = await tx.earnedAchievement.findFirst({ where: { id: input.id, userId: user.id, status: "ACTIVE", definition: { status: "PUBLISHED" } }, include: { definition: true } });
    if (!earned) throw new ValidationApiError("Achievement is unavailable");
+   if (input.enabled && earned.definition?.kind === "PLACEMENT" && !await qualification(tx, user.id, earned.definition, earned.scope)) throw new ValidationApiError("Verified results are required before sharing this achievement");
    const token = input.enabled ? randomBytes(32).toString("base64url") : null;
    await tx.earnedAchievement.update({ where: { id: earned.id }, data: { shareHash: token ? hashShare(token) : null, version: { increment: 1 } } });
    return { href: token ? `/shared/achievements/${token}` : null };
@@ -92,6 +95,7 @@ export function hashShare(token: string) { return createHash("sha256").update(to
 export async function getSharedAchievement(token: string) {
  if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
  const a = await prisma.earnedAchievement.findFirst({ where: { shareHash: hashShare(token), status: "ACTIVE", definition: { status: "PUBLISHED" },
-   user: { status: "ACTIVE", role: "STUDENT" } }, select: { title: true, badge: true, explanation: true, awardedAt: true } });
+   user: { status: "ACTIVE", role: "STUDENT" } }, select: { title: true, badge: true, explanation: true, awardedAt: true, userId: true, scope: true, definition: { select: { id: true, kind: true, threshold: true } } } });
+ if (a?.definition?.kind === "PLACEMENT" && !await qualification(prisma, a.userId, a.definition, a.scope)) return null;
  return a ? { title: a.title, badge: a.badge, explanation: a.explanation, awardedAt: a.awardedAt.toISOString() } : null;
 }

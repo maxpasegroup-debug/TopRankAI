@@ -6,7 +6,7 @@ import { PageContainer } from "@/components/ui/PageContainer";
 
 type Profile = { aspiration: string | null; targetExamId: string | null; targetYear: number | null;
   dreamCollege: string | null; targetScore: string | null; dailyStudyMins: number | null;
-  preparationStart: string | null; focusSubjectIds: string[] };
+  preparationStart: string | null; focusSubjectIds: string[]; onboardingCompletedAt?: string | null };
 type Journey = { profile: Profile | null; exams: { id: string; name: string; category: string }[];
   subjects: { id: string; name: string }[] };
 type Draft = { previewToken: string; tasks: { title: string; subject: string; minutes: number; dueDate: string }[] };
@@ -31,6 +31,8 @@ export function JourneyWizard() {
       setJourney(data);
       if (data.profile) setProfile({ ...defaults, ...Object.fromEntries(Object.entries(data.profile).filter(([, value]) => value !== null)),
         preparationStart: data.profile.preparationStart?.slice(0, 10) ?? defaults.preparationStart } as Profile);
+      if (data.profile?.onboardingCompletedAt) setStep(4);
+      else if ((data.profile?.aspiration?.trim().length ?? 0) >= 2) setStep(2);
     }).catch((e: Error) => active && setError(e.message));
     return () => { active = false; };
   }, []);
@@ -38,9 +40,13 @@ export function JourneyWizard() {
   async function next() {
     setBusy(true); setError("");
     try {
-      if (step === 1) await studentRequest("/api/student/journey", "PUT", { aspiration: profile.aspiration });
+      if (step === 1) {
+        if ((profile.aspiration?.trim().length ?? 0) < 2) throw new Error("Enter your aspiration before continuing");
+        await studentRequest("/api/student/journey", "PUT", { aspiration: profile.aspiration });
+      }
       if (step === 2) {
-        await studentRequest("/api/student/journey", "PUT", profile);
+        const { onboardingCompletedAt: _completed, ...preferences } = profile;
+        await studentRequest("/api/student/journey", "PUT", preferences);
         setDraft(await studentRequest<Draft>("/api/student/missions/preview"));
         setRequestKey(crypto.randomUUID());
       }

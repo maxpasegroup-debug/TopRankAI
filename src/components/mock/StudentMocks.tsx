@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { studentRequest } from "@/components/journey/client";
+import { studentRequest, StudentRequestError } from "@/components/journey/client";
+import { mockStorageKey, readMockDraft, mockSeconds, sameMockDraft, type RecoverableMockDraft } from "@/shared/mock-recovery";
 import type { getMockAttempt, listStudentMocks, getMockRevision } from "@/server/mock/service";
 type Attempt = Awaited<ReturnType<typeof getMockAttempt>>;
 type Directory = Awaited<ReturnType<typeof listStudentMocks>>;
@@ -11,11 +12,17 @@ const api = "/api/student/mocks";
 function formatTime(seconds: number) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
 export function MockDirectory({ mockId }: { mockId?: string }) {
  const [data, setData] = useState<Directory | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState(false);
- const key = useRef<string | null>(null);
+ const keys = useRef(new Map<string, string>());
  const load = () => { setError(""); studentRequest<Directory>(api).then(setData).catch((e: Error) => setError(e.message)); };
  useEffect(load, []);
- async function start(id: string) { setBusy(true); setError(""); key.current ??= crypto.randomUUID();
-   try { const a = await studentRequest<Attempt>(api, "POST", { action: "start", mockId: id, requestKey: key.current });
+ async function start(id: string) { if (!data || busy) return; setBusy(true); setError("");
+   const storage = `toprank.mock.start.${encodeURIComponent(data.ownerId)}.${encodeURIComponent(id)}`;
+   let key = keys.current.get(id);
+   try { const stored = sessionStorage.getItem(storage); if (stored && /^[a-f0-9-]{36}$/i.test(stored)) key ??= stored; } catch { /* In-memory retry remains available. */ }
+   key ??= crypto.randomUUID(); keys.current.set(id, key);
+   try { sessionStorage.setItem(storage, key); } catch { /* No persistent start recovery. */ }
+   try { const a = await studentRequest<Attempt>(api, "POST", { action: "start", mockId: id, requestKey: key });
+     try { sessionStorage.removeItem(storage); } catch { /* Browser storage can be unavailable. */ } keys.current.delete(id);
      window.location.assign(`/practice/mock-attempts?attemptId=${encodeURIComponent(a.id)}`);
    } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
  }
@@ -47,16 +54,43 @@ function SubmitConfirmation({ busy, cancel, submit }: { busy: boolean; cancel: (
 export function MockWorkspace({ attemptId }: { attemptId: string }) {
  const [data, setData] = useState<Attempt | null>(null), [error, setError] = useState(""), [busy, setBusy] = useState(false);
  const [index, setIndex] = useState(0), [seconds, setSeconds] = useState(0), [confirm, setConfirm] = useState(false);
- const [draft, setDraft] = useState<Draft>({ answer: {}, flagged: false, bookmarked: false });
- const anchor = useRef({ remaining: 0, tick: 0 }), inFlight = useRef(false), nextExpiryTry = useRef(0);
- const apply = (a: Attempt) => { anchor.current = { remaining: Math.max(0, new Date(a.deadline).getTime() - new Date(a.serverNow).getTime()), tick: performance.now() }; setData(a); };
- async function load() { setError(""); try { const a = await studentRequest<Attempt>(`${api}?attemptId=${encodeURIComponent(attemptId)}`); apply(a);
-   const saved = a.answers.find((answer) => answer.position === index); if (saved) setDraft({ answer: saved.answer, flagged: saved.flagged, bookmarked: saved.bookmarked });
- } catch (e) { setError((e as Error).message); } }
+ const [draft, setDraftState] = useState<Draft>({ answer: {}, flagged: false, bookmarked: false });
+ const [notice, setNotice] = useState(""), [autoPaused, setAutoPaused] = useState(false);
+ const pending = useRef<RecoverableMockDraft | null>(null);
+ const anchor = useRef({ remaining: 0, tick: 0, wall: 0 }), inFlight = useRef(false), nextExpiryTry = useRef(0), nextSaveTry = useRef(0);
+ const refreshRef = useRef<() => Promise<void>>(async () => {}), saveRef = useRef<() => Promise<boolean>>(async () => false);
+ const apply = (a: Attempt) => { anchor.current = { remaining: Math.max(0, new Date(a.deadline).getTime() - new Date(a.serverNow).getTime()), tick: performance.now(), wall: Date.now() }; setSeconds(mockSeconds(anchor.current, performance.now(), Date.now())); setData(a); };
+ function clearLocal(ownerId: string) { pending.current = null; try { sessionStorage.removeItem(mockStorageKey(ownerId, attemptId)); } catch { /* No storage access. */ } }
+ async function load(discard = false) {
+   if (inFlight.current) return; inFlight.current = true; setBusy(true); setError("");
+   try { const a = await studentRequest<Attempt>(`${api}?attemptId=${encodeURIComponent(attemptId)}`);
+     if (discard) { clearLocal(a.ownerId); setNotice(""); }
+     let local = pending.current;
+     try { local ??= readMockDraft(sessionStorage.getItem(mockStorageKey(a.ownerId, attemptId))); } catch { /* Retain the in-memory draft. */ }
+     if (local && !a.questions[local.position]) { clearLocal(a.ownerId); local = null; }
+     const position = local?.position ?? index;
+     const server = a.answers.find(answer => answer.position === position);
+     if (local && server && sameMockDraft(local, server)) { clearLocal(a.ownerId); local = null; }
+     pending.current = local; setIndex(position); apply(a);
+     if (local) { setDraftState(local); if (a.status !== "IN_PROGRESS") setNotice("Unconfirmed local edits were not included in this finalized result."); }
+     else if (server) setDraftState({ answer: server.answer, flagged: server.flagged, bookmarked: server.bookmarked });
+     setAutoPaused(Boolean(local && server && local.version !== server.version));
+     if (local && server && local.version !== server.version && a.status === "IN_PROGRESS") setError("Another tab changed this answer. Your local draft is preserved; compare it before discarding or retrying.");
+   } catch (e) { setError((e as Error).message); } finally { inFlight.current = false; setBusy(false); }
+ }
+ refreshRef.current = load;
  useEffect(() => { void load(); }, [attemptId]); // eslint-disable-line react-hooks/exhaustive-deps
  const saved = data?.answers.find((a) => a.position === index);
- useEffect(() => { if (saved) setDraft({ answer: saved.answer, flagged: saved.flagged, bookmarked: saved.bookmarked }); }, [index, saved?.version]);
- const dirty = Boolean(saved && (JSON.stringify(saved.answer) !== JSON.stringify(draft.answer) || saved.flagged !== draft.flagged || saved.bookmarked !== draft.bookmarked));
+ useEffect(() => { if (pending.current?.position === index) setDraftState(pending.current); else if (saved) setDraftState({ answer: saved.answer, flagged: saved.flagged, bookmarked: saved.bookmarked }); }, [index, saved?.version]);
+ const dirty = Boolean(saved && !sameMockDraft(saved, draft));
+ function setDraft(value: Draft) {
+   setDraftState(value); setAutoPaused(false); setError(""); nextSaveTry.current = 0;
+   if (!data || !saved) return;
+   const local = { position: index, version: pending.current?.position === index ? pending.current.version : saved.version, ...value };
+   pending.current = local;
+   try { sessionStorage.setItem(mockStorageKey(data.ownerId, attemptId), JSON.stringify({ savedAt: Date.now(), draft: local })); }
+   catch { setNotice("Local recovery storage is unavailable. Keep this tab open until your answer is saved."); }
+ }
  useEffect(() => {
    const warn = (e: BeforeUnloadEvent) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } };
    window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
@@ -68,27 +102,52 @@ export function MockWorkspace({ attemptId }: { attemptId: string }) {
  }
  useEffect(() => {
    if (data?.status !== "IN_PROGRESS") return;
-   const timer = window.setInterval(() => { const remaining = Math.max(0, Math.ceil((anchor.current.remaining - (performance.now() - anchor.current.tick)) / 1000)); setSeconds(remaining);
-     if (!remaining && performance.now() >= nextExpiryTry.current) { nextExpiryTry.current = performance.now() + 5000; void submit(); }
+   const timer = window.setInterval(() => { const remaining = mockSeconds(anchor.current, performance.now(), Date.now()); setSeconds(remaining);
+     if (!remaining && performance.now() >= nextExpiryTry.current) { nextExpiryTry.current = performance.now() + 5000; void refreshRef.current(); }
    }, 250); return () => clearInterval(timer);
  }, [data?.status, attemptId]); // eslint-disable-line react-hooks/exhaustive-deps
  async function save(): Promise<boolean> {
-   if (!data || !saved || !dirty) return true;
+   if (!data || !saved) return false;
+   if (!dirty) { clearLocal(data.ownerId); return data.status === "IN_PROGRESS"; }
    if (inFlight.current) return false; inFlight.current = true; setBusy(true); setError("");
-   try { const a = await studentRequest<Attempt>(api, "POST", { action: "save", attemptId, position: index, version: saved.version, ...draft });
-     apply(a); return a.status === "IN_PROGRESS";
-   } catch (e) { setError((e as Error).message); return false; } finally { setBusy(false); inFlight.current = false; }
+   try { const payload = pending.current ?? { position: index, version: saved.version, ...draft };
+     const a = await studentRequest<Attempt>(api, "POST", { action: "save", attemptId, ...payload });
+     const acknowledged = a.answers.find(answer => answer.position === payload.position);
+     if (acknowledged && sameMockDraft(payload, acknowledged)) { clearLocal(a.ownerId); setNotice(""); }
+     else { setAutoPaused(true); setNotice("Unconfirmed local edits were not saved. The server result remains authoritative."); }
+     apply(a); return a.status === "IN_PROGRESS" && Boolean(acknowledged && sameMockDraft(payload, acknowledged));
+   } catch (e) { setError((e as Error).message); nextSaveTry.current = Date.now() + 10000;
+     if (e instanceof StudentRequestError && [400, 409, 413, 415].includes(e.status)) setAutoPaused(true);
+     return false;
+   } finally { setBusy(false); inFlight.current = false; }
  }
+ saveRef.current = save;
+ useEffect(() => {
+   if (!dirty || busy || autoPaused || data?.status !== "IN_PROGRESS" || !navigator.onLine) return;
+   const timer = window.setTimeout(() => { void saveRef.current(); }, Math.max(750, nextSaveTry.current - Date.now()));
+   return () => clearTimeout(timer);
+ }, [dirty, draft, busy, autoPaused, data?.status]);
+ useEffect(() => {
+   const online = () => { nextSaveTry.current = 0; void refreshRef.current(); };
+   const visible = () => { if (document.visibilityState === "visible") void refreshRef.current(); };
+   window.addEventListener("online", online); window.addEventListener("pageshow", online); document.addEventListener("visibilitychange", visible);
+   return () => { window.removeEventListener("online", online); window.removeEventListener("pageshow", online); document.removeEventListener("visibilitychange", visible); };
+ }, [attemptId]);
  async function navigate(next: number) { if (await save()) setIndex(next); }
  const q = data?.questions[index];
+ const answerLabel = (answer: Draft["answer"], position = index) => answer.numerical ?? answer.optionIds?.map(id => data?.questions[position]?.options.find(o => o.id === id)?.text ?? "Option unavailable").join(", ") ?? "Unanswered";
  return <div className="journey-shell"><nav className="mock-links"><Link href="/practice/mock-tests">Mock exams</Link><Link href="/practice/revision">Revision</Link></nav><h1>{data?.title ?? "Mock exam"}</h1>
-   {error && <p role="alert" className="journey-error">{error}<button disabled={busy} onClick={() => { if (!dirty || window.confirm("Discard unsaved changes and reload?")) void load(); }}>Reload saved attempt</button></p>}
+   {error && <p role="alert" className="journey-error">{error}<button disabled={busy} onClick={() => void load()}>Reconnect / compare saved attempt</button><button disabled={busy} onClick={() => { if (!dirty || window.confirm("Discard your local draft and reload the saved answer?")) void load(true); }}>Discard local draft and reload</button></p>}
+   {notice && <p role="status">{notice}</p>}
+   {autoPaused && pending.current && saved && data?.status === "IN_PROGRESS" && <section><h2>Compare answers</h2><p>Saved: {answerLabel(saved.answer)}</p><p>Local draft: {answerLabel(pending.current.answer)}</p></section>}
    {!data ? <p role="status">{error ? "Attempt unavailable" : "Loading attempt..."}</p> : data.status !== "IN_PROGRESS" ? <>
      <p role="status">{data.status === "EXPIRED" ? "Time expired. Saved answers were finalized." : "Exam submitted."}</p>
+     {pending.current && <section><h2>Unconfirmed local answer</h2><p>Question {pending.current.position + 1}: {answerLabel(pending.current.answer, pending.current.position)}</p><button disabled={busy} onClick={() => { if (window.confirm("Discard this unconfirmed local answer?")) void load(true); }}>Discard local draft</button></section>}
      {data.result && <><dl className="journey-metrics"><div><dt>Score</dt><dd>{data.result.score} / {data.result.maximumScore}</dd></div><div><dt>Accuracy (answered)</dt><dd>{data.result.accuracy}%</dd></div><div><dt>Time taken</dt><dd>{formatTime(data.result.timeSeconds)}</dd></div></dl>
        <p>{data.result.answered} answered / {data.result.total - data.result.answered} unanswered / {data.result.correct} correct</p>
        <div className="mock-table-scroll"><table className="mock-table"><thead><tr><th>Section</th><th>Score</th><th>Answered</th><th>Correct</th></tr></thead><tbody>{data.result.sections.map((s, i) => <tr key={i}><th>{s.title}</th><td>{s.score} / {s.maximumScore}</td><td>{s.answered} / {s.total}</td><td>{s.correct}</td></tr>)}</tbody></table></div>
      </>}
+     {data.review.length > 0 && <details><summary>Question results and explanations</summary><ol>{data.review.map(r => <li key={r.position}><h2 className="mock-question-text">{data.questions[r.position].text}</h2><p>{r.answered ? r.correct ? "Correct" : "Incorrect" : "Unanswered"} / {r.score} marks</p>{r.explanation ? <p>{r.explanation}</p> : <p>No explanation was recorded in this attempt.</p>}</li>)}</ol></details>}
      <div className="journey-actions"><Link href="/practice/revision">Review questions</Link><Link href="/compete">Competition rankings</Link><Link href="/achievements">Check earned achievements</Link><Link href="/home">Mission & study session</Link><Link href="/progress">Digital Profile</Link></div>
    </> : q && <>
      <div className="mock-toolbar"><strong>{data.sections[q.section].title}</strong><output aria-label="Time remaining">{formatTime(seconds)}</output><span role="status">{busy ? "Saving..." : dirty ? "Unsaved changes" : "Saved"}</span></div>
@@ -97,7 +156,7 @@ export function MockWorkspace({ attemptId }: { attemptId: string }) {
        return <button key={i} disabled={busy} aria-current={i === index ? "step" : undefined} title={`Question ${i + 1}: ${answered ? "answered" : "unanswered"}${a?.flagged ? ", flagged" : ""}`} className={`${answered ? "answered" : ""} ${a?.flagged ? "flagged" : ""}`} onClick={() => navigate(question.position)}>{i + 1}{a?.flagged ? "*" : ""}</button>; })}</nav>
        <section><p>Question {index + 1} of {data.questions.length} / +{q.marks} / -{q.negativeMarks}</p><h2 className="mock-question-text">{q.text}</h2>
          <fieldset className="journey-answer-options" disabled={busy || seconds === 0}><legend className="sr-only">Answer</legend>
-           {q.type === "NUMERICAL" ? <label className="journey-field">Numerical answer<input value={draft.answer.numerical ?? ""} inputMode="decimal" onChange={(e) => setDraft({ ...draft, answer: e.target.value ? { numerical: e.target.value } : {} })} /></label> : q.options.map((o) => <label key={o.id}><input type={q.type === "SINGLE_CHOICE" ? "radio" : "checkbox"} name="mock-answer" checked={draft.answer.optionIds?.includes(o.id) ?? false} onChange={(e) => { const ids = q.type === "SINGLE_CHOICE" ? [o.id] : e.target.checked ? [...(draft.answer.optionIds ?? []), o.id] : (draft.answer.optionIds ?? []).filter((id) => id !== o.id); setDraft({ ...draft, answer: ids.length ? { optionIds: ids.sort() } : {} }); }} />{o.text}</label>)}
+           {q.type === "NUMERICAL" ? <label className="journey-field">Numerical answer<input value={draft.answer.numerical ?? ""} inputMode="decimal" maxLength={60} onChange={(e) => setDraft({ ...draft, answer: e.target.value ? { numerical: e.target.value } : {} })} /></label> : q.options.map((o) => <label key={o.id}><input type={q.type === "SINGLE_CHOICE" ? "radio" : "checkbox"} name="mock-answer" checked={draft.answer.optionIds?.includes(o.id) ?? false} onChange={(e) => { const ids = q.type === "SINGLE_CHOICE" ? [o.id] : e.target.checked ? [...(draft.answer.optionIds ?? []), o.id] : (draft.answer.optionIds ?? []).filter((id) => id !== o.id); setDraft({ ...draft, answer: ids.length ? { optionIds: ids.sort() } : {} }); }} />{o.text}</label>)}
          </fieldset>
          <div className="mock-links"><label><input type="checkbox" disabled={busy} checked={draft.flagged} onChange={(e) => setDraft({ ...draft, flagged: e.target.checked })} /> Flag for review</label><label><input type="checkbox" disabled={busy} checked={draft.bookmarked} onChange={(e) => setDraft({ ...draft, bookmarked: e.target.checked })} /> Bookmark</label></div>
          <div className="journey-actions"><button title="Clear answer" disabled={busy} onClick={() => setDraft({ ...draft, answer: {} })}>Clear</button><button disabled={busy || index === 0} onClick={() => navigate(index - 1)}>Previous</button><button disabled={busy || !dirty} onClick={() => save()}>Save answer</button><button disabled={busy || index === data.questions.length - 1} onClick={() => navigate(index + 1)}>Next</button></div>

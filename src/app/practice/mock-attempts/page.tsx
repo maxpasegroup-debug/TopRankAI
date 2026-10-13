@@ -4,5 +4,5 @@ import { MockWorkspace } from "@/components/mock/StudentMocks";
 export const dynamic = "force-dynamic";
 export default async function Page({ searchParams }: { searchParams: Promise<{ attemptId?: string }> }) {
  const { attemptId } = await searchParams; if (!attemptId) redirect("/practice/mock-tests");
- return <MockFrame><MockWorkspace attemptId={attemptId} /></MockFrame>;
+ return <MockFrame currentPath="/practice"><MockWorkspace key={attemptId} attemptId={attemptId} /></MockFrame>;
 }

@@ -1,0 +1,7 @@
+.controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; margin: 20px 0; }
+.controls > * { min-width: 0; max-width: 100%; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 20px 0; border-block: 1px solid #d9dee5; }
+.week button { min-height: 100px; border: 0; border-right: 1px solid #d9dee5; border-radius: 0; display: grid; gap: 8px; align-content: start; padding: 12px 8px; background: #f3f7f4; color: #24352b; overflow-wrap: anywhere; font-size: 13px; }
+.week button:last-child { border-right: 0; }
+@media (max-width: 850px) { .week { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .week { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

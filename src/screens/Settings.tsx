@@ -24,6 +24,7 @@ export function Settings() {
           </Card>
           <Card>
             <h2 style={{ marginTop: 0 }}>Account</h2>
+            <p><a href="/account/consent">Account consent</a></p>
             <p style={{ color: "var(--color-muted)" }}>End this secure session on the current device.</p>
             <form action="/api/auth/logout" method="post">
               <button className="button button-secondary" type="submit">Log out</button>

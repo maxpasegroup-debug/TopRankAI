@@ -1,0 +1,19 @@
+.layout { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.layout aside { border-right: 1px solid #d9dee5; padding-right: 16px; }
+.layout h2 { font-size: 20px; margin: 20px 0 12px; }
+.records { list-style: none; margin: 0; padding: 0; }
+.row { width: 100%; text-align: left; padding: 12px 8px; border: 0; border-bottom: 1px solid #d9dee5; border-radius: 0; background: transparent; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.row[aria-pressed="true"] { background: #e9f3ec; border-left: 3px solid #207646; }
+.row span, .row small { color: #56616a; font-size: 13px; }
+.section { border: 0; border-top: 1px solid #d9dee5; padding: 16px 0; margin: 16px 0; min-width: 0; }
+.section legend { font-size: 13px; color: #56616a; }
+.json { font-family: monospace; width: 100%; box-sizing: border-box; }
+.tabs { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid #d9dee5; margin: 20px 0; }
+.tabs button { border: 0; border-radius: 0; background: transparent; padding: 12px; font-size: 14px; min-height: 44px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.tabs button[aria-selected="true"] { border-bottom: 3px solid #207646; background: #e9f3ec; }
+.table td { white-space: normal; min-width: 100px; max-width: 400px; overflow-wrap: anywhere; vertical-align: top; }
+.tableWrap { width: 100%; overflow-x: auto; }
+.table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.table th, .table td { padding: 8px; border-bottom: 1px solid #d9dee5; text-align: left; white-space: nowrap; }
+.layout input, .layout textarea, .layout select { max-width: 100%; min-width: 0; box-sizing: border-box; }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } .layout aside { border-right: 0; border-bottom: 1px solid #d9dee5; padding: 0 0 16px; } }

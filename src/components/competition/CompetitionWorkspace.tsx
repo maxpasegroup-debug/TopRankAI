@@ -13,14 +13,14 @@ const api = "/api/student/competitions";
 export function CompetitionWorkspace({ id }: { id?: string }) {
  const [data, setData] = useState<Directory | null>(null), [board, setBoard] = useState<Board | null>(null), [overall, setOverall] = useState<Overall | null>(null);
  const [page, setPage] = useState(1), [overallPage, setOverallPage] = useState(1), [error, setError] = useState(""), [busy, setBusy] = useState(false);
- const requestKey = useRef<string | null>(null);
+ const requestKeys = useRef(new Map<string, string>());
  async function load() { setError(""); try { setData(await studentRequest<Directory>(api));
    if (id) setBoard(await studentRequest<Board>(`${api}?id=${encodeURIComponent(id)}&page=${page}`));
    else setOverall(await studentRequest<Overall>(`${api}?overall=true&page=${overallPage}`));
  } catch (e) { setError((e as Error).message); } }
  useEffect(() => { void load(); }, [id, page, overallPage]); // eslint-disable-line react-hooks/exhaustive-deps
  async function act(action: string, extra = {}) { if (!id) return; setBusy(true); setError(""); try {
-   requestKey.current ??= crypto.randomUUID(); const response = await studentRequest<{ attemptId?: string }>(api, "POST", { action, id, ...(action === "join" ? { requestKey: requestKey.current } : {}), ...extra });
+   const requestKey = requestKeys.current.get(id) ?? crypto.randomUUID(); requestKeys.current.set(id, requestKey); const response = await studentRequest<{ attemptId?: string }>(api, "POST", { action, id, ...(action === "join" ? { requestKey } : {}), ...extra });
    if (response.attemptId) window.location.assign(`/practice/mock-attempts?attemptId=${encodeURIComponent(response.attemptId)}`); else await load();
  } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
  return <div className="journey-shell"><span className="journey-kicker">TOPRANK</span><h1>{board?.competition.title ?? "Compete"}</h1>
@@ -31,10 +31,11 @@ export function CompetitionWorkspace({ id }: { id?: string }) {
    {board && <>
      <dl className="journey-metrics"><div><dt>Status</dt><dd className="mock-small">{board.competition.phase}</dd></div><div><dt>Duration</dt><dd>{board.competition.durationSeconds / 60} min</dd></div><div><dt>Your rank</dt><dd>{board.mine?.rank ?? "Not ranked"}</dd></div></dl>
      <p>Starts {new Date(board.competition.startsAt).toLocaleString()} / entry closes {new Date(board.competition.endsAt).toLocaleString()}.</p>
+     <p role="status">Rankings: {board.competition.rankingState === "VERIFIED" ? "Verified final results" : board.competition.rankingState === "CANCELLED" ? "Cancelled / rankings withdrawn" : "Provisional / not yet verified final results"}{board.competition.resultsVerifiedAt ? ` / ${new Date(board.competition.resultsVerifiedAt).toLocaleString()}` : ""}</p>
      <p>Already-started attempts may finish by {new Date(board.competition.finishBy).toLocaleString()}. One entry per student. Capacity {board.competition.config.capacity}. Requires {board.competition.config.minCompletedMocks} completed mock attempts.</p>
      <p>Ranking: {board.competition.config.scoring === "RAW_SCORE" ? "score" : "percentage score"}, then shorter elapsed time and earlier participation. Exact ties share a placement.</p>
-     {board.mine?.disqualified ? <p role="status">Your entry is disqualified. Contact support for a review.</p> : <div className="mock-links">{(board.mine?.attemptId || board.competition.phase === "ACTIVE") && <button disabled={busy} className="journey-primary" onClick={() => act("join")}>{board.mine?.attemptId ? "Open your attempt" : "Join challenge"}</button>}{board.mine && <><button disabled={busy} onClick={() => act("sync")}>Refresh verified rankings</button><label><input type="checkbox" disabled={busy} checked={board.mine.visible} onChange={(e) => act("visibility", { visible: e.target.checked })} /> Show my generated alias and competition score</label></>}</div>}
-     {board.mine?.score && <p>Your verified score: {board.mine.score}</p>}
+     {board.mine?.disqualified ? <p role="status">Your entry is disqualified. Contact support for a review.</p> : <div className="mock-links">{board.mine?.attemptId ? <Link href={`/practice/mock-attempts?attemptId=${encodeURIComponent(board.mine.attemptId)}`}>Open your attempt</Link> : board.competition.phase === "ACTIVE" && <button disabled={busy} className="journey-primary" onClick={() => act("join")}>Join challenge</button>}{board.mine && <><button disabled={busy || board.competition.rankingState === "CANCELLED"} onClick={() => act("sync")}>Refresh rankings</button><label><input type="checkbox" disabled={busy} checked={board.mine.visible} onChange={(e) => act("visibility", { visible: e.target.checked })} /> Show my generated alias and competition score</label></>}</div>}
+     {board.mine?.score && <p>{board.competition.rankingState === "VERIFIED" ? "Your verified score:" : "Your provisional score:"} {board.mine.score}</p>}
      <h2>Competition leaderboard</h2>{board.rows.length ? <div className="mock-table-scroll"><table className="mock-table"><thead><tr><th>Rank</th><th>Participant</th><th>Score</th><th>Seconds</th></tr></thead><tbody>{board.rows.map((r, i) => <tr key={`${r.rank}-${i}`}><td>{r.rank}</td><td>{r.name}</td><td>{r.score ?? "Private"}</td><td>{r.timeSeconds ?? "Private"}</td></tr>)}</tbody></table></div> : <p>No ranked results yet. Started or unprocessed attempts may still be pending.</p>}
      <Pagination page={page} hasNext={board.hasNext} change={setPage} />
    </>}

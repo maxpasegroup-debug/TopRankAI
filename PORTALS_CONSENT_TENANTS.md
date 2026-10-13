@@ -1,6 +1,132 @@
 # Parent and institution portals: implementation evidence
 
-Date: 2026-10-10. Branch: main. Changes are uncommitted.
+## Continuation: workspace entry and consent integrity
+
+Date: 2026-10-10. Branch: main. Baseline HEAD:
+`38f2c50ff893af29d130d3fc4919e8873356aa4f`.
+The original module below is already committed. This additive continuation is
+uncommitted; it does not recreate its models, roles or authorization services.
+
+### Completed and connected
+
+- Added `/workspace`, a dynamic server entry point deriving the destination from
+  the current database-backed session: student `/home`, parent `/parent`, teacher
+  `/teacher`, school administrator `/school`, platform operations `/admin/portals`.
+  Login now uses this entry point instead of routing every role to student Home.
+  Signup still routes students to onboarding. No login API, cookie, role grant or
+  authentication activation behavior changed.
+- Portal navigation and the access-denied return link use `/workspace`. Portals
+  provide a POST sign-out form using the existing origin/revocation protections.
+  Student six-item navigation is unchanged. Navigation grants no tenant access:
+  destination APIs still reload current membership, assignment, consent and status.
+- Canonical `validConsent` now validates stored scopes against the existing
+  bounded, unique scope schema. Null, absent, non-array, empty, duplicate,
+  null-element and invented scopes deny access before learner/assignment queries.
+- Pending guardian and enrollment acceptance cannot activate malformed scopes.
+  Enrollment scope narrowing is checked before any old-tenant transfer writes;
+  enrollment acceptance explicitly requires the verification actor. Revoking an
+  invalid legacy relationship does not manufacture consent or expand permissions.
+- Added forward migration `20261010000500_portal_scope_integrity` and restored
+  the PostgreSQL provider lock. Historical SQL and the Prisma schema are unchanged.
+  ACTIVE relationships require non-null, bounded, one-dimensional, known scopes
+  without null elements; guardians cannot receive support/counselling scopes.
+  Both new CHECKs are `NOT VALID`: existing rows remain for authorized review,
+  while new/updated rows must satisfy the guards. No automatic data remediation,
+  historical constraint removal or constraint validation was added.
+
+### Partial functionality and limitations
+
+Existing parent/staff/school consent, invitation, announcement, scoped feedback,
+report/export and notification workflows remain connected as described below.
+The current tests support code contracts, not production readiness. Individual
+staff assignments remain the access unit; no invented classes, attendance,
+grades, wellbeing metrics, private SIA sharing or unrestricted student search
+was introduced. Reports remain bounded recent summaries. Broader pagination,
+approved legal identity/consent/retention policies, delivery and operational
+abuse controls remain prerequisites or separate tasks.
+
+The new database checks do not enforce scope-array uniqueness; application
+validation rejects duplicate scopes. `NOT VALID` does not certify legacy rows.
+The prior audit's commerce array constraint and subject-backfill risks are outside
+this portal-only continuation and remain open. The prior verification report is
+preserved unchanged as historical evidence, not silently rewritten as a pass.
+
+### Verification actually executed
+
+```powershell
+node node_modules/vitest/vitest.mjs run tests/portal --no-cache --no-fsModuleCache --configLoader runner
+node node_modules/vitest/vitest.mjs run tests/auth tests/question tests/content tests/student tests/mock tests/competition tests/commerce tests/portal --no-cache --no-fsModuleCache --configLoader runner
+node node_modules/typescript/bin/tsc --noEmit
+node node_modules/prisma/build/index.js validate --config prisma7.config.ts
+node node_modules/prisma/build/index.js generate --config prisma7.config.ts
+npm.cmd run build
+git diff --check
+git status --short --untracked-files=all
+git branch --show-current
+git rev-parse HEAD
+```
+
+All checks passed: **242 portal tests in six files**, including 38 new checks;
+**932 broader focused tests passed, one live Upstash test skipped**, in 40 passed
+files and one skipped file. TypeScript, Prisma validation/generation and the
+production build passed. This is not a full-suite or PostgreSQL integration run.
+Persistence/transaction tests use mocks; migration tests check local SQL text
+contracts only, not database parsing, deployment or actual constraint enforcement.
+Authenticated browser acceptance is **MANUAL / NOT VERIFIED**.
+
+A new loopback-only built preview runs at `http://127.0.0.1:3004/workspace`,
+PID 96616. It was started with the existing installed Next CLI:
+
+```powershell
+$preview = Start-Process -FilePath (Get-Command node).Source -ArgumentList 'node_modules/next/dist/bin/next','start','--hostname','127.0.0.1','--port','3004' -WorkingDirectory 'D:\APPS\WEB\toprank' -WindowStyle Hidden -RedirectStandardOutput 'D:\APPS\WEB\toprank\.next\portal-continuation-preview.stdout.log' -RedirectStandardError 'D:\APPS\WEB\toprank\.next\portal-continuation-preview.stderr.log' -PassThru
+```
+
+Anonymous HTTP checks, without credentials/cookies, returned: `/workspace`,
+`/parent`, `/teacher`, `/school` 307 to `/login`; `/api/portal` 401 no-store;
+`/api/auth/readiness` 503 no-store; `/api/live` 200 no-store; `/invitations` 200.
+No authenticated page or database health endpoint was exercised. Presence-only
+process/`.env` checks confirmed activation/live-verification/ingress attestations
+not enabled and Upstash endpoint/token absent; no values or secrets were printed.
+Production signup/login and invitation acceptance remain fail closed. Payments,
+external messages and real invitation delivery were not activated.
+
+### Files, Git and next task
+
+Modified: `MASTER_BUILD_STATUS.md`, this report,
+`src/app/[[...path]]/page.tsx`, `src/components/portal/PortalWorkspace.tsx`,
+`src/screens/AuthPages.tsx`, `src/server/portal/authorization.ts`,
+`src/server/portal/service.ts`, `tests/portal/authorization.test.ts`,
+`tests/portal/lifecycle.test.ts`.
+
+New: `src/app/workspace/page.tsx`, `tests/portal/workspace.test.ts`,
+`tests/portal/migration-contract.test.ts`,
+`prisma/migrations/20261010000500_portal_scope_integrity/migration.sql`,
+`prisma/migrations/migration_lock.toml`.
+
+The pre-existing untracked `CONTROLLED_VERIFICATION_REPORT.md` is unchanged.
+All 324 repository files outside the deliberately scoped edit/new-file list are
+byte-for-byte preserved, including every historical migration and that report.
+Final tree: nine modified tracked files, five new files from this continuation,
+plus the pre-existing untracked report. Nothing is staged. Git emitted global
+ignore-file permission and LF-to-CRLF warnings; tracked whitespace checks passed.
+
+No commit, push, deployment, branch change, migration application, database access,
+seed, dependency installation, production activation or destructive cleanup
+occurred. New SQL remains unapplied. Existing database migration-ledger status
+was not queried, and remote synchronization was not refreshed.
+
+**Single next task:** implement a guarded disposable-PostgreSQL test configuration
+and verify chronological migration replay, real authorization/concurrency, then
+authenticated role acceptance on an explicitly approved isolated target. Do not
+use the ordinary unidentified `DATABASE_URL` or infer disposability from a name.
+Dedicated Upstash credentials/target confirmation and Railway trusted ingress
+verification remain separately required before production authentication activation.
+
+## Original implementation evidence (historical)
+
+The following sections preserve the original increment's results and Git
+snapshot. Their uncommitted status, counts and preview URL are historical, not
+the current continuation status above.
 
 ## Completed and connected
 

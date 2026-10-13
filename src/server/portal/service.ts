@@ -3,7 +3,7 @@ import type { AuthUser } from "@/server/auth/session";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { atomic, type Tx } from "@/server/commerce/transaction";
 import { freshActor, tenantContext, guardianAccess, schoolStudentAccess, activeStudent, validConsent, displayConsentStatus, portalAudit, denied } from "./authorization";
-import { portalMutationSchema, portalQuerySchema, type Scope } from "./validation";
+import { portalMutationSchema, portalQuerySchema, scopesSchema, type Scope } from "./validation";
 import { sharedSummary, csvCell } from "./reporting";
 import { createInvitation, revokeInvitation } from "./invitations";
 type Query = z.output<typeof portalQuerySchema>;
@@ -12,6 +12,7 @@ const now = () => new Date();
 const checkVersion = (current: number, supplied: number) => { if (current !== supplied) throw new ConflictApiError("Access state changed; refresh before retrying"); };
 function future(date: Date) { if (date <= now()) throw new ValidationApiError("Authorization window has expired"); }
 function narrow(scopes: string[], requested?: Scope[]) {
+ if (!scopesSchema.safeParse(scopes).success) throw denied();
  const selected = requested ?? scopes;
  if (!selected.length || selected.some(s => !scopes.includes(s))) throw denied(); return selected;
 }
@@ -147,20 +148,21 @@ export async function mutatePortal(user: AuthUser, raw: z.input<typeof portalMut
      const status = input.decision === "NARROW" ? "ACTIVE" : input.decision === "ACCEPT" ? (studentConsentAt && parentAcceptedAt ? "ACTIVE" : "PENDING") : input.decision === "REJECT" ? "REJECTED" : "REVOKED";
      if (input.decision === "REJECT" && record.status !== "PENDING") throw denied();
      const changed = await tx.studentParentRelationship.updateMany({ where: { id: record.id, version: input.version }, data: { status, scopes, studentConsentAt, parentAcceptedAt, version: { increment: 1 } } }); if (!changed.count) throw new ConflictApiError();
-     await portalAudit(tx, actor.id, null, record.id, `GUARDIAN_${input.decision}`, input.reason); await notice(tx, record.parentUserId, `guardian:${record.id}:${record.version + 1}`); return { id: record.id };
+     await portalAudit(tx, actor.id, null, record.id, `GUARDIAN_${input.decision}`, input.reason); await notice(tx, record.parentUserId, `guardian:${record.id}:${record.version + 1}`); await notice(tx, record.studentUserId, `guardian:${record.id}:${record.version + 1}`); return { id: record.id };
    }
    if (input.action === "enrollmentDecision") {
      if (actor.role !== "STUDENT") throw denied();
      const record = await tx.schoolEnrollment.findUnique({ where: { id: input.id }, include: { school: true } }); if (!record || record.studentId !== actor.id) throw denied(); checkVersion(record.version, input.version);
+     const scopes = ["ACCEPT", "NARROW"].includes(input.decision) ? narrow(record.scopes, input.scopes) : record.scopes;
      if (input.decision === "ACCEPT") {
-       if (displayConsentStatus(record) !== "PENDING" || record.school.status !== "ACTIVE" || !record.authorizationBasis || !record.verificationReference || !record.verifiedAt) throw denied();
+       if (displayConsentStatus(record) !== "PENDING" || record.school.status !== "ACTIVE" || !record.authorizationBasis || !record.verificationReference || !record.verifiedAt || !record.verifiedById) throw denied();
        // Transfers invalidate the old tenant's enrolment and assignments in the same transaction.
        const old = await tx.schoolEnrollment.findMany({ where: { studentId: actor.id, status: "ACTIVE", id: { not: record.id } }, select: { id: true, schoolId: true } });
        for (const e of old) { await tx.schoolEnrollment.update({ where: { id: e.id }, data: { status: "REVOKED", version: { increment: 1 } } }); await tx.schoolStaffAssignment.updateMany({ where: { enrollmentId: e.id }, data: { active: false } }); await portalAudit(tx, actor.id, e.schoolId, e.id, "ENROLLMENT_TRANSFERRED", input.reason); }
      }
      if (input.decision === "REJECT" && record.status !== "PENDING") throw denied();
      if (input.decision === "NARROW" && (displayConsentStatus(record) !== "ACTIVE" || !input.scopes)) throw denied();
-     const changed = await tx.schoolEnrollment.updateMany({ where: { id: record.id, version: input.version }, data: { status: ["ACCEPT", "NARROW"].includes(input.decision) ? "ACTIVE" : input.decision === "REJECT" ? "REJECTED" : "REVOKED", scopes: ["ACCEPT", "NARROW"].includes(input.decision) ? narrow(record.scopes, input.scopes) : record.scopes, studentConsentAt: input.decision === "ACCEPT" ? now() : record.studentConsentAt, version: { increment: 1 } } }); if (!changed.count) throw new ConflictApiError();
+     const changed = await tx.schoolEnrollment.updateMany({ where: { id: record.id, version: input.version }, data: { status: ["ACCEPT", "NARROW"].includes(input.decision) ? "ACTIVE" : input.decision === "REJECT" ? "REJECTED" : "REVOKED", scopes, studentConsentAt: input.decision === "ACCEPT" ? now() : record.studentConsentAt, version: { increment: 1 } } }); if (!changed.count) throw new ConflictApiError();
      if (!["ACCEPT", "NARROW"].includes(input.decision)) await tx.schoolStaffAssignment.updateMany({ where: { enrollmentId: record.id }, data: { active: false } });
      await portalAudit(tx, actor.id, record.schoolId, record.id, `ENROLLMENT_${input.decision}`, input.reason); return { id: record.id };
    }

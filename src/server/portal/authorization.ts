@@ -2,7 +2,7 @@ import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
 import { AuthorizationApiError } from "@/server/api/errors";
 import type { Tx } from "@/server/commerce/transaction";
-import type { Scope } from "./validation";
+import { scopesSchema, type Scope } from "./validation";
 export const denied = () => new AuthorizationApiError("Portal access is not authorized");
 export async function freshActor(user: AuthUser, db: Tx = prisma, roles: readonly string[] = ["STUDENT", "PARENT", "TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"]) {
  const current = await db.user.findUnique({ where: { id: user.id }, select: { id: true, name: true, email: true, role: true, status: true } });
@@ -10,9 +10,9 @@ export async function freshActor(user: AuthUser, db: Tx = prisma, roles: readonl
  return current;
 }
 export function validConsent(record: { status: string; expiresAt: Date | null; verifiedAt: Date | null; studentConsentAt: Date | null;
- authorizationBasis: string | null; verificationReference: string | null; verifiedById: string | null }, now = new Date()) {
+ authorizationBasis: string | null; verificationReference: string | null; verifiedById: string | null; scopes: unknown }, now = new Date()) {
  return record.status === "ACTIVE" && record.expiresAt instanceof Date && record.expiresAt > now && Boolean(record.verifiedAt && record.studentConsentAt &&
-   record.authorizationBasis && record.verificationReference && record.verifiedById);
+   record.authorizationBasis && record.verificationReference && record.verifiedById) && scopesSchema.safeParse(record.scopes).success;
 }
 export function displayConsentStatus(record: { status: string; expiresAt: Date | null }, now = new Date()) {
  return ["PENDING", "ACTIVE"].includes(record.status) && record.expiresAt && record.expiresAt <= now ? "EXPIRED" : record.status;

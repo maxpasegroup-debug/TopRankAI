@@ -12,9 +12,10 @@ const db = vi.hoisted(() => ({
   missionTask: { findFirst: vi.fn(), updateMany: vi.fn(), count: vi.fn() }, missionTaskEvent: { create: vi.fn() },
   studySession: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() },
   studentLessonProgress: { findUnique: vi.fn(), upsert: vi.fn(), findMany: vi.fn(), count: vi.fn() },
-  lesson: { findFirst: vi.fn() }, $transaction: vi.fn(),
+  lesson: { findFirst: vi.fn() }, questionExam: { findFirst: vi.fn() }, $transaction: vi.fn(), access: vi.fn(),
 }));
 vi.mock("@/server/db", () => ({ prisma: db }));
+vi.mock("@/server/commerce/access", () => ({ requireResourceAccess: db.access }));
 import { saveJourney, previewJourneyPlan, confirmJourneyPlan, changeMissionTask, getMissionBoard,
   updateStudySession, getLearningProgress, updateLearningProgress, getVerifiedProgress } from "@/server/journey/service";
 const user: AuthUser = { id: "student-a", name: "Student", email: "s@example.com", role: "STUDENT" };
@@ -23,6 +24,11 @@ const profile = { targetExamId: "exam", targetYear: 2027, dreamCollege: "My goal
 const key = "8664dc14-a97f-4e63-9747-0a76e597a077";
 
 describe("student journey", () => {
+  it("rejects paid lesson progress before writes without current access", async () => {
+    db.lesson.findFirst.mockResolvedValue({ id: "paid-lesson" }); db.access.mockRejectedValue(new AuthorizationApiError());
+    await expect(updateLearningProgress(user, { lessonId: "paid-lesson", completed: true })).rejects.toBeInstanceOf(AuthorizationApiError);
+    expect(db.studentLessonProgress.findUnique).not.toHaveBeenCalled(); expect(db.studentLessonProgress.upsert).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     db.$transaction.mockImplementation((fn) => fn(db));
@@ -32,11 +38,11 @@ describe("student journey", () => {
     db.studyPlan.findUnique.mockResolvedValue(null);
     db.studyPlan.create.mockResolvedValue({ id: "plan" });
   });
-  it("splits exact daily availability across seven UTC days", () => {
-    const lessons = ["a", "b", "c"].map((title) => ({ title, subject: "Science", href: "/learn" }));
+  it("uses distinct lessons in bounded blocks across seven UTC days", () => {
+    const lessons = Array.from({ length: 21 }, (_, index) => ({ title: String(index), subject: "Science", href: `/learn/${index}` }));
     const tasks = previewStudyPlan(start, 121, lessons);
     expect(tasks).toHaveLength(21);
-    for (let i = 0; i < 7; i++) expect(tasks.slice(i * 3, i * 3 + 3).reduce((n, t) => n + t.minutes, 0)).toBe(121);
+    for (let i = 0; i < 7; i++) expect(tasks.slice(i * 3, i * 3 + 3).reduce((n, t) => n + t.minutes, 0)).toBeLessThanOrEqual(121);
     expect(tasks[6].dueDate.toISOString().slice(0, 10)).toBe("2027-01-01");
     expect(start.toISOString()).toBe("2026-12-30T00:00:00.000Z");
   });
@@ -80,6 +86,18 @@ describe("student journey", () => {
     await expect(confirmJourneyPlan(user, { requestKey: key, title: "My plan", previewToken: "0".repeat(64) })).rejects.toBeInstanceOf(ConflictApiError);
     expect(db.studyPlan.create).not.toHaveBeenCalled(); expect(db.studyPlan.updateMany).not.toHaveBeenCalled();
   });
+  it("can plan reviewed practice when no lessons are published", async () => {
+    db.examSubject.findMany.mockResolvedValue([{ subject: { id: "biology", name: "Biology", slug: "biology", chapters: [] } }]);
+    db.questionExam.findFirst.mockResolvedValue({ id: "published-question-link" });
+    const draft = await previewJourneyPlan(user);
+    expect(draft.tasks).toHaveLength(1); expect(draft.tasks[0].href).toBe("/practice/subjects/biology/questions");
+  });
+  it("defaults onboarding to today's India calendar rather than yesterday UTC", async () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date("2026-10-10T20:00:00Z"));
+    try { db.studentProfile.findUnique.mockResolvedValue({ ...profile, preparationStart: new Date("2026-10-09") });
+      const draft = await previewJourneyPlan(user); expect(draft.tasks[0].dueDate.toISOString().slice(0, 10)).toBe("2026-10-11");
+    } finally { vi.useRealTimers(); }
+  });
   it("replays a confirmation without needing now-unpublished content", async () => {
     db.studyPlan.findUnique.mockResolvedValue({ id: "existing" });
     await expect(confirmJourneyPlan(user, { requestKey: key, title: "My plan", previewToken: "0".repeat(64) })).resolves.toEqual({ id: "existing" });
@@ -93,7 +111,7 @@ describe("student journey", () => {
   it("rejects foreign tasks without updating or recording an event", async () => {
     db.missionTask.findFirst.mockResolvedValue(null);
     await expect(changeMissionTask(user, { id: "foreign", version: 0, status: "COMPLETED" })).rejects.toBeInstanceOf(ValidationApiError);
-    expect(db.missionTask.findFirst).toHaveBeenCalledWith({ where: { id: "foreign", plan: { userId: user.id } } });
+    expect(db.missionTask.findFirst).toHaveBeenCalledWith({ where: { id: "foreign", plan: { userId: user.id, active: true } }, include: { plan: true } });
     expect(db.missionTask.updateMany).not.toHaveBeenCalled(); expect(db.missionTaskEvent.create).not.toHaveBeenCalled();
   });
   it("rejects stale task versions without an event", async () => {

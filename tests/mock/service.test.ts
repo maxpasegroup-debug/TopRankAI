@@ -8,9 +8,11 @@ const db = vi.hoisted(() => ({ $transaction: vi.fn(), commerceGate: { findUnique
  mockAttempt: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
  mockAnswer: { updateMany: vi.fn(), update: vi.fn() }, exam: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
  questionExam: { findMany: vi.fn() }, question: { findMany: vi.fn() }, lesson: { findMany: vi.fn(), findFirst: vi.fn() },
- studyPlan: { findFirst: vi.fn() }, missionTask: { create: vi.fn() }, auditEvent: { create: vi.fn() } }));
+ contentEditorialRecord: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), update: vi.fn(), upsert: vi.fn() },
+ studyPlan: { findFirst: vi.fn() }, missionTask: { create: vi.fn(), aggregate: vi.fn() }, auditEvent: { create: vi.fn() } }));
 vi.mock("@/server/db", () => ({ prisma: db }));
 import { mutateMock, getMockAttempt, listStudentMocks, mutateAdminMock, getMockRevision, mutateMockRevision, adminMocks } from "@/server/mock/service";
+import { editorialFingerprint } from "@/server/content/editorial";
 const user: AuthUser = { id: "student", name: "Student", email: "s@example.com", role: "STUDENT" };
 const admin: AuthUser = { ...user, id: "admin", role: "PLATFORM_ADMIN" };
 const now = new Date("2026-10-10T00:00:00Z");
@@ -28,6 +30,10 @@ let attempt: ReturnType<typeof record>;
 afterEach(() => vi.useRealTimers());
 beforeEach(() => {
  vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(now); attempt = record();
+ db.missionTask.aggregate.mockResolvedValue({ _sum: { minutes: 0 } });
+ db.contentEditorialRecord.findMany.mockResolvedValue([]);
+ db.contentEditorialRecord.findUnique.mockResolvedValue({ authorId: "author", reviewerId: "reviewer", revision: 0, reviewedRevision: 0,
+   reviewedAt: now, reviewEvidence: "Checked blueprint and marking", reviewedFingerprint: editorialFingerprint(blueprint) });
  db.$transaction.mockImplementation((fn) => fn(db)); db.mockAttempt.findFirst.mockImplementation(async (args) => args.where.id ? attempt : null);
  db.competition.findFirst.mockResolvedValue(null);
  db.commerceGate.findUnique.mockResolvedValue(null);
@@ -91,6 +97,25 @@ describe("timed mock lifecycle (mocked database only)", () => {
    expect(db.questionExam.findMany).not.toHaveBeenCalled();
  });
  it("never changes answers after submission", async () => { await mutateMock(user, { action: "submit", attemptId: "attempt" }); expect(await mutateMock(user, saveInput)).toMatchObject({ status: "SUBMITTED" }); expect(db.mockAnswer.updateMany).not.toHaveBeenCalled(); });
+ it("exposes per-question review only after permitted finalization", async () => {
+   expect((await getMockAttempt(user, "attempt")).review).toEqual([]);
+   const result = await mutateMock(user, { action: "submit", attemptId: "attempt" });
+   expect(result.review[0]).toMatchObject({ position: 0, explanation: "A reviewed explanation" });
+   expect(JSON.stringify(result)).not.toContain("numericalAnswer"); expect(JSON.stringify(result)).not.toContain("998.75");
+ });
+ it("withholds per-question explanations under NEVER policy", async () => {
+   attempt.snapshot = { ...snapshot, revealPolicy: "NEVER" } as typeof attempt.snapshot;
+   expect((await mutateMock(user, { action: "submit", attemptId: "attempt" })).review).toEqual([]);
+ });
+ it("models duplicate finalization without a second result write", async () => {
+   const results = await Promise.all([mutateMock(user, { action: "submit", attemptId: "attempt" }), mutateMock(user, { action: "submit", attemptId: "attempt" })]);
+   expect(results.every(result => result.status === "SUBMITTED")).toBe(true); expect(db.mockAttempt.updateMany).toHaveBeenCalledTimes(1);
+ });
+ it("preserves acknowledged answers at the exact deadline", async () => {
+   vi.setSystemTime(new Date(now.getTime() + 59999)); await mutateMock(user, saveInput);
+   vi.setSystemTime(new Date(now.getTime() + 60000)); const result = await mutateMock(user, { ...saveInput, version: 1, answer: { numerical: "2" } });
+   expect(result.status).toBe("EXPIRED"); expect(result.answers[0].answer).toEqual(saveInput.answer); expect(db.mockAnswer.updateMany).toHaveBeenCalledTimes(1);
+ });
  it("uses only owner-bound attempt lookups and rejects foreign attempts", async () => { db.mockAttempt.findFirst.mockResolvedValue(null); await expect(getMockAttempt(user, "foreign")).rejects.toBeInstanceOf(ValidationApiError); expect(db.mockAttempt.findFirst.mock.calls[0][0].where).toEqual({ id: "foreign", userId: user.id }); });
  it.each(["TEACHER", "PARENT", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const)("rejects %s before any database access", async (role) => { await expect(mutateMock({ ...user, role }, startInput)).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.$transaction).not.toHaveBeenCalled(); });
  it("retries serialization conflicts with bounded retries", async () => {
@@ -125,6 +150,35 @@ describe("timed mock lifecycle (mocked database only)", () => {
  });
 });
 describe("mock admin publication (mocked database)", () => {
+ it("records draft authorship in the existing editorial system", async () => {
+   await mutateAdminMock(admin, { action: "create", blueprint }); expect(db.contentEditorialRecord.create).toHaveBeenCalledWith({ data: { entity: "MOCK_EXAM", entityId: "mock", revision: 0, authorId: admin.id } });
+ });
+ it("requires independent review before publication and a fresh start", async () => {
+   db.contentEditorialRecord.findUnique.mockResolvedValue(null);
+   await expect(mutateAdminMock(admin, { action: "publish", id: "mock", version: 0 })).rejects.toThrow("Independent review");
+   await expect(mutateMock(user, startInput)).rejects.toThrow("Independent review"); expect(db.mockAttempt.create).not.toHaveBeenCalled(); expect(db.mockExam.updateMany).not.toHaveBeenCalled();
+ });
+ it("rejects author self-review", async () => {
+   db.contentEditorialRecord.findUnique.mockResolvedValue({ authorId: admin.id, revision: 0 });
+   await expect(mutateAdminMock(admin, { action: "review", id: "mock", version: 0, evidence: "Reviewed blueprint" })).rejects.toThrow("different reviewer"); expect(db.contentEditorialRecord.update).not.toHaveBeenCalled();
+ });
+ it("validates and records review without publication", async () => {
+   await mutateAdminMock(admin, { action: "review", id: "mock", version: 0, evidence: "Checked marking and duration" });
+   expect(db.contentEditorialRecord.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ reviewerId: admin.id, reviewedAt: now, reviewedRevision: 0, reviewedFingerprint: editorialFingerprint(blueprint) }) }));
+   expect(db.mockExam.updateMany).not.toHaveBeenCalled();
+ });
+ it("rejects an approved fingerprint after blueprint contents change", async () => {
+   db.mockExam.findUnique.mockResolvedValue({ id: "mock", status: "DRAFT", version: 0, ...blueprint, durationSeconds: 120 });
+   await expect(mutateAdminMock(admin, { action: "publish", id: "mock", version: 0 })).rejects.toThrow("Independent review"); expect(db.mockExam.updateMany).not.toHaveBeenCalled();
+ });
+ it("invalidates review after an edit without altering active snapshots", async () => {
+   await mutateAdminMock(admin, { action: "edit", id: "mock", version: 0, blueprint: { ...blueprint, durationSeconds: 120 } });
+   expect(db.contentEditorialRecord.upsert).toHaveBeenCalledWith(expect.objectContaining({ update: expect.objectContaining({ revision: 1, reviewerId: null, reviewedFingerprint: null, authorId: admin.id }) })); expect(db.mockAttempt.updateMany).not.toHaveBeenCalled();
+ });
+ it("keeps unchanged review valid when publication increments the lifecycle version", async () => {
+   await mutateAdminMock(admin, { action: "publish", id: "mock", version: 0 });
+   expect(db.contentEditorialRecord.update).toHaveBeenCalledWith(expect.objectContaining({ data: { revision: 1, reviewedRevision: 1 } }));
+ });
  it("creates only draft blueprints and minimal audit events", async () => {
    await mutateAdminMock(admin, { action: "create", blueprint }); expect(db.mockExam.create.mock.calls[0][0].data).not.toHaveProperty("status");
    expect(db.auditEvent.create.mock.calls[0][0].data).toMatchObject({ entity: "MOCK_EXAM", action: "MOCK_CREATED_DRAFT" });
@@ -148,7 +202,7 @@ describe("persisted review and mission integration (mocked database)", () => {
  it("withheld incorrect/unanswered outcomes do not leak through queue membership", async () => { complete("NEVER"); expect(await getMockRevision(user)).toEqual([]); });
  it("requires finalization before review actions", async () => { await expect(mutateMockRevision(user, { action: "reviewed", attemptId: "attempt", position: 0 })).rejects.toThrow(); expect(db.mockAnswer.update).not.toHaveBeenCalled(); });
  it("marking reviewed never changes answer or result", async () => { complete(); await mutateMockRevision(user, { action: "reviewed", attemptId: "attempt", position: 0 }); expect(db.mockAnswer.update.mock.calls[0][0].data).toEqual({ reviewedAt: now }); expect(db.mockAttempt.updateMany).not.toHaveBeenCalled(); });
- it("adds a revision task to the authenticated student's active mission", async () => { complete(); db.studyPlan.findFirst.mockResolvedValue({ id: "plan" }); db.missionTask.create.mockResolvedValue({ id: "task" }); expect(await mutateMockRevision(user, { action: "mission", attemptId: "attempt", position: 0 })).toEqual({ taskId: "task" }); expect(db.studyPlan.findFirst.mock.calls[0][0].where).toEqual({ userId: user.id, active: true }); });
+ it("adds a revision task to the authenticated student's active mission", async () => { complete(); db.studyPlan.findFirst.mockResolvedValue({ id: "plan", dailyMinutes: 60 }); db.missionTask.create.mockResolvedValue({ id: "task" }); expect(await mutateMockRevision(user, { action: "mission", attemptId: "attempt", position: 0 })).toEqual({ taskId: "task" }); expect(db.studyPlan.findFirst.mock.calls[0][0].where).toEqual({ userId: user.id, active: true }); });
  it("repeated mission requests cannot add another task", async () => { complete(); Object.assign(attempt.answers[0], { revisionTaskId: "task" }); expect(await mutateMockRevision(user, { action: "mission", attemptId: "attempt", position: 0 })).toEqual({ taskId: "task" }); expect(db.missionTask.create).not.toHaveBeenCalled(); });
  it("requires a saved mission before adding tasks", async () => { complete(); db.studyPlan.findFirst.mockResolvedValue(null); await expect(mutateMockRevision(user, { action: "mission", attemptId: "attempt", position: 0 })).rejects.toThrow("Save a mission"); expect(db.missionTask.create).not.toHaveBeenCalled(); });
 });

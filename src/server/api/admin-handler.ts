@@ -12,10 +12,10 @@ export function adminRead(handler: (user: AuthUser, request: Request) => Promise
     } catch (error) { return handleApiError(error, id); }
   };
 }
-export function adminMutation<T extends z.ZodType>(schema: T, handler: (user: AuthUser, input: z.output<T>) => Promise<unknown>, bodyLimitBytes = 4096) {
+export function adminMutation<T extends z.ZodType>(schema: T, handler: (user: AuthUser, input: z.output<T>) => Promise<unknown>, bodyLimitBytes = 4096, reader: (request: Request, limitBytes: number) => Promise<unknown> = readAuthJson) {
   return async (request: Request) => { const id = getRequestId(request);
     try { const user = await getCurrentUser(); if (!user) throw new AuthenticationApiError(); assertPlatformAdmin(user);
-      requireAuthOrigin(request); return apiOk(await handler(user, schema.parse(await readAuthJson(request, bodyLimitBytes))), id, { headers: { "Cache-Control": "no-store" } });
+      requireAuthOrigin(request); return apiOk(await handler(user, schema.parse(await reader(request, bodyLimitBytes))), id, { headers: { "Cache-Control": "no-store" } });
     } catch (error) { return handleApiError(error, id); }
   };
 }

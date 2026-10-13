@@ -13,6 +13,7 @@ export type AuthUser = {
   email: string;
   name: string;
   role: UserRole;
+  requiresLegalConsent?: boolean;
 };
 
 export function createSessionToken() {
@@ -23,11 +24,11 @@ export function hashSessionToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, db: Pick<typeof prisma, "session"> = prisma) {
   const token = createSessionToken();
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-  await prisma.session.create({
+  await db.session.create({
     data: {
       userId,
       tokenHash: hashSessionToken(token),
@@ -50,7 +51,7 @@ export async function revokeSession(token: string) {
   });
 }
 
-export async function getCurrentUser(): Promise<AuthUser | null> {
+export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -72,20 +73,28 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     return null;
   }
 
+  const requiresLegalConsent = session.user.role === "STUDENT" &&
+    !(await import("./account-consent")).isConsentCurrent(await prisma.accountConsent.findUnique({
+      where: { userId: session.user.id }, include: { guardianGrant: { include: { guardian: { select: { status: true } } } } },
+    }));
+  if (requiresLegalConsent && !allowConsentOnly) return null;
+
   return {
     id: session.user.id,
     email: session.user.email,
     name: session.user.name,
     role: session.user.role,
+    requiresLegalConsent,
   };
 }
 
 export async function requireAuth() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(true);
 
   if (!user) {
     redirect("/login");
   }
+  if (user.requiresLegalConsent) redirect("/account/consent");
 
   return user;
 }

@@ -44,3 +44,12 @@ export async function getPracticeHistory(user: AuthUser) {
   assertStudent(user);
   return prisma.practiceAttempt.findMany({ where: { userId: user.id }, orderBy: [{ submittedAt: "desc" }, { id: "desc" }], take: 100, select: resultSelect });
 }
+export async function getPracticeHistoryPage(user: AuthUser, cursor?: string) {
+  assertStudent(user);
+  const anchor = cursor ? await prisma.practiceAttempt.findFirst({ where: { id: cursor, userId: user.id }, select: { id: true, submittedAt: true } }) : null;
+  if (cursor && !anchor) throw new ValidationApiError("History cursor was not found");
+  const rows = await prisma.practiceAttempt.findMany({ where: { userId: user.id,
+    ...(anchor ? { OR: [{ submittedAt: { lt: anchor.submittedAt } }, { submittedAt: anchor.submittedAt, id: { lt: anchor.id } }] } : {}) },
+    orderBy: [{ submittedAt: "desc" }, { id: "desc" }], take: 51, select: resultSelect });
+  return { records: rows.slice(0, 50), nextCursor: rows.length > 50 ? rows[49].id : null };
+}

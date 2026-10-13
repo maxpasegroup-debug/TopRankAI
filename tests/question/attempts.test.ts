@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Prisma } from "@/generated/prisma/client";
 import { ConflictApiError, ValidationApiError, AuthorizationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
-const db = vi.hoisted(() => ({ $transaction: vi.fn(), practiceAttempt: { findUnique: vi.fn(), create: vi.fn(), findMany: vi.fn() },
+const db = vi.hoisted(() => ({ $transaction: vi.fn(), practiceAttempt: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn(), findMany: vi.fn() },
   studentProfile: { findUnique: vi.fn() }, questionExam: { findFirst: vi.fn() } }));
 vi.mock("@/server/db", () => ({ prisma: db }));
-import { submitPracticeAnswer, getPracticeHistory } from "@/server/practice/service";
+import { submitPracticeAnswer, getPracticeHistory, getPracticeHistoryPage } from "@/server/practice/service";
 const user: AuthUser = { id: "student", role: "STUDENT", name: "S", email: "s@example.com" };
 const input = { requestKey: "8664dc14-a97f-4e63-9747-0a76e597a077", questionId: "q", optionIds: ["a"] };
 beforeEach(() => {
@@ -40,5 +40,23 @@ describe("practice submission (mocked transactions)", () => {
   });
   it("reads only the authenticated student's attempts", async () => {
     await getPracticeHistory(user); expect(db.practiceAttempt.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: user.id }, take: 100 }));
+  });
+  it.each(["P2002", "P2034"])("retries %s using the same identifier and persisted result", async code => {
+    db.$transaction.mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError("Transient conflict", { code, clientVersion: "7.10.0" }));
+    await expect(submitPracticeAnswer(user, input)).resolves.toMatchObject({ id: "attempt" });
+    expect(db.$transaction).toHaveBeenCalledTimes(2); expect(db.practiceAttempt.create).toHaveBeenCalledTimes(1);
+  });
+  it("bounds repeated transaction conflicts", async () => {
+    db.$transaction.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("Conflict", { code: "P2034", clientVersion: "7.10.0" }));
+    await expect(submitPracticeAnswer(user, input)).rejects.toMatchObject({ status: 409 }); expect(db.$transaction).toHaveBeenCalledTimes(3);
+  });
+  it("paginates history with a stable owner-bound cursor", async () => {
+    const submittedAt = new Date("2026-10-11T00:00:00Z"); db.practiceAttempt.findFirst.mockResolvedValue({ id: "cursor", submittedAt }); db.practiceAttempt.findMany.mockResolvedValue(Array.from({ length: 51 }, (_, i) => ({ id: `attempt-${i}` })));
+    const page = await getPracticeHistoryPage(user, "cursor"); expect(page.records).toHaveLength(50); expect(page.nextCursor).toBe("attempt-49");
+    expect(db.practiceAttempt.findFirst).toHaveBeenCalledWith({ where: { id: "cursor", userId: user.id }, select: { id: true, submittedAt: true } });
+    expect(db.practiceAttempt.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ userId: user.id, OR: expect.any(Array) }), take: 51 }));
+  });
+  it("does not accept another student's history cursor", async () => {
+    db.practiceAttempt.findFirst.mockResolvedValue(null); await expect(getPracticeHistoryPage(user, "other-student-cursor")).rejects.toMatchObject({ status: 400 }); expect(db.practiceAttempt.findMany).not.toHaveBeenCalled();
   });
 });

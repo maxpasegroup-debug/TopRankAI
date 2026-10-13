@@ -5,6 +5,7 @@ import { signupSchema } from "@/server/auth/validation";
 import { hashPassword } from "@/server/auth/password";
 import { prisma } from "@/server/db";
 import { logger } from "@/server/logger";
+import { assertAccountPolicyReady, prepareAccountConsent } from "@/server/auth/account-consent";
 import { AuthThrottleError, enforceAuthIdentityRateLimit, enforceAuthRateLimit, readAuthJson, requireAuthOrigin } from "@/server/auth/request-security";
 
 export async function POST(request: Request) {
@@ -15,6 +16,7 @@ export async function POST(request: Request) {
     await enforceAuthRateLimit("signup");
     const body = signupSchema.parse(await readAuthJson(request));
     await enforceAuthIdentityRateLimit("signup", request, body.email);
+    assertAccountPolicyReady();
     const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
 
     if (existingUser) {
@@ -24,6 +26,7 @@ export async function POST(request: Request) {
     const passwordHash = await hashPassword(body.password);
 
     const user = await prisma.$transaction(async (tx) => {
+      const saveConsent = await prepareAccountConsent(tx, body.email, body);
       const createdUser = await tx.user.create({
         data: {
           email: body.email,
@@ -34,11 +37,12 @@ export async function POST(request: Request) {
       });
 
       await tx.studentProfile.create({ data: { userId: createdUser.id } });
-
-      return createdUser;
+      await saveConsent(createdUser.id);
+      const session = await createSession(createdUser.id, tx);
+      return { ...createdUser, session };
     });
 
-    const session = await createSession(user.id);
+    const session = user.session;
     const response = apiOk({ user: { id: user.id, email: user.email, name: user.name, role: user.role } }, requestId, {
       status: 201,
     });

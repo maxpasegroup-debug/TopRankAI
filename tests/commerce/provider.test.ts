@@ -40,7 +40,8 @@ describe("Razorpay transport: simulated fixtures, no network", () => {
 });
 describe("commercial inputs and templates", () => {
  it("accepts a validated fixture catalogue, never seeds it", () => expect(packageSchema.parse(packageInput).durationDays).toBe(30));
- it.each([0, -1, 1.1, 100000001])("rejects invalid price %s", (amountMinor) => expect(packageSchema.safeParse({ ...packageInput, amountMinor }).success).toBe(false));
+ it.each([-1, 1.1, 100000001])("rejects invalid price %s", (amountMinor) => expect(packageSchema.safeParse({ ...packageInput, amountMinor }).success).toBe(false));
+ it("accepts zero only for a fixed free-package offering", () => { expect(packageSchema.safeParse({ ...packageInput, amountMinor: 0, interval: "ONCE" }).success).toBe(true); expect(packageSchema.safeParse({ ...packageInput, amountMinor: 0, interval: "MONTH" }).success).toBe(false); });
  it.each(["USD", "inr", "", "INR "])("rejects unsupported currency %s", (currency) => expect(packageSchema.safeParse({ ...packageInput, currency }).success).toBe(false));
  it("rejects duplicate feature privileges and invalid availability", () => { expect(packageSchema.safeParse({ ...packageInput, features: ["MOCK_ACCESS", "MOCK_ACCESS"] }).success).toBe(false); expect(packageSchema.safeParse({ ...packageInput, availableUntil: packageInput.availableFrom }).success).toBe(false); });
  it.each(["AI_CREDITS", "AI_TOKENS", "WALLET_BALANCE", "EARNINGS", "CREDIT_POOL"])("blocks accounting-backed feature %s", (code) => expect(adminCommerceSchema.safeParse({ action: "feature", code, title: "Fixture" }).success).toBe(false));

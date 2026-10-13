@@ -17,9 +17,11 @@ const mocks = vi.hoisted(() => ({
     },
     chapter: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     lesson: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     studentProfile: {
       findUnique: vi.fn(),
@@ -38,6 +40,8 @@ describe("content service", () => {
     vi.clearAllMocks();
     mocks.prisma.commerceGate.findUnique.mockResolvedValue(null);
     mocks.currentUser.mockResolvedValue(student);
+    mocks.prisma.chapter.findMany.mockResolvedValue([{ id: "chapter-1" }]);
+    mocks.prisma.lesson.findMany.mockResolvedValue([{ id: "lesson-1" }]);
   });
 
   it("retrieves published active exams", async () => {
@@ -121,6 +125,18 @@ describe("content service", () => {
 
     expect(result.resources).toHaveLength(1);
     expect(result.subject.slug).toBe("physics");
+  });
+  it("rejects ambiguous lesson slugs rather than choosing another chapter", async () => {
+    mocks.prisma.lesson.findMany.mockResolvedValue([{ id: "one" }, { id: "two" }]);
+    const { getLessonDetail } = await import("@/server/content/service");
+    await expect(getLessonDetail("shared-slug")).rejects.toBeInstanceOf(ValidationApiError);
+    expect(mocks.prisma.lesson.findFirst).not.toHaveBeenCalled();
+  });
+  it("rejects ambiguous chapter slugs rather than choosing another subject", async () => {
+    mocks.prisma.chapter.findMany.mockResolvedValue([{ id: "one" }, { id: "two" }]);
+    const { listLessonsForChapter } = await import("@/server/content/service");
+    await expect(listLessonsForChapter("shared-slug")).rejects.toBeInstanceOf(ValidationApiError);
+    expect(mocks.prisma.chapter.findFirst).not.toHaveBeenCalled();
   });
 
   it("denies paid lesson detail before disclosing resources when entitlement is absent", async () => {

@@ -34,6 +34,7 @@ export function assertStudent(user: AuthUser) {
   if (user.role !== "STUDENT") {
     throw new AuthorizationApiError("Only student accounts can access this resource");
   }
+  if (user.requiresLegalConsent) throw new AuthorizationApiError("Complete your account consent before continuing");
 }
 
 function toHours(minutes: number | null) {
@@ -132,6 +133,7 @@ export async function getOnboardingStatus(user: AuthUser) {
 
 export async function updateStudentProfile(user: AuthUser, input: StudentProfileUpdateInput): Promise<StudentProfileDto> {
   assertStudent(user);
+  if (input.completeOnboarding) throw new ValidationApiError("Confirm your mission plan to finish onboarding");
 
   if (input.targetExamId) {
     const exam = await prisma.exam.findFirst({
@@ -168,7 +170,7 @@ export async function updateStudentProfile(user: AuthUser, input: StudentProfile
         targetYear: input.targetYear,
         dreamCollege: input.dreamCollege,
         dailyStudyMins,
-        onboardingCompletedAt: input.completeOnboarding ? new Date() : undefined,
+        onboardingCompletedAt: undefined,
       },
       create: {
         userId: user.id,
@@ -176,7 +178,7 @@ export async function updateStudentProfile(user: AuthUser, input: StudentProfile
         targetYear: input.targetYear,
         dreamCollege: input.dreamCollege,
         dailyStudyMins,
-        onboardingCompletedAt: input.completeOnboarding ? new Date() : undefined,
+        onboardingCompletedAt: undefined,
       },
       include: {
         user: true,

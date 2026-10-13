@@ -6,7 +6,10 @@ import { Prisma } from "@/generated/prisma/client";
 import { ConflictApiError } from "@/server/api/errors";
 import { scoreAnswer } from "@/server/practice/scoring";
 import { safeResourceUrl } from "@/server/content/resource-url";
-export const entitySchema = z.enum(["EXAM", "SUBJECT", "CHAPTER", "LESSON", "RESOURCE", "QUESTION", "QUESTION_EXAM"]);
+import { assertReviewedPublication } from "@/server/content/editorial";
+import { assertQuestionReviewed, assertQuestionParentsPublished } from "@/server/question/authoring";
+import { inAppNotice } from "@/server/notifications/service";
+export const entitySchema = z.enum(["EXAM", "SUBJECT", "EXAM_SUBJECT", "CHAPTER", "LESSON", "RESOURCE", "QUESTION", "QUESTION_EXAM"]);
 export const publicationSchema = z.object({ entity: entitySchema, id: z.string().min(1).max(100),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]), active: z.boolean(),
   reviewStatus: z.enum(["NEEDS_REVIEW", "REVIEWED"]).optional(),
@@ -36,6 +39,7 @@ export async function listPublicationRecords(user: AuthUser, entity: z.infer<typ
   switch (entity) {
     case "EXAM": return prisma.exam.findMany({ ...options, select: { id: true, name: true, status: true, active: true } });
     case "SUBJECT": return prisma.subject.findMany({ ...options, select: { id: true, name: true, status: true, active: true } });
+    case "EXAM_SUBJECT": return prisma.examSubject.findMany({ ...options, select: { id: true, examId: true, subjectId: true, status: true, active: true } });
     case "CHAPTER": return prisma.chapter.findMany({ ...options, select: { id: true, title: true, status: true, active: true } });
     case "LESSON": return prisma.lesson.findMany({ ...options, select: { id: true, title: true, status: true, active: true } });
     case "RESOURCE": return prisma.learningResource.findMany({ ...options, select: { id: true, title: true, url: true, reference: true, status: true, active: true } });
@@ -48,9 +52,11 @@ export async function changePublication(user: AuthUser, input: z.infer<typeof pu
   assertPlatformAdmin(user);
   return prisma.$transaction(async (tx) => {
     const data = { status: input.status, active: input.active };
+    if (input.status === "PUBLISHED" && !["QUESTION", "QUESTION_EXAM"].includes(input.entity)) await assertReviewedPublication(tx, input.entity, input.id);
     switch (input.entity) {
       case "EXAM": await tx.exam.update({ where: { id: input.id }, data }); break;
       case "SUBJECT": await tx.subject.update({ where: { id: input.id }, data }); break;
+      case "EXAM_SUBJECT": await tx.examSubject.update({ where: { id: input.id }, data }); break;
       case "CHAPTER": await tx.chapter.update({ where: { id: input.id }, data }); break;
       case "LESSON": await tx.lesson.update({ where: { id: input.id }, data }); break;
       case "RESOURCE": {
@@ -59,6 +65,10 @@ export async function changePublication(user: AuthUser, input: z.infer<typeof pu
         await tx.learningResource.update({ where: { id: input.id }, data }); break;
       }
       case "QUESTION": {
+        if (input.status === "PUBLISHED" || input.reviewStatus === "REVIEWED") {
+          const reviewed = await assertQuestionReviewed(tx, input.id);
+          if (input.status === "PUBLISHED") await assertQuestionParentsPublished(tx, reviewed);
+        }
         const question = await tx.question.findUnique({ where: { id: input.id }, include: { options: { where: { active: true } }, exams: { where: { active: true, status: "PUBLISHED" } } } });
         if (!question) throw new ValidationApiError("Question was not found");
         if (input.status === "PUBLISHED") {
@@ -68,24 +78,36 @@ export async function changePublication(user: AuthUser, input: z.infer<typeof pu
         }
         await tx.question.update({ where: { id: input.id }, data: { ...data, reviewStatus: input.reviewStatus } }); break;
       }
-      case "QUESTION_EXAM": await tx.questionExam.update({ where: { id: input.id }, data: { ...data, scoringMode: input.scoringMode } }); break;
+      case "QUESTION_EXAM": {
+        const link = await tx.questionExam.findUnique({ where: { id: input.id } });
+        if (!link) throw new ValidationApiError("Question exam link was not found");
+        if (input.scoringMode && input.scoringMode !== link.scoringMode) throw new ValidationApiError("Create a newly reviewed question instead of changing its scoring");
+        if (input.status === "PUBLISHED") await assertQuestionParentsPublished(tx, await assertQuestionReviewed(tx, link.questionId));
+        await tx.questionExam.update({ where: { id: input.id }, data }); break;
+      }
     }
     await tx.auditEvent.create({ data: { actorId: user.id, entity: input.entity, entityId: input.id, action: `PUBLICATION_${input.status}` } });
     return { id: input.id };
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
-export const helpResponseSchema = z.object({ id: z.string().min(1).max(100), status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED"]),
+export const helpResponseSchema = z.object({ id: z.string().min(1).max(100), version: z.number().int().nonnegative(), status: z.enum(["OPEN", "IN_PROGRESS", "RESOLVED"]),
   response: z.string().trim().min(1).max(2000) }).strict();
 export async function listSupportQueue(user: AuthUser) {
   assertPlatformAdmin(user);
-  return prisma.helpRequest.findMany({ orderBy: { createdAt: "asc" }, take: 100,
-    select: { id: true, subject: true, message: true, status: true, response: true } });
+  return prisma.helpRequest.findMany({ orderBy: [{ status: "asc" }, { createdAt: "asc" }, { id: "asc" }], take: 100,
+    select: { id: true, subject: true, message: true, status: true, response: true, version: true } });
 }
 export async function respondToHelp(user: AuthUser, input: z.infer<typeof helpResponseSchema>) {
   assertPlatformAdmin(user);
+  input = helpResponseSchema.parse(input);
   return prisma.$transaction(async (tx) => {
-    await tx.helpRequest.update({ where: { id: input.id }, data: { status: input.status, response: input.response } });
+    const current = await tx.helpRequest.findUnique({ where: { id: input.id } });
+    if (!current) throw new ValidationApiError("Support request is unavailable");
+    if (current.status === input.status && current.response === input.response) return { id: current.id, version: current.version };
+    const changed = await tx.helpRequest.updateMany({ where: { id: input.id, version: input.version }, data: { status: input.status, response: input.response, version: { increment: 1 } } });
+    if (changed.count !== 1) throw new ConflictApiError("Support request changed. Reload before replying.");
+    await inAppNotice(tx, current.userId, `help:${current.id}:${input.version + 1}`, "SUPPORT_UPDATED");
     await tx.auditEvent.create({ data: { actorId: user.id, entity: "HELP_REQUEST", entityId: input.id, action: `HELP_${input.status}` } });
-    return { id: input.id };
+    return { id: input.id, version: input.version + 1 };
   });
 }

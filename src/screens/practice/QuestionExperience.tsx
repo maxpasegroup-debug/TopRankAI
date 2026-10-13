@@ -4,8 +4,9 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { PageContainer } from "../../components/ui/PageContainer";
 import type { StudentQuestionDto } from "../../server/question/service";
 import { AnswerSubmission } from "@/components/practice/AnswerSubmission";
+import { QuestionBookmark } from "@/components/practice/QuestionBookmark";
 
-export function QuestionExperience({ question }: { question?: StudentQuestionDto | null }) {
+export function QuestionExperience({ question, ownerId }: { question?: StudentQuestionDto | null; ownerId?: string }) {
   if (!question) {
     return (
       <PageContainer>
@@ -18,7 +19,8 @@ export function QuestionExperience({ question }: { question?: StudentQuestionDto
     <PageContainer>
       <div className="question-screen">
         <QuestionCard question={question} />
-        <AnswerSubmission key={question.id} question={question} />
+        <QuestionBookmark key={`bookmark-${question.id}`} questionId={question.id} />
+        <AnswerSubmission key={`${ownerId}-${question.id}`} question={question} ownerId={ownerId} />
         <div className="question-actions">
           <Button href={`/practice/subjects/${question.subject.slug}/questions`} variant="secondary">
             Back to Questions

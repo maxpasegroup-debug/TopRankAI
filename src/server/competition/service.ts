@@ -5,7 +5,8 @@ import { assertStudent } from "@/server/student/service";
 import { assertPlatformAdmin } from "@/server/operations/service";
 import { prisma } from "@/server/db";
 import { ValidationApiError, ConflictApiError } from "@/server/api/errors";
-import { mutateMock, reconcileCompetitionAttempt, mutateAdminMock } from "@/server/mock/service";
+import { mutateMock, reconcileCompetitionAttempt, mutateAdminMock, requireMockReview } from "@/server/mock/service";
+import { inAppNotice } from "@/server/notifications/service";
 import { atomic, audit, earn, qualification, type Tx } from "./achievements";
 import { phase, requireWindow, rankEntries, verifiedScore } from "./rules";
 import { configSchema, competitionSchema, adminCompetitionSchema, participationSchema, pageSchema } from "./validation";
@@ -20,11 +21,13 @@ async function bump(tx: Tx, c: Competition, data: Prisma.CompetitionUpdateManyMu
  if (changed.count !== 1) throw new ConflictApiError("Competition changed. Reload first.");
 }
 function dto(c: Competition) { return { id: c.id, title: c.title, type: c.type, phase: phase(c.status, c.startsAt, c.endsAt, new Date()),
+ rankingState: c.status === "CANCELLED" ? "CANCELLED" : c.status === "COMPLETED" && c.resultsVerifiedAt ? "VERIFIED" : "PROVISIONAL", resultsVerifiedAt: c.resultsVerifiedAt?.toISOString() ?? null,
  startsAt: c.startsAt.toISOString(), endsAt: c.endsAt.toISOString(), finishBy: new Date(c.endsAt.getTime() + c.mockExam.durationSeconds * 1000).toISOString(),
  durationSeconds: c.mockExam.durationSeconds, config: configSchema.parse(c.config) }; }
 async function validateCompetition(tx: Tx, c: Competition) {
  const config = configSchema.parse(c.config), mock = c.mockExam;
  if (mock.status !== "PUBLISHED" || mock.version !== c.mockVersion || mock.maxAttempts !== 1 || mock.revealPolicy !== "NEVER") throw new ValidationApiError("Use an unchanged published, single-attempt mock with withheld explanations");
+ await requireMockReview(tx, mock);
  if (await tx.mockAttempt.count({ where: { mockExamId: mock.id } })) throw new ValidationApiError("Use a dedicated mock with no previous attempts");
  for (const award of config.awards) { const def = await tx.achievementDefinition.findFirst({ where: { id: award.definitionId, status: "PUBLISHED", kind: "PLACEMENT" } });
    if (!def || award.toRank > def.threshold || award.toRank > config.capacity) throw new ValidationApiError("Publish compatible placement definitions and rank ranges first"); }
@@ -44,10 +47,12 @@ async function settle(tx: Tx, c: Competition, actorId: string, close = false) {
    if (!a.finalizedAt || a.finalizedAt > new Date(c.endsAt.getTime() + c.mockExam.durationSeconds * 1000)) throw new ValidationApiError("Result falls outside the permitted finish window");
    const verified = verifiedScore(a.result, config.scoring); e.score = verified.score; e.timeSeconds = verified.timeSeconds;
  }
- if (close && (new Date() < c.endsAt || pending)) throw new ValidationApiError("Close only after entry window ends and started attempts finish or expire");
+ if ((close || c.status === "COMPLETED") && (new Date() < c.endsAt || pending)) throw new ValidationApiError("Close only after entry window ends and started attempts finish or expire");
  const ranked = rankEntries(entries);
  for (const e of entries) await tx.competitionEntry.update({ where: { id: e.id }, data: { score: e.score, timeSeconds: e.timeSeconds, rank: ranked.find((r) => r.id === e.id)?.rank ?? null } });
- await bump(tx, c, close ? { status: "COMPLETED" } : {});
+ const verified = close || c.status === "COMPLETED";
+ await bump(tx, c, { ...(close ? { status: "COMPLETED" } : {}), resultsVerifiedAt: verified ? new Date() : null });
+ if (verified) for (const entry of entries) await inAppNotice(tx, entry.userId, `competition:${c.id}:verified:${c.version + 1}`, "COMPETITION_VERIFIED");
  if (close || c.status === "COMPLETED") {
    const activeAwards = new Set<string>();
    for (const rule of config.awards) {
@@ -91,13 +96,13 @@ export async function competitionDirectory(user: AuthUser) {
 export async function competitionLeaderboard(user: AuthUser, id: string, rawPage: unknown = 1) {
  assertStudent(user); idSchema.parse(id); const page = pageSchema.parse(rawPage);
  return atomic(async (tx) => { const c = await getCompetition(tx, id); if (c.status === "DRAFT") throw missing();
-   const rows = await tx.competitionEntry.findMany({ where: { competitionId: id, rank: { not: null }, disqualified: false },
+   const rows = c.status === "CANCELLED" ? [] : await tx.competitionEntry.findMany({ where: { competitionId: id, rank: { not: null }, disqualified: false },
      orderBy: [{ rank: "asc" }, { alias: "asc" }], skip: (page - 1) * 25, take: 26, select: { alias: true, visible: true, rank: true, score: true, timeSeconds: true } });
    const mine = await tx.competitionEntry.findUnique({ where: { competitionId_userId: { competitionId: id, userId: user.id } },
      select: { attemptId: true, rank: true, score: true, disqualified: true, visible: true } });
    return { competition: dto(c), page, hasNext: rows.length > 25, rows: rows.slice(0, 25).map((e) => ({ rank: e.rank,
      name: e.visible ? `Participant ${e.alias}` : "Private participant", score: e.visible ? e.score?.toString() : null, timeSeconds: e.visible ? e.timeSeconds : null })),
-     mine: mine ? { ...mine, score: mine.score?.toString() ?? null } : null };
+     mine: mine ? { ...mine, rank: c.status === "CANCELLED" ? null : mine.rank, score: c.status === "CANCELLED" ? null : mine.score?.toString() ?? null } : null };
  });
 }
 export async function participate(user: AuthUser, raw: z.infer<typeof participationSchema>) {
@@ -105,7 +110,9 @@ export async function participate(user: AuthUser, raw: z.infer<typeof participat
  if (input.action !== "join") return atomic(async (tx) => {
    const e = await tx.competitionEntry.findUnique({ where: { competitionId_userId: { competitionId: input.id, userId: user.id } } }); if (!e) throw missing();
    if (input.action === "visibility") { await tx.competitionEntry.update({ where: { id: e.id }, data: { visible: input.visible } }); return { saved: true }; }
-   return settle(tx, await getCompetition(tx, input.id), user.id);
+   const c = await getCompetition(tx, input.id);
+   if (c.status === "COMPLETED") return { ranked: await tx.competitionEntry.count({ where: { competitionId: c.id, rank: { not: null }, disqualified: false } }), pending: 0 };
+   return settle(tx, c, user.id);
  });
  const entry = await atomic(async (tx) => {
    const replay = await tx.competitionEntry.findUnique({ where: { userId_requestKey: { userId: user.id, requestKey: input.requestKey } } });
@@ -149,6 +156,7 @@ export async function overallLeaderboard(user: AuthUser, rawPage: unknown = 1) {
    FROM "CompetitionEntry" e JOIN "Competition" c ON c.id = e."competitionId"
    JOIN "User" u ON u.id = e."userId"
    WHERE c.status = 'COMPLETED' AND e.visible = true AND e.disqualified = false
+     AND c."resultsVerifiedAt" IS NOT NULL
      AND e.rank IS NOT NULL AND u.status = 'ACTIVE' AND u.role = 'STUDENT'
    GROUP BY e."userId")
    SELECT alias, points, RANK() OVER (ORDER BY points DESC, seconds ASC, joined ASC) AS rank
@@ -215,7 +223,9 @@ export async function adminCompetitionMutation(user: AuthUser, raw: z.infer<type
      if (c.status !== "DRAFT" || new Date() >= c.startsAt) throw new ValidationApiError("Validate and publish a draft before its start time");
      await validateCompetition(tx, c); if (input.action === "validate") return { valid: true }; await bump(tx, c, { status: "PUBLISHED" });
    } else if (input.action === "cancel") {
-     await bump(tx, c, { status: "CANCELLED" }); await tx.competitionEntry.updateMany({ where: { competitionId: c.id }, data: { rank: null } });
+     await bump(tx, c, { status: "CANCELLED", resultsVerifiedAt: null }); await tx.competitionEntry.updateMany({ where: { competitionId: c.id }, data: { rank: null } });
+     const affected = await tx.competitionEntry.findMany({ where: { competitionId: c.id }, take: 1000, select: { userId: true } });
+     for (const entry of affected) await inAppNotice(tx, entry.userId, `competition:${c.id}:cancelled:${c.version + 1}`, "COMPETITION_CANCELLED");
      const awards = await tx.earnedAchievement.findMany({ where: { scope: c.id, status: "ACTIVE" }, select: { id: true } });
      for (const a of awards) await revoke(tx, user.id, a.id, "AUTO", input.reason!);
    } else if (input.action === "moderate") {

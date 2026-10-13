@@ -42,7 +42,27 @@
     "prisma",
     "*.ts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next/phase2-verification/types/**/*.ts",
+    ".next/phase2-verification/dev/types/**/*.ts",
+    ".next/phase3-verification/types/**/*.ts",
+    ".next/phase3-verification/dev/types/**/*.ts",
+    ".next/studio-verification/types/**/*.ts",
+    ".next/studio-verification/dev/types/**/*.ts",
+    ".next/phase4-verification/types/**/*.ts",
+    ".next/phase4-verification/dev/types/**/*.ts",
+    ".next/phase5-verification/types/**/*.ts",
+    ".next/phase5-verification/dev/types/**/*.ts",
+    ".next/phase6-verification/types/**/*.ts",
+    ".next/phase6-verification/dev/types/**/*.ts",
+    ".next/phase7-verification/types/**/*.ts",
+    ".next/phase7-verification/dev/types/**/*.ts",
+    ".next/phase8-verification/types/**/*.ts",
+    ".next/phase8-verification/dev/types/**/*.ts",
+    ".next/phase9-verification/types/**/*.ts",
+    ".next/phase9-verification/dev/types/**/*.ts",
+    ".next/phase10-verification/types/**/*.ts",
+    ".next/phase10-verification/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
