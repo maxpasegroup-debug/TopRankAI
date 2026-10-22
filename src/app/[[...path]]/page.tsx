@@ -37,12 +37,8 @@ import { SuccessState } from "@/screens/SuccessState";
 import { TaraChat } from "@/screens/tara/TaraChat";
 import { TaraMood } from "@/screens/tara/TaraMood";
 import { TaraReflection } from "@/screens/tara/TaraReflection";
-import { requireAuth, requireRole } from "@/server/auth/session";
 import { parentRoles, schoolRoles } from "@/server/auth/roles";
 import { redirect } from "next/navigation";
-import { getMissionControl, getOnboardingStatus, getStudentProfile, listSupportedExams } from "@/server/student/service";
-import { getLessonDetail, getStudentLearningHome, listChaptersForSubject, listLessonsForChapter } from "@/server/content/service";
-import { getQuestion, getStudentPracticeHome, listQuestions, listQuestionsForChapter, listQuestionsForSubject } from "@/server/question/service";
 import type { ScreenKey } from "@/types/navigation";
 import type { AuthUser } from "@/server/auth/session";
 
@@ -59,32 +55,38 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
 
   if (learningPath && context.user) {
     if (learningPath.kind === "subject") {
+      const { listChaptersForSubject } = await import("@/server/content/service");
       const data = await listChaptersForSubject(learningPath.subjectSlug);
       return <SubjectWorkspace subject={data.subject.name} contentSubject={data.subject} contentChapters={data.chapters} />;
     }
 
     if (learningPath.kind === "chapter") {
+      const { listLessonsForChapter } = await import("@/server/content/service");
       const data = await listLessonsForChapter(learningPath.chapterSlug, learningPath.subjectSlug);
       return <ChapterLessons subject={data.subject} chapter={data.chapter} lessons={data.lessons} />;
     }
 
     if (learningPath.kind === "lesson") {
+      const { getLessonDetail } = await import("@/server/content/service");
       return <LessonExperience lesson={await getLessonDetail(learningPath.lessonSlug, learningPath)} />;
     }
   }
 
   if (practicePath && context.user) {
     if (practicePath.kind === "subject") {
+      const { listQuestionsForSubject } = await import("@/server/question/service");
       const data = await listQuestionsForSubject(practicePath.subjectSlug);
       return <ChapterPractice subject={data.subject} questions={data.questions} />;
     }
 
     if (practicePath.kind === "chapter") {
+      const { listQuestionsForChapter } = await import("@/server/question/service");
       const data = await listQuestionsForChapter(practicePath.chapterSlug);
       return <ChapterPractice subject={data.subject} chapter={data.chapter} questions={data.questions} />;
     }
 
     if (practicePath.kind === "question") {
+      const { getQuestion } = await import("@/server/question/service");
       return <QuestionExperience question={await getQuestion(practicePath.questionId)} />;
     }
   }
@@ -126,11 +128,13 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
       if (!context.user) {
         redirect("/login");
       }
+      const { getMissionControl } = await import("@/server/student/service");
       return <Home {...(await getMissionControl(context.user))} />;
     case "learn":
       if (!context.user) {
         redirect("/login");
       }
+      const { getStudentLearningHome } = await import("@/server/content/service");
       return <Learn {...(await getStudentLearningHome(context.user))} />;
     case "learnPhysics":
       return <SubjectWorkspace subject="Physics" />;
@@ -149,14 +153,17 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
       if (!context.user) {
         redirect("/login");
       }
+      const { getStudentPracticeHome } = await import("@/server/question/service");
       return <Practice {...(await getStudentPracticeHome(context.user))} />;
     case "practicePhysics":
+      const { listQuestionsForSubject } = await import("@/server/question/service");
       return <ChapterPractice {...(await listQuestionsForSubject("physics"))} />;
     case "practiceQuestion":
       if (!context.user) {
         redirect("/login");
       }
-      return <QuestionExperience question={(await listQuestions({ exam: (await getStudentPracticeHome(context.user)).exam?.code })).at(0) ?? null} />;
+      const { getStudentPracticeHome: getPracticeHomeForQuestion, listQuestions } = await import("@/server/question/service");
+      return <QuestionExperience question={(await listQuestions({ exam: (await getPracticeHomeForQuestion(context.user)).exam?.code })).at(0) ?? null} />;
     case "practiceComplete":
     case "practiceReview":
       return <PracticeReview />;
@@ -183,6 +190,7 @@ async function renderScreen(screen: ScreenKey, context: RenderContext) {
       if (!context.user) {
         redirect("/login");
       }
+      const { getStudentProfile } = await import("@/server/student/service");
       return <Me profile={await getStudentProfile(context.user)} />;
     case "parentPreview":
       return <PageContainer><main className="journey-shell"><h1>Parent workspace</h1><p>Student reports are unavailable until consent and relationship verification are implemented.</p></main></PageContainer>;
@@ -318,6 +326,7 @@ export default async function Page({ params }: { params: Promise<{ path?: string
   const pathname = getPath(resolvedParams.path);
 
   if (pathname === "/unauthorized") {
+    const { requireAuth } = await import("@/server/auth/session");
     await requireAuth();
     return <Unauthorized />;
   }
@@ -329,17 +338,22 @@ export default async function Page({ params }: { params: Promise<{ path?: string
 
   if (!isPublicPath(pathname)) {
     if (route.screen === "parentPreview") {
+      const { requireRole } = await import("@/server/auth/session");
       user = await requireRole(parentRoles);
     } else if (route.screen === "schoolPreview") {
+      const { requireRole } = await import("@/server/auth/session");
       user = await requireRole(schoolRoles);
     } else if (isLearningContent || isPracticeContent || isStudentAppScreen(route.screen) || isStudentOnboardingPath(route.screen)) {
+      const { requireRole } = await import("@/server/auth/session");
       user = await requireRole(["STUDENT"]);
     } else {
+      const { requireAuth } = await import("@/server/auth/session");
       user = await requireAuth();
     }
   }
 
   if (user?.role === "STUDENT") {
+    const { getOnboardingStatus } = await import("@/server/student/service");
     const status = await getOnboardingStatus(user);
 
     if (route.screen === "missionReady" && !status.completed) {

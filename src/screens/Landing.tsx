@@ -46,6 +46,29 @@ const journeyStages = [
 
 const exams = ["NEET", "JEE", "KEAM", "CUET", "NDA"];
 
+const faqs = [
+  {
+    question: "Which exams does TopRank support?",
+    answer: "Daily missions adapt to NEET, JEE, KEAM, CUET, and NDA. Students pick a target exam during onboarding, and practice stays tied to that journey.",
+  },
+  {
+    question: "What does a student do each day?",
+    answer: "Mission Control gives one clear goal: a short lesson, a practice set, and a progress check. Tara suggests the next small step when the syllabus feels too large.",
+  },
+  {
+    question: "Can parents see progress without adding pressure?",
+    answer: "The parent view shows effort, attendance, and a weekly summary. It is built to make consistency visible, not to turn every score into a comparison.",
+  },
+  {
+    question: "How do schools use TopRank?",
+    answer: "Schools get a simple pulse of engagement, participation, and weekly activity so teachers can see who is showing up for the work.",
+  },
+  {
+    question: "Do I need an account to look around?",
+    answer: "The demo opens Mission Control without a database login. A real student account is required for saved lessons, practice history, and progress.",
+  },
+];
+
 const trustSnapshots = [
   { title: "Daily Missions", label: "today", value: "one clear goal" },
   { title: "Practice First", label: "questions", value: "start with 30" },
@@ -80,6 +103,7 @@ export function Landing() {
         </div>
       ) : null}
 
+      <section className="tr-hero-stage">
       <nav className="tr-nav" aria-label="Public navigation">
         <a className="tr-logo" href="/">
           <span>TopRank</span>
@@ -90,6 +114,7 @@ export function Landing() {
           <a href="#platform">Platform</a>
           <a href="#parents">Parents</a>
           <a href="#schools">Schools</a>
+          <a href="#faq">FAQ</a>
           <a href="#about">About</a>
         </div>
         <div className="tr-nav-actions">
@@ -113,6 +138,19 @@ export function Landing() {
         </div>
 
         <div className="tr-product-preview" id="platform" aria-label="TopRank Mission Control preview">
+          <div className="tr-hero-art-wrap">
+            <span className="tr-float-tile tr-float-mission">Mission</span>
+            <span className="tr-float-tile tr-float-practice">Practice</span>
+            <span className="tr-float-tile tr-float-Vision">Vision</span>
+            <span className="tr-float-tile tr-float-progress">Progress</span>
+            <span className="tr-float-tile tr-float-Exams">Exams</span>
+            <span className="tr-float-tile tr-float-Prepare">Prepare</span>
+            <img
+              className="tr-hero-art"
+              src="/hero/student-laptop.png"
+              alt="Student with a laptop and backpack"
+            />
+          </div>
           <div className="tr-preview-top">
             <div>
               <p>Mission Control</p>
@@ -148,6 +186,7 @@ export function Landing() {
             ))}
           </div>
         </div>
+      </section>
       </section>
 
       <section className="tr-showcase" aria-label="TopRank product flow">
@@ -245,11 +284,47 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="tr-section tr-about" id="about">
+      <section className="tr-section tr-faq" id="faq" aria-label="Frequently asked questions">
+        <div className="tr-section-heading">
+          <p className="tr-eyebrow">FAQ</p>
+          <h2>Questions families ask first.</h2>
+        </div>
+        <div className="tr-faq-list">
+          {faqs.map((item) => (
+            <details className="tr-faq-item" key={item.question}>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section className="tr-section tr-about bg-black" id="about">
         <p className="tr-eyebrow">Ready for your first mission?</p>
         <h2>Your next rank starts with your next mission.</h2>
         <a className="tr-primary tr-arrow" href="/demo/start">Experience Mission Control</a>
       </section>
+
+      <footer className="tr-footer">
+        <div className="tr-footer-inner">
+          <div className="tr-footer-brand">
+            <a className="tr-logo" href="/">
+              <span>TopRank</span>
+              <small>Personalized Entrance Prep</small>
+            </a>
+            {/* <p>One daily mission for students, a calm view for parents, and a clear pulse for schools.</p> */}
+          </div>
+          <nav className="tr-footer-links" aria-label="Footer">
+            <a href="#platform">Platform</a>
+            <a href="#parents">Parents</a>
+            <a href="#schools">Schools</a>
+            <a href="#faq">FAQ</a>
+            <a href="/login">Login</a>
+            <a href="/signup">Sign up</a>
+          </nav>
+          <p className="tr-footer-copy">© {new Date().getFullYear()} TopRank. Preparation, one mission at a time.</p>
+        </div>
+      </footer>
     </main>
   );
 }
