@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
-    "build": "prisma generate --config prisma7.config.ts && next build",
-    "start": "next start --hostname 0.0.0.0",
+    "build": "node scripts/production.mjs build",
+    "start": "node scripts/production.mjs start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prisma:generate": "prisma generate --config prisma7.config.ts",
