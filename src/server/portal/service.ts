@@ -6,6 +6,7 @@ import { freshActor, tenantContext, guardianAccess, schoolStudentAccess, activeS
 import { portalMutationSchema, portalQuerySchema, scopesSchema, type Scope } from "./validation";
 import { sharedSummary, csvCell } from "./reporting";
 import { createInvitation, revokeInvitation } from "./invitations";
+import { sharingStudentWhere } from "@/server/auth/sharing";
 type Query = z.output<typeof portalQuerySchema>;
 type Mutation = z.output<typeof portalMutationSchema>;
 const now = () => new Date();
@@ -61,7 +62,7 @@ export async function readPortal(user: AuthUser, query: Query) {
    if (query.mode === "export") {
      const context = await tenantContext(user, query.schoolId, tx, true);
      if (!query.reason) throw denied();
-     const records = await tx.schoolEnrollment.findMany({ where: { schoolId: context.school.id, status: "ACTIVE", expiresAt: { gt: now() } }, orderBy: { id: "asc" }, skip: (query.page - 1) * 25, take: 25 });
+     const records = await tx.schoolEnrollment.findMany({ where: { schoolId: context.school.id, status: "ACTIVE", expiresAt: { gt: now() }, student: sharingStudentWhere() }, orderBy: { id: "asc" }, skip: (query.page - 1) * 25, take: 25 });
      const rows = ["Student,Completed missions,Completed lessons,Recorded minutes"];
      for (const record of records) {
        if (!validConsent(record) || !record.scopes.includes("ACTIVITY")) continue;
@@ -74,7 +75,7 @@ export async function readPortal(user: AuthUser, query: Query) {
    }
    const notifications = await tx.commerceNotification.findMany({ where: { userId: actor.id, channel: "IN_APP", status: "AVAILABLE", template: "PORTAL_UPDATED" }, select: { id: true, message: true, readAt: true }, take: 25, orderBy: { createdAt: "desc" } });
    if (actor.role === "PARENT" || actor.role === "STUDENT") {
-     const relationships = await tx.studentParentRelationship.findMany({ where: actor.role === "PARENT" ? { parentUserId: actor.id } : { studentUserId: actor.id },
+     const relationships = await tx.studentParentRelationship.findMany({ where: actor.role === "PARENT" ? { parentUserId: actor.id, student: sharingStudentWhere() } : { studentUserId: actor.id },
        include: { student: { select: { name: true, status: true } }, parent: { select: { name: true, status: true } } }, orderBy: { id: "asc" }, take: 100 });
      const guardians = relationships.map(r => ({ id: r.id, studentId: r.studentUserId, studentName: r.student.name, parentName: r.parent.name, scopes: r.scopes, version: r.version,
        status: displayConsentStatus(r), accessible: actor.role === "PARENT" && r.student.status === "ACTIVE" && Boolean(r.parentAcceptedAt) && validConsent(r), expiresAt: r.expiresAt,
@@ -88,7 +89,7 @@ export async function readPortal(user: AuthUser, query: Query) {
    }
    const context = await tenantContext(user, query.schoolId, tx);
    if (actor.role === "PLATFORM_ADMIN") { if (!query.reason) throw denied(); await portalAudit(tx, actor.id, context.school.id, context.school.id, "INSTITUTION_ACCESSED", query.reason); }
-   const enrollments = await tx.schoolEnrollment.findMany({ where: { schoolId: context.school.id, ...(context.isAdmin ? {} : { assignments: { some: { membershipId: context.membership!.id, active: true } }, status: "ACTIVE", expiresAt: { gt: now() } }) },
+   const enrollments = await tx.schoolEnrollment.findMany({ where: { schoolId: context.school.id, student: sharingStudentWhere(), ...(context.isAdmin ? {} : { assignments: { some: { membershipId: context.membership!.id, active: true } }, status: "ACTIVE", expiresAt: { gt: now() } }) },
      include: { student: { select: { name: true, status: true } } }, take: 25, skip: (query.page - 1) * 25, orderBy: { id: "asc" } });
    const students = enrollments.filter(e => context.isAdmin || (validConsent(e) && e.student.status === "ACTIVE" && e.scopes.some(s => context.membership?.duty === "COUNSELLING" ? s === "COUNSELLING" : ["ACTIVITY", "MOCKS", "ACHIEVEMENTS", "ANNOUNCEMENTS", "SUPPORT"].includes(s)))).map(e => ({ id: e.id, studentId: e.studentId, name: e.student.name, status: displayConsentStatus(e), scopes: e.scopes, version: e.version }));
    const members = context.isAdmin ? await tx.schoolMembership.findMany({ where: { schoolId: context.school.id }, select: { id: true, role: true, duty: true, status: true, version: true, user: { select: { name: true } } }, take: 25, orderBy: { id: "asc" } }) : [];

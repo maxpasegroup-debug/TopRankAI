@@ -8,6 +8,7 @@ import { createSessionToken, hashSessionToken } from "./session";
 
 export const RECOVERY_MESSAGE = "If an eligible account exists, recovery instructions will be sent.";
 export const RESET_DURATION_MS = 30 * 60 * 1000;
+export const RECOVERABLE_ROLES = ["STUDENT", "PARENT"] as const;
 type DeliveryConfig = { key: Buffer; apiKey: string; from: string; appUrl: string };
 export function readRecoveryConfig(): DeliveryConfig {
   const unavailable = () => new ApiError(503, "RECOVERY_UNAVAILABLE", "Account recovery is temporarily unavailable");
@@ -42,7 +43,7 @@ export function decryptRecoveryPayload(value: string, id: string, key: Buffer) {
 }
 
 export async function queuePasswordRecovery(email: string, config = readRecoveryConfig()) {
-  const user = await prisma.user.findFirst({ where: { email, role: "STUDENT", status: "ACTIVE" }, select: { id: true, email: true } });
+  const user = await prisma.user.findFirst({ where: { email, role: { in: [...RECOVERABLE_ROLES] }, status: "ACTIVE" }, select: { id: true, email: true } });
   if (user) {
     const token = createSessionToken(); const id = randomUUID();
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -90,7 +91,7 @@ export async function deliverPasswordRecoveries(limit = 5, config = readRecovery
 export async function resetPassword(token: string, password: string) {
   const passwordHash = await hashPassword(password);
   return prisma.$transaction(async tx => {
-    const where = { tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: new Date() }, deliveryState: "SENT", user: { status: "ACTIVE" as const, role: "STUDENT" as const } };
+    const where = { tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: new Date() }, deliveryState: "SENT", user: { status: "ACTIVE" as const, role: { in: [...RECOVERABLE_ROLES] } } };
     const reset = await tx.passwordReset.findFirst({ where });
     if (!reset || (await tx.passwordReset.updateMany({ where: { ...where, id: reset.id }, data: { consumedAt: new Date(), deliveryPayload: null } })).count !== 1) {
       throw new ValidationApiError("Recovery link is invalid or expired");
@@ -101,4 +102,13 @@ export async function resetPassword(token: string, password: string) {
     await tx.auditEvent.create({ data: { actorId: reset.userId, action: "PASSWORD_RECOVERED", entity: "User", entityId: reset.userId } });
     return { reset: true };
   });
+}
+
+export async function clearExpiredRecoveryPayloads(limit = 100) {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new ValidationApiError();
+  const where = { deliveryPayload: { not: null }, OR: [{ expiresAt: { lte: new Date() } }, { consumedAt: { not: null } }] };
+  const rows = await prisma.passwordReset.findMany({ where, select: { id: true }, take: limit, orderBy: [{ expiresAt: "asc" }, { id: "asc" }] });
+  if (!rows.length) return { cleared: 0 };
+  const result = await prisma.passwordReset.updateMany({ where: { ...where, id: { in: rows.map(row => row.id) } }, data: { deliveryPayload: null, deliveryLeaseUntil: null } });
+  return { cleared: result.count };
 }

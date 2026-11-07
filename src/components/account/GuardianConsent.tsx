@@ -11,7 +11,7 @@ export function GuardianConsent() {
     setBusy(true); setError(""); try { await studentRequest("/api/account/guardian-consent", "POST", { grantId: id }); await load(); }
     catch (e) { setError(e instanceof Error ? e.message : "Unavailable"); } finally { setBusy(false); }
   }
-  return <main className="journey-shell"><h1>Registration authorizations</h1><a href="/parent">Guardian workspace</a>
+  return <main className="journey-shell"><h1>Registration authorizations</h1><nav className="mock-links"><a href="/parent">Guardian workspace</a><a href="/account/consent">Account consent</a><a href="/account/privacy-requests">Account support &amp; privacy</a></nav>
     {error && <p role="alert">{error}</p>}{busy && <p role="status">Please wait...</p>}
     {!busy && !rows.length && <p>No registration authorizations recorded.</p>}
     <ul className="journey-task-list">{rows.map(row => <li key={row.id}><div><strong>{row.country} / {new Date(row.verifiedAt).toLocaleDateString()}</strong><span>{row.id}</span><span>{row.revokedAt ? "Withdrawn" : row.usedAt ? "Registered" : "Awaiting registration"}</span></div>

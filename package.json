@@ -12,7 +12,14 @@
     "prisma:generate": "prisma generate --config prisma7.config.ts",
     "prisma:migrate": "prisma migrate dev --config prisma7.config.ts",
     "prisma:deploy": "prisma migrate deploy --config prisma7.config.ts",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "verify:postgres:setup": "tsx verification/setup-postgres.ts",
+    "verify:postgres:preflight": "tsx postgres-preflight.ts",
+    "verify:postgres:migrate": "tsx verification/run-postgres.ts migrate",
+    "verify:postgres:fixtures": "tsx verification/run-postgres.ts fixtures",
+    "verify:infrastructure:typecheck": "tsc --project verification/tsconfig.json",
+    "verify:postgres:stop": "tsx verification/stop-postgres.ts",
+    "verify:postgres:finalize": "tsx verification/finalize-postgres.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",

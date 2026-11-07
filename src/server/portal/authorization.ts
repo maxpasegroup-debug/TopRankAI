@@ -3,6 +3,7 @@ import type { AuthUser } from "@/server/auth/session";
 import { AuthorizationApiError } from "@/server/api/errors";
 import type { Tx } from "@/server/commerce/transaction";
 import { scopesSchema, type Scope } from "./validation";
+import { sharingStudentWhere } from "@/server/auth/sharing";
 export const denied = () => new AuthorizationApiError("Portal access is not authorized");
 export async function freshActor(user: AuthUser, db: Tx = prisma, roles: readonly string[] = ["STUDENT", "PARENT", "TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"]) {
  const current = await db.user.findUnique({ where: { id: user.id }, select: { id: true, name: true, email: true, role: true, status: true } });
@@ -37,7 +38,7 @@ export async function tenantContext(user: AuthUser, schoolId?: string, db: Tx = 
 }
 export type TenantContext = Awaited<ReturnType<typeof tenantContext>>;
 export async function activeStudent(db: Tx, id: string) {
- const student = await db.user.findFirst({ where: { id, role: "STUDENT", status: "ACTIVE" }, select: { id: true, name: true } });
+ const student = await db.user.findFirst({ where: { id, ...sharingStudentWhere() }, select: { id: true, name: true } });
  if (!student || student.id !== id) throw denied(); return student;
 }
 export async function guardianAccess(user: AuthUser, studentId: string, db: Tx = prisma) {

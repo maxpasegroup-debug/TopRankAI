@@ -50,20 +50,40 @@ export function loadPostgresTarget() {
 }
 
 export function assertProcessIdentity(target: PostgresTarget, inventory: { executable: string; listeners: { address: string; pid: number }[] }) {
-  if (normalized(inventory.executable) !== normalized(target.executable) || !inventory.listeners.length || inventory.listeners.some(item => item.address !== "127.0.0.1" || item.pid !== target.pid)) refuse();
+  if (normalized(inventory.executable) !== normalized(target.executable)) throw new Error("Disposable PostgreSQL verification refused: process executable mismatch.");
+  if (!inventory.listeners.length) throw new Error("Disposable PostgreSQL verification refused: process listener absent.");
+  if (inventory.listeners.some(item => item.address !== "127.0.0.1" || item.pid !== target.pid)) throw new Error("Disposable PostgreSQL verification refused: process listener mismatch.");
 }
 
-function inspectProcess(target: PostgresTarget) {
+export function inspectProcess(target: PostgresTarget) {
   if (process.platform !== "win32") refuse();
   try {
     if (readFileSync(path.join(target.dataDirectory, "PG_VERSION"), "utf8").trim() !== "17" || normalized(realpathSync(target.dataDirectory)) !== normalized(target.dataDirectory) || normalized(realpathSync(target.executable)) !== normalized(target.executable)) refuse();
     const command = "$ErrorActionPreference='Stop'; $p=Get-CimInstance Win32_Process -Filter \"ProcessId=" + target.pid + "\"; $l=@(Get-NetTCPConnection -State Listen -LocalPort 15432 -ErrorAction Stop); @{executable=$p.ExecutablePath;listeners=@($l | ForEach-Object {@{address=$_.LocalAddress;pid=$_.OwningProcess}})} | ConvertTo-Json -Compress -Depth 4";
-    assertProcessIdentity(target, JSON.parse(execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], { encoding: "utf8", timeout: 10000, stdio: ["ignore", "pipe", "pipe"] })));
-  } catch { refuse(); }
+    assertProcessIdentity(target, JSON.parse(execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], { encoding: "utf8", timeout: 30000, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] })));
+  } catch (error) {
+    if (error instanceof Error && /^Disposable PostgreSQL verification refused: process [A-Za-z ]+[.]$/.test(error.message)) throw error;
+    if ((error as { code?: string }).code === "ETIMEDOUT") throw new Error("Disposable PostgreSQL verification refused: OS inspection timed out.");
+    refuse();
+  }
+}
+
+export function assertServerIdentity(target: PostgresTarget, row: Record<string, unknown>) {
+  const checks: Record<string, boolean> = {
+    database: row.database === target.database, user: row.user === "toprank_test_owner", owner: row.owner === "toprank_test_owner",
+    address: row.address === "127.0.0.1", port: Number(row.port) === 15432, version: /^17\d{4}$/.test(String(row.version)),
+    directory: typeof row.directory === "string" && normalized(row.directory) === normalized(target.dataDirectory),
+    schemas: Number(row.schemas) === 0, readOnly: row.readOnly === "on", superuser: row.superuser === false,
+    createDatabase: row.createDatabase === false, createRole: row.createRole === false,
+  };
+  for (const [field, matches] of Object.entries(checks)) {
+    if (!matches) throw new Error("Disposable PostgreSQL verification refused: server field " + field + " mismatch.");
+  }
 }
 
 export function assertDatabaseIdentity(target: PostgresTarget, row: Record<string, unknown>) {
-  if (row.database !== target.database || row.user !== "toprank_test_owner" || row.owner !== "toprank_test_owner" || row.address !== "127.0.0.1" || Number(row.port) !== 15432 || !/^17\d{4}$/.test(String(row.version)) || typeof row.directory !== "string" || normalized(row.directory) !== normalized(target.dataDirectory) || Number(row.objects) !== 0 || Number(row.schemas) !== 0 || row.readOnly !== "on" || row.superuser !== false || row.createDatabase !== false || row.createRole !== false) refuse();
+  assertServerIdentity(target, row);
+  if (Number(row.objects) !== 0) throw new Error("Disposable PostgreSQL verification refused: empty schema mismatch.");
 }
 
 export async function verifyPostgresTarget(target: PostgresTarget, dependencies?: { inspect: (target: PostgresTarget) => void; client: (target: PostgresTarget) => ReadClient }) {
@@ -77,7 +97,7 @@ export async function verifyPostgresTarget(target: PostgresTarget, dependencies?
     await client.connect();
     await client.query("BEGIN READ ONLY");
     const { rows } = await client.query([
-      "SELECT current_database() AS database, current_user AS \"user\", inet_server_addr()::text AS address, inet_server_port() AS port,",
+      "SELECT current_database() AS database, current_user AS \"user\", host(inet_server_addr()) AS address, inet_server_port() AS port,",
       "current_setting('data_directory') AS directory, current_setting('server_version_num') AS version, current_setting('transaction_read_only') AS \"readOnly\",",
       "(SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname=current_database()) AS owner,",
       "(SELECT rolsuper FROM pg_roles WHERE rolname=current_user) AS superuser, (SELECT rolcreatedb FROM pg_roles WHERE rolname=current_user) AS \"createDatabase\", (SELECT rolcreaterole FROM pg_roles WHERE rolname=current_user) AS \"createRole\",",
@@ -90,6 +110,13 @@ export async function verifyPostgresTarget(target: PostgresTarget, dependencies?
     assertDatabaseIdentity(target, rows[0]);
     await client.query("ROLLBACK");
     return { verified: true, empty: true, readOnly: true } as const;
-  } catch { refuse(); }
+  } catch (error) {
+    if (error instanceof Error && /^Disposable PostgreSQL verification refused: (?:server field [A-Za-z]+ mismatch|empty schema mismatch|configuration or identity mismatch)[.]$/.test(error.message)) throw error;
+    const code = (error as { code?: string }).code;
+    if (code && /^(?:[0-9A-Z]{5}|EACCES|ETIMEDOUT|ECONNREFUSED)$/.test(code)) {
+      throw new Error("Disposable PostgreSQL verification refused: metadata transport code " + code + ".");
+    }
+    refuse();
+  }
   finally { try { await client.end(); } catch { /* Never expose transport credentials. */ } }
 }

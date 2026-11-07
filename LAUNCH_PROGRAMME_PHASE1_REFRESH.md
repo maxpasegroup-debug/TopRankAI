@@ -1,5 +1,9 @@
 # Launch programme: Phase 1 foundation refresh
 
+2026-10-22: RELEASE_SCOPE_CHECKLIST.md is now the canonical next-release completion
+checklist and frozen product boundary. This report remains historical foundation
+evidence; its earlier proposed quantities and Git inventory are not current signoff.
+
 Date: 2026-10-13 (Asia/Calcutta).
 Requested starting point: Phase 1, not immediate Phase 12 public activation.
 RESULT: scope/readiness refresh completed; infrastructure exit NOT MET.

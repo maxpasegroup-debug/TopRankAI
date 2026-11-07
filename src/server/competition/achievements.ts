@@ -8,6 +8,7 @@ import { studyStreak, verifiedScore } from "./rules";
 import { achievementSchema, configSchema } from "./validation";
 import type { z } from "zod";
 import { inAppNotice } from "@/server/notifications/service";
+import { requireSharingConsent, sharingStudentWhere } from "@/server/auth/sharing";
 export type Tx = Prisma.TransactionClient;
 export async function atomic<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
  for (let i = 0; i < 3; i++) { try { return await prisma.$transaction(fn, { isolationLevel: "Serializable" }); }
@@ -85,6 +86,7 @@ export async function mutateAchievement(user: AuthUser, raw: z.infer<typeof achi
  return atomic(async (tx) => {
    const earned = await tx.earnedAchievement.findFirst({ where: { id: input.id, userId: user.id, status: "ACTIVE", definition: { status: "PUBLISHED" } }, include: { definition: true } });
    if (!earned) throw new ValidationApiError("Achievement is unavailable");
+   if (input.enabled) await requireSharingConsent(tx, user.id);
    if (input.enabled && earned.definition?.kind === "PLACEMENT" && !await qualification(tx, user.id, earned.definition, earned.scope)) throw new ValidationApiError("Verified results are required before sharing this achievement");
    const token = input.enabled ? randomBytes(32).toString("base64url") : null;
    await tx.earnedAchievement.update({ where: { id: earned.id }, data: { shareHash: token ? hashShare(token) : null, version: { increment: 1 } } });
@@ -95,7 +97,7 @@ export function hashShare(token: string) { return createHash("sha256").update(to
 export async function getSharedAchievement(token: string) {
  if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
  const a = await prisma.earnedAchievement.findFirst({ where: { shareHash: hashShare(token), status: "ACTIVE", definition: { status: "PUBLISHED" },
-   user: { status: "ACTIVE", role: "STUDENT" } }, select: { title: true, badge: true, explanation: true, awardedAt: true, userId: true, scope: true, definition: { select: { id: true, kind: true, threshold: true } } } });
+   user: sharingStudentWhere() }, select: { title: true, badge: true, explanation: true, awardedAt: true, userId: true, scope: true, definition: { select: { id: true, kind: true, threshold: true } } } });
  if (a?.definition?.kind === "PLACEMENT" && !await qualification(prisma, a.userId, a.definition, a.scope)) return null;
  return a ? { title: a.title, badge: a.badge, explanation: a.explanation, awardedAt: a.awardedAt.toISOString() } : null;
 }

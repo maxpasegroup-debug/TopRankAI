@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { decryptRecoveryPayload, deliverPasswordRecoveries, encryptRecoveryPayload, queuePasswordRecovery, readRecoveryConfig, RECOVERY_MESSAGE, resetPassword, RESET_DURATION_MS } from "@/server/auth/recovery";
+import { clearExpiredRecoveryPayloads, decryptRecoveryPayload, deliverPasswordRecoveries, encryptRecoveryPayload, queuePasswordRecovery, readRecoveryConfig, RECOVERY_MESSAGE, resetPassword, RESET_DURATION_MS } from "@/server/auth/recovery";
 import { hashSessionToken } from "@/server/auth/session";
 const mocks = vi.hoisted(() => ({ transaction: vi.fn(), user: vi.fn(), resets: vi.fn(), createReset: vi.fn(), findReset: vi.fn(), findMany: vi.fn(), updateUser: vi.fn(), sessions: vi.fn(), audit: vi.fn(), hash: vi.fn() }));
 vi.mock("@/server/db", () => ({ prisma: { user: { findFirst: mocks.user }, $transaction: mocks.transaction, passwordReset: { findMany: mocks.findMany, updateMany: mocks.resets } } }));
@@ -33,7 +33,7 @@ describe("password recovery with mocked persistence and transport", () => {
   });
   it("checks expiry/status, atomically claims once, hashes the replacement and revokes all sessions", async () => {
     mocks.findReset.mockResolvedValue({ id: "r1", userId: "s1" }); expect(await resetPassword(token, "new-password")).toEqual({ reset: true });
-    expect(mocks.findReset).toHaveBeenCalledWith({ where: expect.objectContaining({ tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: expect.any(Date) }, deliveryState: "SENT", user: { role: "STUDENT", status: "ACTIVE" } }) });
+    expect(mocks.findReset).toHaveBeenCalledWith({ where: expect.objectContaining({ tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: expect.any(Date) }, deliveryState: "SENT", user: { role: { in: ["STUDENT", "PARENT"] }, status: "ACTIVE" } }) });
     expect(mocks.updateUser).toHaveBeenCalledWith({ where: { id: "s1" }, data: { passwordHash: "test-only-bcrypt-hash" } }); expect(mocks.sessions).toHaveBeenCalledWith({ where: { userId: "s1", revokedAt: null }, data: { revokedAt: expect.any(Date) } }); expect(mocks.audit).toHaveBeenCalledOnce();
   });
   it("does not send without acquiring the bounded delivery lease", async () => { mocks.findMany.mockResolvedValue([{ id: "r1" }]); mocks.resets.mockResolvedValue({ count: 0 }); const send = vi.fn(); expect(await deliverPasswordRecoveries(5, config, send)).toEqual({ processed: 1, accepted: 0 }); expect(send).not.toHaveBeenCalled(); });
@@ -46,4 +46,27 @@ describe("password recovery with mocked persistence and transport", () => {
   });
   it("marks provider failure without returning its secret details", async () => { mocks.findMany.mockResolvedValue([{ id: "r1", tokenHash: hashSessionToken(token), expiresAt: new Date(Date.now() + 60000), deliveryPayload: encryptRecoveryPayload(payload, "r1", config.key) }]); const send = vi.fn().mockRejectedValue(new Error("secret provider detail")); expect(await deliverPasswordRecoveries(5, config, send)).toEqual({ processed: 1, accepted: 0 }); expect(mocks.resets).toHaveBeenLastCalledWith(expect.objectContaining({ data: { deliveryState: "FAILED", deliveryLeaseUntil: null } })); });
   it.each([0, 11, 1.5])("refuses delivery limit %s before queries", async limit => { await expect(deliverPasswordRecoveries(limit, config, vi.fn())).rejects.toThrow(); expect(mocks.findMany).not.toHaveBeenCalled(); });
+  it("limits public recovery to active student and parent accounts, not staff", async () => {
+    mocks.user.mockResolvedValue(null);
+    await queuePasswordRecovery(payload.email, config);
+    expect(mocks.user).toHaveBeenCalledWith(expect.objectContaining({ where: { email: payload.email, role: { in: ["STUDENT", "PARENT"] }, status: "ACTIVE" } }));
+    expect(mocks.createReset).not.toHaveBeenCalled();
+  });
+  it.each([0, 101, 1.5])("refuses cleanup limit %s before queries", async limit => {
+    await expect(clearExpiredRecoveryPayloads(limit)).rejects.toThrow();
+    expect(mocks.findMany).not.toHaveBeenCalled();
+  });
+  it("clears only bounded expired or consumed encrypted payloads without changing passwords", async () => {
+    mocks.findMany.mockResolvedValue([{ id: "r1" }, { id: "r2" }]);
+    mocks.resets.mockResolvedValue({ count: 2 });
+    expect(await clearExpiredRecoveryPayloads(2)).toEqual({ cleared: 2 });
+    expect(mocks.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 2, select: { id: true }, where: { deliveryPayload: { not: null }, OR: [{ expiresAt: { lte: expect.any(Date) } }, { consumedAt: { not: null } }] } }));
+    expect(mocks.resets).toHaveBeenCalledWith({ where: { id: { in: ["r1", "r2"] }, deliveryPayload: { not: null }, OR: [{ expiresAt: { lte: expect.any(Date) } }, { consumedAt: { not: null } }] }, data: { deliveryPayload: null, deliveryLeaseUntil: null } });
+    expect(mocks.updateUser).not.toHaveBeenCalled(); expect(mocks.sessions).not.toHaveBeenCalled();
+  });
+  it("does not issue an unbounded cleanup when there are no eligible rows", async () => {
+    mocks.findMany.mockResolvedValue([]);
+    expect(await clearExpiredRecoveryPayloads()).toEqual({ cleared: 0 });
+    expect(mocks.resets).not.toHaveBeenCalled();
+  });
 });

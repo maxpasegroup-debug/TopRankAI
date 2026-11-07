@@ -3,7 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import type { AuthUser } from "@/server/auth/session";
 const db = vi.hoisted(() => {
  const model = () => ({ findUnique: vi.fn(), findFirst: vi.fn(), findMany: vi.fn(), count: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn(), upsert: vi.fn() });
- return { $transaction: vi.fn(), $queryRaw: vi.fn(), competition: model(), competitionEntry: model(), achievementDefinition: model(), earnedAchievement: model(), prizeAward: model(),
+ return { $transaction: vi.fn(), $queryRaw: vi.fn(), user: model(), competition: model(), competitionEntry: model(), achievementDefinition: model(), earnedAchievement: model(), prizeAward: model(),
    mockAttempt: model(), mockExam: model(), studentProfile: model(), studentLessonProgress: model(), studySession: model(), auditEvent: model(), commerceNotification: model() };
 });
 const mock = vi.hoisted(() => ({ start: vi.fn(), reconcile: vi.fn(), validate: vi.fn(), review: vi.fn() }));
@@ -11,6 +11,7 @@ vi.mock("@/server/db", () => ({ prisma: db }));
 vi.mock("@/server/mock/service", () => ({ mutateMock: mock.start, reconcileCompetitionAttempt: mock.reconcile, mutateAdminMock: mock.validate, requireMockReview: mock.review }));
 import { participate, competitionLeaderboard, overallLeaderboard, adminCompetitionMutation } from "@/server/competition/service";
 import { checkAchievements, mutateAchievement, getSharedAchievement, getAchievements, qualification } from "@/server/competition/achievements";
+import { sharingStudentWhere } from "@/server/auth/sharing";
 const student: AuthUser = { id: "student", role: "STUDENT", name: "Private name", email: "private@example.com" };
 const admin: AuthUser = { ...student, id: "admin", role: "PLATFORM_ADMIN" };
 const now = new Date("2026-10-10T12:00:00Z");
@@ -28,6 +29,7 @@ beforeEach(() => {
  vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(now); earned = null;
  for (const model of Object.values(db)) if (typeof model === "object") { model.findMany.mockResolvedValue([]); model.findUnique.mockResolvedValue(null); model.findFirst.mockResolvedValue(null); model.count.mockResolvedValue(0); model.updateMany.mockResolvedValue({ count: 1 }); }
  db.$transaction.mockImplementation((fn) => fn(db)); db.$queryRaw.mockResolvedValue([]);
+ db.user.findFirst.mockResolvedValue({ id: student.id });
  db.competition.findUnique.mockResolvedValue(competition); db.studentProfile.findUnique.mockResolvedValue({ targetExamId: "exam", onboardingCompletedAt: now });
  db.mockExam.findUnique.mockResolvedValue(competition.mockExam); db.competitionEntry.create.mockResolvedValue({ ...entry, attemptId: null, joinedAt: now });
  db.competitionEntry.findUnique.mockImplementation(async (args) => args.where.id ? { ...entry, attemptId: null, joinedAt: now } : null);
@@ -67,6 +69,20 @@ describe("competition lifecycle (mocked persistence)", () => {
  it("uses bounded serialization retries without exposing driver errors", async () => { db.$transaction.mockRejectedValue(new Prisma.PrismaClientKnownRequestError("secret driver", { code: "P2034", clientVersion: "7" })); await expect(participate(student, { action: "sync", id: "c" })).rejects.toThrow("Concurrent update"); expect(db.$transaction).toHaveBeenCalledTimes(3); });
 });
 describe("leaderboard privacy and pagination", () => {
+ it("filters leaderboard reads by current student and guardian account authorization", async () => {
+   await competitionLeaderboard(student, "c");
+   expect(db.competitionEntry.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ user: sharingStudentWhere() }) }));
+ });
+ it("cannot restore visibility after account consent is withdrawn", async () => {
+   db.competitionEntry.findUnique.mockResolvedValue(entry); db.user.findFirst.mockResolvedValue(null);
+   await expect(participate(student, { action: "visibility", id: "c", visible: true })).rejects.toThrow("Current account authorization");
+   expect(db.competitionEntry.update).not.toHaveBeenCalled();
+ });
+ it("can turn visibility off even when sharing authorization is absent", async () => {
+   db.competitionEntry.findUnique.mockResolvedValue(entry); db.user.findFirst.mockResolvedValue(null);
+   await participate(student, { action: "visibility", id: "c", visible: false });
+   expect(db.user.findFirst).not.toHaveBeenCalled(); expect(db.competitionEntry.update).toHaveBeenCalledWith(expect.objectContaining({ data: { visible: false } }));
+ });
  it("marks legacy completed results provisional until verified", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", resultsVerifiedAt: null }); expect((await competitionLeaderboard(student, "c")).competition.rankingState).toBe("PROVISIONAL"); });
  it("labels verified completed results with their verification time", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "COMPLETED", resultsVerifiedAt: now }); expect((await competitionLeaderboard(student, "c")).competition).toMatchObject({ rankingState: "VERIFIED", resultsVerifiedAt: now.toISOString() }); });
  it("cancelled leaderboards hide stale rankings and scores but preserve private attempt history", async () => { db.competition.findUnique.mockResolvedValue({ ...competition, status: "CANCELLED" }); db.competitionEntry.findUnique.mockResolvedValue({ ...entry, rank: 1, score: new Prisma.Decimal(10) }); const result = await competitionLeaderboard(student, "c"); expect(result.rows).toEqual([]); expect(result.mine).toMatchObject({ attemptId: "attempt", rank: null, score: null }); expect(result.competition.rankingState).toBe("CANCELLED"); expect(db.competitionEntry.findMany).not.toHaveBeenCalled(); });

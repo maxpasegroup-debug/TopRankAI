@@ -15,4 +15,15 @@ describe("fresh legal consent session enforcement (mocked DB)", () => {
   it("rechecks revocation on the next request", async () => { expect(await getCurrentUser()).not.toBeNull(); mocks.receipt.mockResolvedValue({ ageBand: "18_PLUS", revokedAt: new Date(), termsVersion: ACCOUNT_POLICY_VERSION, privacyVersion: ACCOUNT_POLICY_VERSION }); expect(await getCurrentUser()).toBeNull(); expect(mocks.receipt).toHaveBeenCalledTimes(2); });
   it("legacy students can access only consent renewal until accepted", async () => { mocks.receipt.mockResolvedValue(null); expect(await getCurrentUser()).toBeNull(); expect(await getCurrentUser(true)).toMatchObject({ requiresLegalConsent: true }); await expect(requireAuth()).rejects.toThrow("redirect:/account/consent"); });
   it("preserves staff provisioning/session behavior", async () => { mocks.findSession.mockResolvedValue({ user: { ...user, role: "PLATFORM_ADMIN" } }); expect(await getCurrentUser()).toMatchObject({ role: "PLATFORM_ADMIN", requiresLegalConsent: false }); expect(mocks.receipt).not.toHaveBeenCalled(); });
+  it("requires parents to accept their own current adult account policies", async () => {
+    mocks.findSession.mockResolvedValue({ user: { ...user, role: "PARENT" } });
+    expect(await getCurrentUser()).toMatchObject({ role: "PARENT", requiresLegalConsent: false });
+    mocks.receipt.mockResolvedValue(null); expect(await getCurrentUser()).toBeNull();
+    expect(await getCurrentUser(true)).toMatchObject({ role: "PARENT", requiresLegalConsent: true });
+  });
+  it("cannot use a minor guardian receipt to obtain parent workspace access", async () => {
+    mocks.findSession.mockResolvedValue({ user: { ...user, role: "PARENT" } });
+    mocks.receipt.mockResolvedValue({ ageBand: "UNDER_13", termsVersion: ACCOUNT_POLICY_VERSION, privacyVersion: ACCOUNT_POLICY_VERSION, revokedAt: null });
+    expect(await getCurrentUser()).toBeNull();
+  });
 });

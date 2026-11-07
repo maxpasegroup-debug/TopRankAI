@@ -229,3 +229,18 @@ here. No Railway ingress test or configuration change occurred. A verified
 gateway must still strip and replace x-toprank-client-ip and block bypasses;
 do not reinterpret arbitrary forwarding headers as trusted client identity.
 Reference: https://docs.railway.com/networking/public-networking/specs-and-limits
+
+## 2026-10-22 account lifecycle continuation
+
+Presence-only recheck of local .env and process environment found no dedicated
+Upstash REST credentials, test target or target fingerprint. No live call made.
+Railway trusted-ingress behavior remains unresolved; no attestation activated.
+Policy, guardian-verification, recovery-delivery and privacy-processing approvals
+remain absent/disabled locally. Production signup/login remain fail-closed.
+
+Parent accounts now require their own current adult policy receipt. Guardian
+withdrawal invalidates dependent access; student withdrawal invalidates existing
+public links and optional sharing. Recovery supports active students and parents,
+not public staff recovery. Policies remain drafts with the supplied entity name
+TOP RANK AI PRIVATE LIMITED. The private case queue is not automatic erasure.
+See ACCOUNTS_CONSENT_PRIVACY_COMPLETION.md for commands, evidence and remaining gates.

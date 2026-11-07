@@ -3,10 +3,14 @@ import { ACCOUNT_POLICY_VERSION, needsGuardian } from "@/shared/account-policy";
 import { accountConsentSchema, newPasswordSchema, signupSchema } from "@/server/auth/validation";
 import { acceptAccountConsent, assertAccountPolicyReady, childEmailHash, isConsentCurrent, issueGuardianApproval, revokeGuardianApproval, saveAccountConsent, verifyAdultAccount, withdrawAccountConsent } from "@/server/auth/account-consent";
 import type { Prisma } from "@/generated/prisma/client";
+import { adultConsentWhere } from "@/server/auth/sharing";
+const sharing = vi.hoisted(() => ({ resets: vi.fn(), achievements: vi.fn(), entries: vi.fn(), relationships: vi.fn(), enrollments: vi.fn() }));
 const mocks = vi.hoisted(() => ({ transaction: vi.fn(), findUser: vi.fn(), findGrant: vi.fn(), claim: vi.fn(), createGrant: vi.fn(), updateGrant: vi.fn(), receipt: vi.fn(), upsert: vi.fn(), updateReceipt: vi.fn(), updateReceipts: vi.fn(), sessions: vi.fn(), audit: vi.fn() }));
 vi.mock("@/server/db", () => ({ prisma: { $transaction: mocks.transaction } }));
 const tx = { user: { findFirst: mocks.findUser }, guardianRegistrationGrant: { findFirst: mocks.findGrant, updateMany: mocks.claim, create: mocks.createGrant, update: mocks.updateGrant },
-  accountConsent: { findUnique: mocks.receipt, upsert: mocks.upsert, update: mocks.updateReceipt, updateMany: mocks.updateReceipts }, session: { updateMany: mocks.sessions }, auditEvent: { create: mocks.audit } };
+  accountConsent: { findUnique: mocks.receipt, upsert: mocks.upsert, update: mocks.updateReceipt, updateMany: mocks.updateReceipts }, session: { updateMany: mocks.sessions }, auditEvent: { create: mocks.audit },
+  passwordReset: { updateMany: sharing.resets }, earnedAchievement: { updateMany: sharing.achievements }, competitionEntry: { updateMany: sharing.entries },
+  studentParentRelationship: { updateMany: sharing.relationships }, schoolEnrollment: { updateMany: sharing.enrollments } };
 const student = { id: "s1", role: "STUDENT" as const, email: "s@example.com", name: "Student" };
 const parent = { ...student, id: "p1", role: "PARENT" as const };
 const admin = { ...student, id: "a1", role: "PLATFORM_ADMIN" as const };
@@ -37,7 +41,7 @@ describe("student consent and guardian registration (mocked database)", () => {
     expect(isConsentCurrent({ ...active(), ageBand: "UNDER_13" })).toBe(false);
   });
   it.each(["revoked", "unused", "inactive", "outdated"])("rejects %s guardian consent on subsequent access", failure => {
-    const grant = { revokedAt: null as Date | null, usedAt: new Date() as Date | null, policyVersion: ACCOUNT_POLICY_VERSION, guardian: { status: "ACTIVE" } };
+    const grant = { revokedAt: null as Date | null, usedAt: new Date() as Date | null, policyVersion: ACCOUNT_POLICY_VERSION, guardian: { status: "ACTIVE", role: "PARENT", accountConsent: active() } };
     expect(isConsentCurrent({ ...active(), ageBand: "UNDER_13", guardianGrant: grant })).toBe(true);
     if (failure === "revoked") grant.revokedAt = new Date(); if (failure === "unused") grant.usedAt = null; if (failure === "inactive") grant.guardian.status = "SUSPENDED"; if (failure === "outdated") grant.policyVersion = "old";
     expect(isConsentCurrent({ ...active(), ageBand: "UNDER_13", guardianGrant: grant })).toBe(false);
@@ -45,7 +49,7 @@ describe("student consent and guardian registration (mocked database)", () => {
   it("stores explicit adult acceptance without guardian grants", async () => { await saveAccountConsent(tx as unknown as Prisma.TransactionClient, student.id, student.email, input); expect(mocks.findGrant).not.toHaveBeenCalled(); expect(mocks.upsert).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ userId: student.id, country: "IN", ageBand: "18_PLUS", termsVersion: ACCOUNT_POLICY_VERSION }) })); });
   it("binds a minor grant to email, country, policy, expiry and active verified parent", async () => {
     await saveAccountConsent(tx as unknown as Prisma.TransactionClient, student.id, student.email, minor);
-    expect(mocks.findGrant).toHaveBeenCalledWith({ where: expect.objectContaining({ childEmailHash: childEmailHash(student.email), country: "IN", usedAt: null, revokedAt: null, policyVersion: ACCOUNT_POLICY_VERSION, expiresAt: { gt: expect.any(Date) }, guardian: { role: "PARENT", status: "ACTIVE" } }) });
+    expect(mocks.findGrant).toHaveBeenCalledWith({ where: expect.objectContaining({ childEmailHash: childEmailHash(student.email), country: "IN", usedAt: null, revokedAt: null, policyVersion: ACCOUNT_POLICY_VERSION, expiresAt: { gt: expect.any(Date) }, guardian: { role: "PARENT", status: "ACTIVE", accountConsent: { is: adultConsentWhere() } } }) });
     expect(mocks.claim).toHaveBeenCalledOnce(); expect(mocks.upsert).toHaveBeenCalledWith(expect.objectContaining({ create: expect.objectContaining({ guardianGrantId: "g1" }) }));
   });
   it.each(["missing", "replay"])("rejects %s grant before consent/session creation", async failure => {
@@ -54,6 +58,32 @@ describe("student consent and guardian registration (mocked database)", () => {
   });
   it("does not permit an age assertion to remove an existing child's protections", async () => { mocks.receipt.mockResolvedValue({ ageBand: "UNDER_13" }); await expect(acceptAccountConsent(student, input)).rejects.toThrow(); expect(mocks.upsert).not.toHaveBeenCalled(); });
   it("withdrawal revokes consent and all sessions in the same transaction", async () => { await withdrawAccountConsent(student); expect(mocks.updateReceipts).toHaveBeenCalledWith({ where: { userId: student.id, revokedAt: null }, data: { revokedAt: expect.any(Date) } }); expect(mocks.sessions).toHaveBeenCalledWith({ where: { userId: student.id, revokedAt: null }, data: { revokedAt: expect.any(Date) } }); expect(mocks.audit).toHaveBeenCalledOnce(); });
+  it("withdrawal invalidates recovery, public links, rankings and existing portal sharing atomically", async () => {
+    await withdrawAccountConsent(student);
+    expect(mocks.transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: "Serializable" });
+    expect(sharing.resets).toHaveBeenCalledWith({ where: { userId: student.id, consumedAt: null }, data: { consumedAt: expect.any(Date), deliveryPayload: null } });
+    expect(sharing.achievements).toHaveBeenCalledWith({ where: { userId: student.id, shareHash: { not: null } }, data: { shareHash: null, version: { increment: 1 } } });
+    expect(sharing.entries).toHaveBeenCalledWith({ where: { userId: student.id, visible: true }, data: { visible: false } });
+    expect(sharing.relationships).toHaveBeenCalledWith(expect.objectContaining({ where: { studentUserId: student.id, status: { in: ["PENDING", "ACTIVE"] } }, data: expect.objectContaining({ status: "REVOKED", studentConsentAt: null, parentAcceptedAt: null }) }));
+    expect(sharing.enrollments).toHaveBeenCalledWith(expect.objectContaining({ where: { studentId: student.id, status: { in: ["PENDING", "ACTIVE"] } }, data: expect.objectContaining({ status: "REVOKED", studentConsentAt: null }) }));
+  });
+  it("guardian withdrawal invalidates dependent access and all of that guardian's grants", async () => {
+    await withdrawAccountConsent(parent);
+    expect(mocks.sessions).toHaveBeenCalledTimes(2);
+    expect(mocks.sessions).toHaveBeenLastCalledWith(expect.objectContaining({ where: { user: { is: { role: "STUDENT", accountConsent: { is: { guardianGrant: { is: { guardianId: parent.id } } } } } }, revokedAt: null } }));
+    expect(mocks.claim).toHaveBeenCalledWith({ where: { guardianId: parent.id, revokedAt: null }, data: { revokedAt: expect.any(Date) } });
+    expect(sharing.relationships).toHaveBeenLastCalledWith(expect.objectContaining({ where: { parentUserId: parent.id, status: { in: ["PENDING", "ACTIVE"] } } }));
+    expect(mocks.audit).toHaveBeenCalledOnce();
+  });
+  it.each(["missing", "revoked", "outdated", "minor"])("denies child access when guardian own consent is %s", failure => {
+    const receipt = active();
+    const guardianReceipt = failure === "missing" ? null : { ...receipt, ...(failure === "revoked" ? { revokedAt: new Date() } : failure === "outdated" ? { termsVersion: "old" } : { ageBand: "UNDER_13" }) };
+    expect(isConsentCurrent({ ...receipt, ageBand: "UNDER_13", guardianGrant: { revokedAt: null, usedAt: new Date(), policyVersion: ACCOUNT_POLICY_VERSION, guardian: { status: "ACTIVE", role: "PARENT", accountConsent: guardianReceipt } } })).toBe(false);
+  });
+  it("does not permit a parent to assert minor status", async () => {
+    await expect(acceptAccountConsent(parent, minor)).rejects.toThrow();
+    expect(mocks.upsert).not.toHaveBeenCalled();
+  });
   it("only approved platform staff may issue verified guardian codes", async () => {
     const grantInput = { guardianId: parent.id, childEmail: student.email, country: "IN" as const, verificationReference: "reviewed-evidence-1", guardianIdentityAndAuthorityVerified: true as const, guardianConsentRecorded: true as const };
     await expect(issueGuardianApproval(parent, grantInput)).rejects.toThrow(); expect(mocks.createGrant).not.toHaveBeenCalled();

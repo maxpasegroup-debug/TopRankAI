@@ -1,7 +1,78 @@
 # TopRank AI master build: implementation status
-Date: 2026-10-13 (Asia/Calcutta)
+Date: 2026-10-22 (Asia/Calcutta)
 
-## Current task: Phase 1 foundation refresh / public launch NOT STARTED
+## Current task: accounts, consent and privacy increment / live acceptance BLOCKED
+
+2026-10-22: Continued Step 3 after receiving the corrected user-supplied entity
+name TOP RANK AI PRIVATE LIMITED. Added parent policy acceptance, current guardian
+consent checks, atomic withdrawal of dependent sessions/recovery/sharing, filtered
+public/portal reads, private student/guardian support and privacy requests, admin
+review with optimistic concurrency and processing evidence, and bounded expired
+recovery-payload cleanup. Policies remain drafts; no legal/contact facts invented.
+
+Added AccountPrivacyRequest and forward-only 20261022000100 migration, UNAPPLIED.
+Policy version is now 2026-10-22-draft: previous receipts require renewed acceptance;
+minor renewal requires current verified guardian authorization. Existing guardian
+provisioning remains staff-controlled; public signup remains STUDENT-only.
+
+Verification: focused auth/competition/portal 695 passed/1 live skip; full offline
+suite 1,661 passed/2 gated skips; application/infrastructure TypeScript, offline
+Prisma validation/generation and isolated optimized build passed (66 generation
+entries). Initial-render tests are not browser or PostgreSQL acceptance evidence.
+
+Full migration replay remains blocked by the earlier duplicate index. Dedicated
+Upstash credentials/target confirmation, ingress proof and recovery delivery remain
+unverified. Registered address, support/privacy contacts, approved retention and
+qualified legal review remain missing. Privacy-case closure requires explicit
+policy/processing approval; no automatic export or erasure was implemented.
+Production auth/payments remain disabled; no DB/provider connection, migration,
+seed, install, deployment, commit or push in THIS increment. Earlier work preserved.
+See ACCOUNTS_CONSENT_PRIVACY_COMPLETION.md. Step 3 exit NOT MET.
+
+## Previous task: safe infrastructure implemented / migration and remote gates BLOCKED
+
+2026-10-22: Established a fresh GUID-named portable PostgreSQL 17.11 cluster,
+loopback-only 127.0.0.1:15432, limited test owner and protected ignored dedicated
+configuration. Exact OS/server/ownership/EMPTY-schema checks passed before writes.
+Corrected inet metadata projection to host(inet_server_addr()) without relaxing
+the exact loopback check. Added guarded migration/rollback-fixture commands,
+isolated Prisma child configuration, environment boundary documentation and offline CI.
+
+Real replay: 16 migrations completed; 20261011000100_daily_study_command_centre
+failed P3018/42P07 because StudyPlan_one_active_per_user already exists from the
+earlier student-journey migration. Three later migrations not applied. No historical
+migration edited, reset, repair resolution or seed. Fixtures correctly refused the
+missing success receipt; real fixture persistence NOT VERIFIED. Preserve partial DB.
+
+Offline: 1,574 passed/2 gated skips; application/infrastructure TypeScript, offline
+Prisma validation and isolated optimized build (64 generation entries) passed.
+Railway metadata authentication unavailable: production auto-deploy NOT VERIFIED
+DISABLED. Remote staging/production isolation and GitHub CI execution unverified.
+Keep push/deployment/auth/payments on hold. No existing application DB connected.
+Earlier scope-freeze work preserved. See SAFE_DEVELOPMENT_INFRASTRUCTURE.md for
+commands, actual results, retained fresh attempts and remaining gates. Exit NOT MET.
+
+## Previous task: free student release scope frozen / acceptance PENDING
+
+2026-10-22: Created RELEASE_SCOPE_CHECKLIST.md as the single completion checklist
+for FREE-STUDENT-1: JEE Main/NEET UG, India/UAE, all ages with actual required
+safeguards, free invited pilot before separately approved gradual public access.
+Student journey, exam-content contract, admin/support responsibilities, exclusions,
+evidence gates and scope-change control are explicit. Exact academic coverage,
+quantities, named operators and all live acceptance remain pending; no content
+inventory, policy approval, cohort or production activation was invented.
+
+Payments, advanced AI, mentoring and institutional expansion are excluded from
+this release. Deterministic SIA, staffed support, required guardian authorization,
+free access controls and transactional account recovery remain launch requirements.
+Older phase reports are evidence; use the new checklist to track completion.
+
+Documentation only. No application/schema/configuration change, database/provider
+access, installation, migration, publication, deployment, activation, commit or push.
+No new application test/build result. Phase 10 verification and pilot/public release
+remain unaccepted; safe database setup and exact content signoff are next dependencies.
+
+## Previous task: Phase 1 foundation refresh / public launch NOT STARTED
 
 2026-10-13: Honored the requested starting point of Phase 1; retained existing
 JEE Main/NEET UG, all-ages safeguarded India/UAE free-pilot scope. Updated eight-

@@ -1,0 +1,49 @@
+name: Student release checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  offline-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://placeholder:placeholder@127.0.0.1:1/offline_validation
+      RUN_UPSTASH_LIVE_TESTS: 'false'
+      TOPRANK_POSTGRES_READ_SUITE: 'false'
+      AUTH_RATE_LIMIT_ACTIVATED: 'false'
+      AUTH_RATE_LIMIT_LIVE_VERIFIED: 'false'
+      AUTH_TRUSTED_PROXY_VERIFIED: 'false'
+      ACCOUNT_POLICY_REVIEWED: 'false'
+      ACCOUNT_GUARDIAN_VERIFICATION_APPROVED: 'false'
+      AUTH_RECOVERY_DELIVERY_VERIFIED: 'false'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run prisma:generate
+      - run: node node_modules/prisma/build/index.js validate --config prisma7.config.ts
+      - run: npm test
+      - run: npm run typecheck -- --incremental false
+      - run: npm run verify:infrastructure:typecheck
+      - run: npm run build
+      - run: git diff --check
+
+# No deployment job, environment, production secrets or provider credentials.
+# This workflow does not disable a hosting provider's separately configured auto-deploy.

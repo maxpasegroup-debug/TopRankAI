@@ -12,6 +12,8 @@ import { phase, requireWindow, rankEntries, verifiedScore } from "./rules";
 import { configSchema, competitionSchema, adminCompetitionSchema, participationSchema, pageSchema } from "./validation";
 import { idSchema } from "@/server/mock/validation";
 import type { z } from "zod";
+import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
+import { requireSharingConsent, sharingStudentWhere } from "@/server/auth/sharing";
 type Competition = Prisma.CompetitionGetPayload<{ include: { mockExam: true } }>;
 const includeMock = { mockExam: true };
 const missing = () => new ValidationApiError("Competition or record is unavailable");
@@ -96,7 +98,7 @@ export async function competitionDirectory(user: AuthUser) {
 export async function competitionLeaderboard(user: AuthUser, id: string, rawPage: unknown = 1) {
  assertStudent(user); idSchema.parse(id); const page = pageSchema.parse(rawPage);
  return atomic(async (tx) => { const c = await getCompetition(tx, id); if (c.status === "DRAFT") throw missing();
-   const rows = c.status === "CANCELLED" ? [] : await tx.competitionEntry.findMany({ where: { competitionId: id, rank: { not: null }, disqualified: false },
+   const rows = c.status === "CANCELLED" ? [] : await tx.competitionEntry.findMany({ where: { competitionId: id, rank: { not: null }, disqualified: false, user: sharingStudentWhere() },
      orderBy: [{ rank: "asc" }, { alias: "asc" }], skip: (page - 1) * 25, take: 26, select: { alias: true, visible: true, rank: true, score: true, timeSeconds: true } });
    const mine = await tx.competitionEntry.findUnique({ where: { competitionId_userId: { competitionId: id, userId: user.id } },
      select: { attemptId: true, rank: true, score: true, disqualified: true, visible: true } });
@@ -109,7 +111,7 @@ export async function participate(user: AuthUser, raw: z.infer<typeof participat
  assertStudent(user); const input = participationSchema.parse(raw);
  if (input.action !== "join") return atomic(async (tx) => {
    const e = await tx.competitionEntry.findUnique({ where: { competitionId_userId: { competitionId: input.id, userId: user.id } } }); if (!e) throw missing();
-   if (input.action === "visibility") { await tx.competitionEntry.update({ where: { id: e.id }, data: { visible: input.visible } }); return { saved: true }; }
+   if (input.action === "visibility") { if (input.visible) await requireSharingConsent(tx, user.id); await tx.competitionEntry.update({ where: { id: e.id }, data: { visible: input.visible } }); return { saved: true }; }
    const c = await getCompetition(tx, input.id);
    if (c.status === "COMPLETED") return { ranked: await tx.competitionEntry.count({ where: { competitionId: c.id, rank: { not: null }, disqualified: false } }), pending: 0 };
    return settle(tx, c, user.id);
@@ -158,6 +160,14 @@ export async function overallLeaderboard(user: AuthUser, rawPage: unknown = 1) {
    WHERE c.status = 'COMPLETED' AND e.visible = true AND e.disqualified = false
      AND c."resultsVerifiedAt" IS NOT NULL
      AND e.rank IS NOT NULL AND u.status = 'ACTIVE' AND u.role = 'STUDENT'
+     AND EXISTS (SELECT 1 FROM "AccountConsent" ac WHERE ac."userId" = u.id AND ac."revokedAt" IS NULL
+       AND ac."termsVersion" = ${ACCOUNT_POLICY_VERSION} AND ac."privacyVersion" = ${ACCOUNT_POLICY_VERSION}
+       AND (ac."ageBand" = '18_PLUS' OR (ac."ageBand" IN ('UNDER_13','13_TO_17') AND EXISTS (
+         SELECT 1 FROM "GuardianRegistrationGrant" g JOIN "User" guardian ON guardian.id = g."guardianId"
+         WHERE g.id = ac."guardianGrantId" AND g."revokedAt" IS NULL AND g."usedAt" IS NOT NULL
+           AND g."policyVersion" = ${ACCOUNT_POLICY_VERSION} AND guardian.status = 'ACTIVE' AND guardian.role = 'PARENT'
+           AND EXISTS (SELECT 1 FROM "AccountConsent" gc WHERE gc."userId" = guardian.id AND gc."revokedAt" IS NULL
+             AND gc."ageBand" = '18_PLUS' AND gc."termsVersion" = ${ACCOUNT_POLICY_VERSION} AND gc."privacyVersion" = ${ACCOUNT_POLICY_VERSION})))))
    GROUP BY e."userId")
    SELECT alias, points, RANK() OVER (ORDER BY points DESC, seconds ASC, joined ASC) AS rank
    FROM totals ORDER BY points DESC, seconds ASC, joined ASC, "userId" COLLATE "C" ASC

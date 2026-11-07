@@ -142,6 +142,9 @@ model User {
   authoredContentSources ContentSource[] @relation("ContentSourceAuthor")
   reviewedContentSources ContentSource[] @relation("ContentSourceReviewer")
   requestedKnowledgeJobs ContentKnowledgeJob[]
+  privacyRequestsMade AccountPrivacyRequest[] @relation("PrivacyRequester")
+  privacyRequestsAbout AccountPrivacyRequest[] @relation("PrivacySubject")
+  privacyRequestsReviewed AccountPrivacyRequest[] @relation("PrivacyReviewer")
 
   @@index([role])
   @@index([status])
@@ -709,6 +712,30 @@ model HelpRequest {
   @@unique([userId, requestKey])
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+model AccountPrivacyRequest {
+  id String @id @default(cuid())
+  requesterId String
+  subjectId String
+  requestKey String
+  kind String
+  message String
+  status String @default("OPEN")
+  response String?
+  completionReference String?
+  followUp String?
+  followUpKey String?
+  reviewerId String?
+  version Int @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  requester User @relation("PrivacyRequester", fields: [requesterId], references: [id], onDelete: Restrict)
+  subject User @relation("PrivacySubject", fields: [subjectId], references: [id], onDelete: Restrict)
+  reviewer User? @relation("PrivacyReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+  @@unique([requesterId, requestKey])
+  @@index([subjectId, status])
+  @@index([status, createdAt, id])
 }
 
 model AuditEvent {

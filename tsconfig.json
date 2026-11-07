@@ -62,7 +62,11 @@
     ".next/phase9-verification/types/**/*.ts",
     ".next/phase9-verification/dev/types/**/*.ts",
     ".next/phase10-verification/types/**/*.ts",
-    ".next/phase10-verification/dev/types/**/*.ts"
+    ".next/phase10-verification/dev/types/**/*.ts",
+    ".next/infrastructure-verification/types/**/*.ts",
+    ".next/infrastructure-verification/dev/types/**/*.ts",
+    ".next/accounts-verification/types/**/*.ts",
+    ".next/accounts-verification/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

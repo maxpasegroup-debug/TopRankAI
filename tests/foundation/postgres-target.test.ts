@@ -50,6 +50,8 @@ describe("dedicated PostgreSQL foundation guards (no live connections)", () => {
     expect(query.mock.calls[0][0]).toBe("BEGIN READ ONLY");
     expect(query.mock.calls.at(-1)![0]).toBe("ROLLBACK");
     expect(query.mock.calls[1][0]).not.toMatch(/\b(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i);
+    expect(query.mock.calls[1][0]).toContain("host(inet_server_addr()) AS address");
+    expect(query.mock.calls[1][0]).not.toContain("inet_server_addr()::text");
     expect(end).toHaveBeenCalledOnce();
   });
   it("suppresses credentials and closes the client on transport failure", async () => {
