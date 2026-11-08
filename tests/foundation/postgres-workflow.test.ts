@@ -39,8 +39,8 @@ describe("guarded disposable workflow (mocked, no database)", () => {
   });
   it("fingerprints the complete ordered migration history", () => {
     const rows = migrationManifest();
-    expect(rows).toHaveLength(21);
-    expect(rows.at(-1)?.name).toBe("20261022000100_account_privacy_requests");
+    expect(rows).toHaveLength(22);
+    expect(rows.at(-1)?.name).toBe("20261108000100_email_otp_pin");
     expect(rows.every(row => /^[a-f0-9]{64}$/.test(row.checksum))).toBe(true);
     expect(rows.map(row => row.name)).toEqual(rows.map(row => row.name).sort());
   });

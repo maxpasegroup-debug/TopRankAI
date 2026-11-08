@@ -1,7 +1,34 @@
 # TopRank AI master build: implementation status
-Date: 2026-10-22 (Asia/Calcutta)
+Date: 2026-11-08 (Asia/Calcutta)
 
-## Current task: accounts, consent and privacy increment / live acceptance BLOCKED
+## Current task: SIA-guided email OTP and mobile/PIN accounts / activation BLOCKED
+
+2026-11-08: Implemented sequential signup dialogs (name/mobile, email, consent,
+Resend email OTP, PIN, confirmation), mobile/PIN login and email-OTP PIN recovery.
+SIA prompts are a deterministic guided interface, not a live model activation.
+Reused canonical accounts, profiles, consent, bcrypt hashing and database sessions.
+Old public password signup now returns 410; existing password accounts/staff retain
+their separate login. PIN accounts cannot bypass through legacy password recovery.
+
+Forward-only 20261108000100_email_otp_pin is UNAPPLIED. Existing phone field reused;
+added hashed PIN/version/email-verification timestamp, OTP challenges and bounded
+cross-client guessing windows. Role, OTP/proof, expiry, replay, consent, guardian,
+resend and credential-version checks are server-side. Profile editing cannot
+silently change the PIN login identifier. Policies remain drafts, now version
+2026-11-08-draft; previously accepted receipts require a planned renewal rollout.
+
+Verification: 1,725 passed/2 live skips; TypeScript and offline Prisma generation/
+validation passed. Webpack production build passed (67 generation entries).
+Default Turbopack verification hit Windows junction permission errors even in a
+fresh output; no OS changes, cache deletion or production bundler change made.
+Local UI preview: http://127.0.0.1:3107/signup (HTTP 200; authentication/mail disabled).
+Browser connector unavailable: visual/mobile/full browser acceptance NOT VERIFIED.
+
+No DB connection, migration, seed, install, real email, Railway mutation, activation,
+commit, push or deployment. Existing migration-chain, ingress, legal and provider
+gates remain open. See SIA_SIGNUP_PIN.md. Not authorized for public use.
+
+## Previous task: accounts, consent and privacy increment / live acceptance BLOCKED
 
 2026-10-22: Continued Step 3 after receiving the corrected user-supplied entity
 name TOP RANK AI PRIVATE LIMITED. Added parent policy acceptance, current guardian

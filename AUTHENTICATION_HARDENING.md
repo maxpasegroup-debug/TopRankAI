@@ -244,3 +244,18 @@ public links and optional sharing. Recovery supports active students and parents
 not public staff recovery. Policies remain drafts with the supplied entity name
 TOP RANK AI PRIVATE LIMITED. The private case queue is not automatic erasure.
 See ACCOUNTS_CONSENT_PRIVACY_COMPLETION.md for commands, evidence and remaining gates.
+
+## 2026-11-08 SIA signup and PIN workflow
+
+New public flow: /signup dialogs -> /api/auth/pin actions requestSignup/verify/signup.
+Mobile/PIN login uses action login; forgot PIN uses requestReset/verify/reset.
+The old /api/auth/signup password-registration API is retired (410 after existing
+origin/validation/limiter gates); it cannot bypass OTP. Existing password accounts
+and staff keep /api/auth/login and their recovery; PIN accounts are excluded there.
+
+AUTH_PIN_ENABLED=false and AUTH_PIN_EMAIL_VERIFIED=false remain default examples.
+The dedicated server-only AUTH_PIN_HMAC_KEY must be independently generated.
+Resend credentials/sender/domain delivery and existing distributed limiter/ingress
+requirements must be verified before approval. Merely setting flags is not evidence.
+No live email or authentication was activated. The SIA UI does not call a live model.
+See SIA_SIGNUP_PIN.md for expiry, quota, lockout, migration and compatibility details.

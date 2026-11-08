@@ -51,6 +51,11 @@ function expectNoPersistence() {
 }
 
 describe("signup/login hardening with mocked persistence and limiter", () => {
+  it("cannot use the legacy password endpoint to bypass a PIN account", async () => {
+    mocks.findUser.mockResolvedValue({ id: "student1", ...credentials, role: "STUDENT", status: "ACTIVE", passwordHash: "legacy-hash", pinHash: "pin-hash" });
+    const response = await login(request("login")); expect(response.status).toBe(401);
+    expect(mocks.verify).not.toHaveBeenCalled(); expect(mocks.createSession).not.toHaveBeenCalled();
+  });
   it.each([["login", login], ["signup", signup]] as const)("%s fails closed without limiter", async (path, handler) => {
     mocks.limiterEnabled = false;
     const response = await handler(request(path));

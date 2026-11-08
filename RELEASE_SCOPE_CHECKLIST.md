@@ -38,8 +38,10 @@ full offline 1,661 passed; live gates and the new unapplied migration remain ope
 See ACCOUNTS_CONSENT_PRIVACY_COMPLETION.md. S01/S02/S11 remain unchecked: this is
 implementation evidence, not real-service, legal or browser acceptance.
 
-- [ ] S01 Accounts: STUDENT-only registration, login, logout, session expiry and
-  password recovery work; manipulated roles and unauthorized access are rejected.
+- [ ] S01 Accounts: STUDENT-only email-OTP registration, mobile/PIN login, logout,
+  session expiry and email-OTP PIN recovery work; manipulated roles and unauthorized
+  access are rejected. Existing password-account migration remains controlled.
+  2026-11-08 implementation evidence: SIA_SIGNUP_PIN.md; live acceptance still open.
 - [ ] S02 Consent: policy acceptance, guardian authorization, renewal and withdrawal
   work end to end. Check sessions, public achievement links and optional sharing
   after withdrawal/revocation. Account retention/deletion has an operable procedure.

@@ -24,6 +24,7 @@ async function withdrawScope(tx: Prisma.TransactionClient, scope: { userId: stri
   await tx.accountConsent.updateMany({ where: { ...scope, revokedAt: null }, data: { revokedAt: now } });
   await tx.session.updateMany({ where: { ...scope, revokedAt: null }, data: { revokedAt: now } });
   await tx.passwordReset.updateMany({ where: { ...scope, consumedAt: null }, data: { consumedAt: now, deliveryPayload: null } });
+  await tx.emailOtpChallenge.updateMany({ where: { ...scope, consumedAt: null }, data: { consumedAt: now } });
   await tx.earnedAchievement.updateMany({ where: { ...scope, shareHash: { not: null } }, data: { shareHash: null, version: { increment: 1 } } });
   await tx.competitionEntry.updateMany({ where: { ...scope, visible: true }, data: { visible: false } });
   const student = "userId" in scope ? { studentUserId: scope.userId } : { student: scope.user };

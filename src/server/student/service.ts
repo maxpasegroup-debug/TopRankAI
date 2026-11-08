@@ -153,7 +153,11 @@ export async function updateStudentProfile(user: AuthUser, input: StudentProfile
     input.dailyStudyHours === undefined ? undefined : Math.round(input.dailyStudyHours * 60);
 
   const profile = await prisma.$transaction(async (tx) => {
-    if (input.name !== undefined || input.phone !== undefined) {
+    if (input.phone !== undefined) {
+      const phone = input.phone === "" ? null : input.phone;
+      const changed = await tx.user.updateMany({ where: { id: user.id, OR: [{ pinHash: null }, { phone }] }, data: { name: input.name, phone } });
+      if (changed.count !== 1) throw new ValidationApiError("Contact account support to change your login mobile number");
+    } else if (input.name !== undefined) {
       await tx.user.update({
         where: { id: user.id },
         data: {

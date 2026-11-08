@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({ transaction: vi.fn(), findUser: vi.fn(), findG
 vi.mock("@/server/db", () => ({ prisma: { $transaction: mocks.transaction } }));
 const tx = { user: { findFirst: mocks.findUser }, guardianRegistrationGrant: { findFirst: mocks.findGrant, updateMany: mocks.claim, create: mocks.createGrant, update: mocks.updateGrant },
   accountConsent: { findUnique: mocks.receipt, upsert: mocks.upsert, update: mocks.updateReceipt, updateMany: mocks.updateReceipts }, session: { updateMany: mocks.sessions }, auditEvent: { create: mocks.audit },
-  passwordReset: { updateMany: sharing.resets }, earnedAchievement: { updateMany: sharing.achievements }, competitionEntry: { updateMany: sharing.entries },
+  passwordReset: { updateMany: sharing.resets }, emailOtpChallenge: { updateMany: vi.fn() }, earnedAchievement: { updateMany: sharing.achievements }, competitionEntry: { updateMany: sharing.entries },
   studentParentRelationship: { updateMany: sharing.relationships }, schoolEnrollment: { updateMany: sharing.enrollments } };
 const student = { id: "s1", role: "STUDENT" as const, email: "s@example.com", name: "Student" };
 const parent = { ...student, id: "p1", role: "PARENT" as const };

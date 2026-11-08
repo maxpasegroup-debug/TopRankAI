@@ -11,5 +11,8 @@ if (process.env.TOPRANK_VERIFY_BUILD === "infrastructure") {
 if (process.env.TOPRANK_VERIFY_BUILD === "accounts") {
   nextConfig.distDir = ".next/accounts-verification";
 }
+if (process.env.TOPRANK_VERIFY_BUILD === "pin") {
+  nextConfig.distDir = ".next/pin-verification";
+}
 
 export default nextConfig;

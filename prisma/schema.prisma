@@ -99,6 +99,9 @@ model User {
   email        String     @unique
   phone        String?    @unique
   passwordHash String
+  pinHash      String?
+  pinVersion   Int        @default(0)
+  emailVerifiedAt DateTime?
   name         String
   role         UserRole
   status       UserStatus @default(ACTIVE)
@@ -137,6 +140,7 @@ model User {
   guardianRegistrationGrants GuardianRegistrationGrant[] @relation("RegistrationGuardian")
   issuedRegistrationGrants GuardianRegistrationGrant[] @relation("RegistrationVerifier")
   passwordResets PasswordReset[]
+  otpChallenges EmailOtpChallenge[]
   authoredSyllabuses SyllabusVersion[] @relation("SyllabusAuthor")
   reviewedSyllabuses SyllabusVersion[] @relation("SyllabusReviewer")
   authoredContentSources ContentSource[] @relation("ContentSourceAuthor")
@@ -163,6 +167,33 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model EmailOtpChallenge {
+  id String @id
+  tokenHash String @unique
+  purpose String
+  email String
+  bindingHash String?
+  codeHash String
+  proofHash String?
+  userId String?
+  pinVersion Int?
+  deliveryState String @default("PENDING")
+  attempts Int @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  verifiedAt DateTime?
+  consumedAt DateTime?
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([email, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+model PinAttemptWindow {
+  id String @id
+  count Int @default(0)
+  endsAt DateTime
 }
 
 model GuardianRegistrationGrant {

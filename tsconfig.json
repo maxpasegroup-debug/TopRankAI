@@ -66,7 +66,9 @@
     ".next/infrastructure-verification/types/**/*.ts",
     ".next/infrastructure-verification/dev/types/**/*.ts",
     ".next/accounts-verification/types/**/*.ts",
-    ".next/accounts-verification/dev/types/**/*.ts"
+    ".next/accounts-verification/dev/types/**/*.ts",
+    ".next/pin-verification/types/**/*.ts",
+    ".next/pin-verification/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

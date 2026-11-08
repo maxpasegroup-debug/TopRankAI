@@ -39,6 +39,7 @@ const mocks = vi.hoisted(() => {
     tx: {
       user: {
         update: vi.fn(),
+        updateMany: vi.fn(),
       },
       studentProfile: {
         upsert: vi.fn(),
@@ -66,6 +67,7 @@ const parent: AuthUser = {
 describe("student service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.tx.user.updateMany.mockResolvedValue({ count: 1 });
     mocks.prisma.exam.findFirst.mockResolvedValue(mocks.exam);
     mocks.prisma.exam.findMany.mockResolvedValue([mocks.exam]);
     mocks.prisma.studentProfile.findUnique.mockResolvedValue({ ...mocks.profile });
@@ -108,6 +110,20 @@ describe("student service", () => {
     const { updateStudentProfile } = await import("@/server/student/service");
 
     await expect(updateStudentProfile(student, { targetExamId: "missing_exam" })).rejects.toBeInstanceOf(ValidationApiError);
+  });
+
+  it("cannot replace or clear the login mobile through an ordinary profile update", async () => {
+    mocks.tx.user.updateMany.mockResolvedValue({ count: 0 });
+    const { updateStudentProfile } = await import("@/server/student/service");
+    await expect(updateStudentProfile(student, { phone: "" })).rejects.toThrow("login mobile");
+    expect(mocks.tx.studentProfile.upsert).not.toHaveBeenCalled();
+    expect(mocks.tx.user.updateMany).toHaveBeenCalledWith({ where: { id: student.id, OR: [{ pinHash: null }, { phone: null }] }, data: { name: undefined, phone: null } });
+  });
+  it("allows profile updates that preserve a PIN account's exact existing mobile", async () => {
+    const { updateStudentProfile } = await import("@/server/student/service");
+    await updateStudentProfile(student, { phone: "+919876543210" });
+    expect(mocks.tx.user.updateMany).toHaveBeenCalledWith({ where: { id: student.id, OR: [{ pinHash: null }, { phone: "+919876543210" }] }, data: { name: undefined, phone: "+919876543210" } });
+    expect(mocks.tx.studentProfile.upsert).toHaveBeenCalledOnce();
   });
 
   it("cannot finish onboarding by manipulating a profile flag", async () => {

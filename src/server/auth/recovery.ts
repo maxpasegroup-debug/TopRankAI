@@ -43,7 +43,7 @@ export function decryptRecoveryPayload(value: string, id: string, key: Buffer) {
 }
 
 export async function queuePasswordRecovery(email: string, config = readRecoveryConfig()) {
-  const user = await prisma.user.findFirst({ where: { email, role: { in: [...RECOVERABLE_ROLES] }, status: "ACTIVE" }, select: { id: true, email: true } });
+  const user = await prisma.user.findFirst({ where: { email, role: { in: [...RECOVERABLE_ROLES] }, status: "ACTIVE", pinHash: null }, select: { id: true, email: true } });
   if (user) {
     const token = createSessionToken(); const id = randomUUID();
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -91,7 +91,7 @@ export async function deliverPasswordRecoveries(limit = 5, config = readRecovery
 export async function resetPassword(token: string, password: string) {
   const passwordHash = await hashPassword(password);
   return prisma.$transaction(async tx => {
-    const where = { tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: new Date() }, deliveryState: "SENT", user: { status: "ACTIVE" as const, role: { in: [...RECOVERABLE_ROLES] } } };
+    const where = { tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: new Date() }, deliveryState: "SENT", user: { status: "ACTIVE" as const, role: { in: [...RECOVERABLE_ROLES] }, pinHash: null } };
     const reset = await tx.passwordReset.findFirst({ where });
     if (!reset || (await tx.passwordReset.updateMany({ where: { ...where, id: reset.id }, data: { consumedAt: new Date(), deliveryPayload: null } })).count !== 1) {
       throw new ValidationApiError("Recovery link is invalid or expired");

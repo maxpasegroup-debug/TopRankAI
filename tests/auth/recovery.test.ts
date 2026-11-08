@@ -33,7 +33,7 @@ describe("password recovery with mocked persistence and transport", () => {
   });
   it("checks expiry/status, atomically claims once, hashes the replacement and revokes all sessions", async () => {
     mocks.findReset.mockResolvedValue({ id: "r1", userId: "s1" }); expect(await resetPassword(token, "new-password")).toEqual({ reset: true });
-    expect(mocks.findReset).toHaveBeenCalledWith({ where: expect.objectContaining({ tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: expect.any(Date) }, deliveryState: "SENT", user: { role: { in: ["STUDENT", "PARENT"] }, status: "ACTIVE" } }) });
+    expect(mocks.findReset).toHaveBeenCalledWith({ where: expect.objectContaining({ tokenHash: hashSessionToken(token), consumedAt: null, expiresAt: { gt: expect.any(Date) }, deliveryState: "SENT", user: { role: { in: ["STUDENT", "PARENT"] }, status: "ACTIVE", pinHash: null } }) });
     expect(mocks.updateUser).toHaveBeenCalledWith({ where: { id: "s1" }, data: { passwordHash: "test-only-bcrypt-hash" } }); expect(mocks.sessions).toHaveBeenCalledWith({ where: { userId: "s1", revokedAt: null }, data: { revokedAt: expect.any(Date) } }); expect(mocks.audit).toHaveBeenCalledOnce();
   });
   it("does not send without acquiring the bounded delivery lease", async () => { mocks.findMany.mockResolvedValue([{ id: "r1" }]); mocks.resets.mockResolvedValue({ count: 0 }); const send = vi.fn(); expect(await deliverPasswordRecoveries(5, config, send)).toEqual({ processed: 1, accepted: 0 }); expect(send).not.toHaveBeenCalled(); });
@@ -49,7 +49,7 @@ describe("password recovery with mocked persistence and transport", () => {
   it("limits public recovery to active student and parent accounts, not staff", async () => {
     mocks.user.mockResolvedValue(null);
     await queuePasswordRecovery(payload.email, config);
-    expect(mocks.user).toHaveBeenCalledWith(expect.objectContaining({ where: { email: payload.email, role: { in: ["STUDENT", "PARENT"] }, status: "ACTIVE" } }));
+    expect(mocks.user).toHaveBeenCalledWith(expect.objectContaining({ where: { email: payload.email, role: { in: ["STUDENT", "PARENT"] }, status: "ACTIVE", pinHash: null } }));
     expect(mocks.createReset).not.toHaveBeenCalled();
   });
   it.each([0, 101, 1.5])("refuses cleanup limit %s before queries", async limit => {

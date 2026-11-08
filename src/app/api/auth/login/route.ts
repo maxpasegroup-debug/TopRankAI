@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     await enforceAuthIdentityRateLimit("login", request, body.email);
     const user = await prisma.user.findUnique({ where: { email: body.email } });
 
-    if (!user || user.status !== "ACTIVE") {
+    if (!user || user.status !== "ACTIVE" || user.pinHash) {
       throw new AuthenticationApiError("Invalid email or password");
     }
 
