@@ -33,14 +33,22 @@ export type ScheduledPaper = {
 
 // scheduledDate is the UTC date key for the Indian study day. An 08:00 IST
 // first sitting is a reminder; candidates may start that first paper earlier.
-export function dailySchedule(day: Date, count: number, duration: number, papers: ScheduledPaper[], previousDaySubmission?: Date | null) {
-  let startsAt = new Date(day.getTime() + 150 * 60_000);
+export function dailySchedule(
+  day: Date,
+  count: number,
+  duration: number,
+  papers: ScheduledPaper[],
+  previousDaySubmission?: Date | null,
+  startMinutes = 480,
+) {
+  const offset = (startMinutes - 330) * 60_000;
+  const configuredStart = day.getTime() + offset;
   const carryOver = previousDaySubmission ? previousDaySubmission.getTime() + EXAM_BREAK_MINUTES * 60_000 : 0;
-  if (carryOver > Date.now()) startsAt = new Date(carryOver);
+  let startsAt = new Date(Math.max(configuredStart, carryOver));
   return Array.from({ length: count }, (_, slot) => {
     const paper = papers.find((row) => row.slot === slot);
     const previous = papers.find((row) => row.slot === slot - 1);
-    const available = slot === 0 ? carryOver <= Date.now() : Boolean(previous?.submittedAt && startsAt.getTime() <= Date.now());
+    const available = startsAt.getTime() <= Date.now() && (slot === 0 || Boolean(previous?.submittedAt));
     const sitting = { slot, startsAt, available, status: paper?.status ?? "SCHEDULED" };
     const finish = paper?.submittedAt ?? paper?.attempt?.deadline
       ?? new Date(Math.max(Date.now(), startsAt.getTime()) + duration * 60_000);

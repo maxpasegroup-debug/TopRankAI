@@ -30,7 +30,15 @@ it("opens the next sitting only after submission and a full break", () => {
 it("carries a late submission break across the Indian study-day boundary", () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-11-16T18:35:00Z"));
-  const schedule = dailySchedule(new Date("2026-11-17T00:00:00Z"), 2, 180, [], new Date("2026-11-16T18:20:00Z"));
+  const schedule = dailySchedule(new Date("2026-11-17T00:00:00Z"), 2, 180, [], new Date("2026-11-16T18:20:00Z"), 0);
   expect(schedule[0].available).toBe(false);
   expect(schedule[0].startsAt.toISOString()).toBe("2026-11-16T19:05:00.000Z");
+});
+
+it("honours a candidate's IST start time", () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-11-16T03:00:00Z"));
+  const schedule = dailySchedule(new Date("2026-11-16T00:00:00Z"), 1, 180, [], null, 600);
+  expect(schedule[0].startsAt.toISOString()).toBe("2026-11-16T04:30:00.000Z");
+  expect(schedule[0].available).toBe(false);
 });

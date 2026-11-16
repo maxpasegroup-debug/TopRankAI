@@ -258,11 +258,12 @@ export async function updateCandidateProfile(raw: unknown) {
   }
 }
 
-export async function saveDailyWorkload(targetId: string, count: number, activateMonthly: boolean) {
+export async function saveDailyWorkload(targetId: string, count: number, activateMonthly: boolean, startMinutes?: number) {
   const user = await requireAuth();
   const exam = (await getCandidateExams(user.id)).find((item) => item.targetId === targetId);
-  if (!exam || !Number.isInteger(count) || count < 1 || count > MAX_DAILY_PAPERS) {
-    return { ok: false, message: "Choose a valid number of daily papers." };
+  const start = startMinutes ?? exam?.dailyStartMinutes ?? 480;
+  if (!exam || !Number.isInteger(count) || count < 1 || count > MAX_DAILY_PAPERS || !Number.isInteger(start) || start < 0 || start > 1439) {
+    return { ok: false, message: "Choose a valid number of daily papers and a start time." };
   }
   return prisma.$transaction(async (tx) => {
     const target = await tx.candidateExamTarget.findFirst({ where: { id: targetId, userId: user.id, active: true } });
@@ -298,7 +299,7 @@ export async function saveDailyWorkload(targetId: string, count: number, activat
     }
     await tx.candidateExamTarget.update({
       where: { id: target.id },
-      data: { dailyPaperCount: count },
+      data: { dailyPaperCount: count, dailyStartMinutes: start },
     });
     return {
       ok: true,

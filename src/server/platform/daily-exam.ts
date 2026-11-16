@@ -810,7 +810,9 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
         localDateKey(afterBreak) === recordDate.toISOString().slice(0, 10);
       // When a late paper runs past midnight, the new study day has already begun.
       const nextDay = addDays(recordDate, 1);
-      const nextAt = nextToday ? afterBreak : new Date(nextDay.getTime() + 150 * 60_000);
+      const nextAt = nextToday
+        ? afterBreak
+        : new Date(nextDay.getTime() + (target.dailyStartMinutes - 330) * 60_000);
       await tx.notification.create({ data: {
         userId, type: "DAILY_EXAM", title: nextToday ? "Your next exam" : "Your next study day",
         body: `${target.shortName ?? target.name} · Paper ${nextToday ? attempt.dailyExam.slot + 2 : 1} at ${formatDateTime(nextAt)} IST. Review your answers and prepare well.`,

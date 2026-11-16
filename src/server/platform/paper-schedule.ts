@@ -15,7 +15,7 @@ export async function getPaperSchedule(userId: string, exam: CandidateExam, day 
       orderBy: { submittedAt: "desc" }, select: { submittedAt: true },
     }),
   ]);
-  return dailySchedule(day, exam.papersPerDay, exam.durationMinutes, papers, lastSubmission?.submittedAt);
+  return dailySchedule(day, exam.papersPerDay, exam.durationMinutes, papers, lastSubmission?.submittedAt, exam.dailyStartMinutes);
 }
 
 export async function checkPaperSlot(userId: string, exam: CandidateExam, slot: number, day: Date) {

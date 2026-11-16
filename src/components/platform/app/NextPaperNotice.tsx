@@ -2,13 +2,13 @@ import { ExamReminder } from "./ExamReminder";
 import { addDays, todayDate } from "@/server/platform/utils";
 import type { dailySchedule } from "@/shared/daily-workload";
 
-export function NextPaperNotice({ name, schedule, day = todayDate() }: {
-  name: string; schedule: ReturnType<typeof dailySchedule>; day?: Date;
+export function NextPaperNotice({ name, schedule, day = todayDate(), startMinutes = 480 }: {
+  name: string; schedule: ReturnType<typeof dailySchedule>; day?: Date; startMinutes?: number;
 }) {
   const next = schedule.find((sitting) => sitting.status === "SCHEDULED");
   const tomorrow = addDays(day, 1).getTime();
   const midnight = tomorrow - 330 * 60_000;
-  const tomorrowFirst = tomorrow + 150 * 60_000;
+  const tomorrowFirst = tomorrow + (startMinutes - 330) * 60_000;
   const withinDay = next && next.startsAt.getTime() < midnight;
   const startsAt = withinDay ? next.startsAt.getTime() : tomorrowFirst;
   const refreshAt = startsAt > Date.now() ? Math.min(midnight, startsAt) : midnight;

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { saveDailyWorkload } from "@/server/actions/platform";
 import { MAX_DAILY_PAPERS } from "@/shared/daily-workload";
 
@@ -12,21 +12,30 @@ export type ExamScheduleRow = {
   count: number;
   included: number;
   durationMinutes: number;
-  studyMinutes: number;
+  startMinutes: number;
   monthlyUntil: string | null;
 };
+
+function timeValue(minutes?: number) {
+  const safe = Number.isFinite(minutes) ? Math.min(1439, Math.max(0, minutes as number)) : 480;
+  return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+}
+
+function minutesValue(value: string) {
+  const [hours, minutes] = value.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return 480;
+  return Math.min(1439, Math.max(0, hours * 60 + minutes));
+}
 
 export function ExamScheduleList({ rows, activeCode }: { rows: ExamScheduleRow[]; activeCode: string }) {
   return (
     <section className="tp-card tp-card-pad tp-mb-24">
-      <div className="tp-row-between tp-gap-12 tp-wrap" style={{ marginBottom: 12 }}>
-        <div>
-          <h2 style={{ fontSize: 18 }}>Schedules for all your exams</h2>
-          <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>
-            Change papers per day for each exam. Daily study time is set separately in My exams.
-          </p>
-        </div>
-        <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/app/exams">Edit study time</Link>
+      <div style={{ marginBottom: 12 }}>
+        <h2 style={{ fontSize: 18 }}>Schedules for all your exams</h2>
+        <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>
+          Set papers per day and the start time (IST) for each exam. Every paper is the full official paper;
+          later papers follow after a 45-minute break.
+        </p>
       </div>
       <div className="tp-stack tp-gap-12">
         {rows.map((row) => <ScheduleRow key={row.targetId} row={row} active={row.code === activeCode} />)}
@@ -37,10 +46,13 @@ export function ExamScheduleList({ rows, activeCode }: { rows: ExamScheduleRow[]
 
 function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean }) {
   const [count, setCount] = useState(row.count);
+  const [start, setStart] = useState(timeValue(row.startMinutes));
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const needsMonthly = count > row.included && !row.monthlyUntil;
+  const changed = count !== row.count || minutesValue(start) !== row.startMinutes;
 
   return (
     <div className="tp-list-item" style={{ alignItems: "flex-start" }}>
@@ -51,13 +63,15 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
           {row.monthlyUntil ? <span className="tp-pill tp-pill-ok">Mock monthly</span> : null}
         </div>
         <div className="tp-xs tp-faint" style={{ marginTop: 3 }}>
-          {row.durationMinutes} min official paper · {row.studyMinutes} min study target
+          {row.durationMinutes} min official paper · starts {start} IST
           {row.monthlyUntil ? ` · extra papers until ${row.monthlyUntil}` : ""}
         </div>
       </div>
-      <div className="tp-stack tp-gap-6" style={{ minWidth: 230 }}>
-        <div className="tp-row tp-gap-8">
+      <div className="tp-stack tp-gap-6" style={{ minWidth: 290 }}>
+        <div className="tp-row tp-gap-8 tp-wrap">
+          <label className="tp-xs tp-muted" htmlFor={`papers-${row.targetId}`}>Papers</label>
           <select
+            id={`papers-${row.targetId}`}
             className="tp-select"
             style={{ width: "auto" }}
             value={count}
@@ -66,27 +80,41 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
               setMessage("");
               setError("");
             }}
-            aria-label={`Papers per day for ${row.name}`}
           >
             {Array.from({ length: MAX_DAILY_PAPERS }, (_, index) => {
               const value = index + 1;
               return <option value={value} key={value}>{value}{value > row.included ? " (monthly)" : ""}</option>;
             })}
           </select>
+          <label className="tp-xs tp-muted" htmlFor={`start-${row.targetId}`}>Start</label>
+          <input
+            id={`start-${row.targetId}`}
+            className="tp-input"
+            type="time"
+            value={start}
+            onChange={(event) => {
+              setStart(event.target.value);
+              setMessage("");
+              setError("");
+            }}
+            style={{ width: 112, minHeight: 34, padding: "2px 8px" }}
+          />
+          <span className="tp-xs tp-faint">IST</span>
           <button
             type="button"
             className="tp-btn tp-btn-sm"
-            disabled={pending || (count === row.count && !needsMonthly)}
+            disabled={pending || (!changed && !needsMonthly)}
             onClick={() => {
               setMessage("");
               setError("");
               startTransition(async () => {
-                const result = await saveDailyWorkload(row.targetId, count, needsMonthly);
+                const result = await saveDailyWorkload(row.targetId, count, needsMonthly, minutesValue(start));
                 if (!result.ok) {
                   setError(result.message);
                   return;
                 }
                 setMessage(result.message);
+                router.refresh();
               });
             }}
           >

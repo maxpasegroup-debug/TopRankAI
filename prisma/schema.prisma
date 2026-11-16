@@ -403,6 +403,7 @@ model CandidateExamTarget {
   targetYear        Int
   preparationLevel  PreparationLevel @default(BEGINNER)
   dailyPaperCount   Int?
+  dailyStartMinutes Int              @default(480)
   dailyMinutes      Int              @default(45)
   examPart          String?
   targetExamDate    DateTime?        @db.Date

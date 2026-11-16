@@ -14,6 +14,7 @@ export type CandidateExam = {
   level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXTREME";
   papersPerDay: number;
   includedPapers: number;
+  dailyStartMinutes: number;
   monthlyUntil: Date | null;
   targetYear: number;
   dailyMinutes: number;
@@ -63,6 +64,7 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
       level: levelForPapers(count),
       papersPerDay: count,
       includedPapers: includedPapers(target.preparationLevel),
+      dailyStartMinutes: target.dailyStartMinutes,
       monthlyUntil: monthly ? subscription!.endsAt : null,
       targetYear: target.targetYear,
       dailyMinutes: target.dailyMinutes,

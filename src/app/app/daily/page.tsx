@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
-import { DailyWorkloadForm } from "@/components/platform/app/DailyWorkloadForm";
 import { ExamScheduleList } from "@/components/platform/app/ExamScheduleList";
 import { NextPaperNotice } from "@/components/platform/app/NextPaperNotice";
 import { getPaperSchedule } from "@/server/platform/paper-schedule";
@@ -105,7 +104,7 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
         </div>
       </div>
 
-      <NextPaperNotice name={exam.shortName ?? exam.name} schedule={schedule} day={day} />
+      <NextPaperNotice name={exam.shortName ?? exam.name} schedule={schedule} day={day} startMinutes={exam.dailyStartMinutes} />
       <section className="tp-card tp-card-pad tp-mb-24">
         <h2 style={{ fontSize: 19 }}>Today’s papers</h2>
         <p className="tp-small tp-muted tp-mb-16">
@@ -132,10 +131,6 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
           </div>;
         })}
       </section>
-      <DailyWorkloadForm key={exam.targetId} targetId={exam.targetId} count={exam.papersPerDay}
-        included={exam.includedPapers} durationMinutes={exam.durationMinutes}
-        monthlyUntil={exam.monthlyUntil ? formatDateTime(exam.monthlyUntil) + " IST" : null} />
-
       <ExamScheduleList
         activeCode={exam.code}
         rows={allExams.map((entry) => ({
@@ -146,6 +141,7 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
           included: entry.includedPapers,
           durationMinutes: entry.durationMinutes,
           studyMinutes: entry.dailyMinutes,
+          startMinutes: entry.dailyStartMinutes ?? 480,
           monthlyUntil: entry.monthlyUntil ? formatDateTime(entry.monthlyUntil) + " IST" : null,
         }))}
       />
