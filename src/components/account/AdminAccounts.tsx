@@ -19,7 +19,7 @@ export function AdminAccounts() {
   return <main className="journey-shell"><h1>Account operations</h1><nav className="mock-links"><a href="/admin">Operations workspace</a><a href="/admin/privacy-requests">Account privacy queue</a></nav>{error && <p role="alert">{error}</p>}
     <section><h2>Verified guardian authorization</h2><form className="commerce-form" onSubmit={issue}>
       <label>Verified guardian account ID<input name="guardianId" maxLength={100} required /></label><label>Authorized student email<input name="childEmail" type="email" autoComplete="off" required /></label>
-      <label>Country<select name="country"><option value="IN">India</option><option value="AE">United Arab Emirates</option></select></label>
+      <label>Country<select name="country"><option value="IN">India</option></select></label>
       <label>Verification evidence reference<input name="verificationReference" minLength={8} maxLength={200} required /></label>
       <label><input name="verified" type="checkbox" required /> Guardian adulthood, identity and authority verified.</label>
       <label><input name="consented" type="checkbox" required /> Guardian registration consent recorded for the current policies.</label>

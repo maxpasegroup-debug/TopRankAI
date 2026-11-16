@@ -36,7 +36,7 @@ describe("practice submission (mocked transactions)", () => {
     db.questionExam.findFirst.mockResolvedValue(null); await expect(submitPracticeAnswer(user, input)).rejects.toBeInstanceOf(ValidationApiError); expect(db.practiceAttempt.create).not.toHaveBeenCalled();
   });
   it("rejects nonstudents before querying", async () => {
-    await expect(submitPracticeAnswer({ ...user, role: "TEACHER" }, input)).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.$transaction).not.toHaveBeenCalled();
+    await expect(submitPracticeAnswer({ ...user, role: "PARENT" }, input)).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.$transaction).not.toHaveBeenCalled();
   });
   it("reads only the authenticated student's attempts", async () => {
     await getPracticeHistory(user); expect(db.practiceAttempt.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: user.id }, take: 100 }));

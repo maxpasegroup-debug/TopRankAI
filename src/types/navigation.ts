@@ -50,6 +50,4 @@ export type ScreenKey =
   | "taraMoodTired"
   | "taraReflection"
   | "me"
-  | "parentPreview"
-  | "schoolPreview"
   | "settings";

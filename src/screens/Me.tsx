@@ -33,22 +33,6 @@ export function Me({ profile }: MeProps) {
             <span>Status: {profile?.onboardingCompleted ? "Onboarding complete" : "Onboarding pending"}</span>
           </div>
         </Card>
-        <div className="grid grid-2">
-          <Card>
-            <h2 style={{ marginTop: 0 }}>Parent Preview</h2>
-            <p style={{ color: "var(--color-muted)", lineHeight: 1.55 }}>
-              A warm view of the student's journey.
-            </p>
-            <Button href="/parent" variant="secondary">Open Parent View</Button>
-          </Card>
-          <Card>
-            <h2 style={{ marginTop: 0 }}>School Preview</h2>
-            <p style={{ color: "var(--color-muted)", lineHeight: 1.55 }}>
-              A simple engagement view for teachers.
-            </p>
-            <Button href="/school" variant="secondary">Open School View</Button>
-          </Card>
-        </div>
       </div>
     </PageContainer>
   );

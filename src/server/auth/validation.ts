@@ -14,8 +14,8 @@ export const signupSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.email().transform((value) => value.toLowerCase()),
   password: newPasswordSchema,
-  // Public registration defaults to student and rejects all other roles.
-  role: z.literal("STUDENT").default("STUDENT"),
+  // Public registration creates a candidate account and rejects all other roles.
+  role: z.literal("CANDIDATE").default("CANDIDATE"),
   targetExam: z.string().trim().max(32).optional(),
 }).extend(accountConsentSchema.shape).strict().superRefine((value, context) => {
   if (needsGuardian(value.ageBand) && !value.guardianApproval) context.addIssue({ code: "custom", path: ["guardianApproval"], message: "Verified guardian authorization is required" });

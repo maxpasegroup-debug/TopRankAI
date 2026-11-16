@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { editorialFingerprint } from "@/server/content/editorial";
 import { safeResourceUrl } from "@/server/content/resource-url";
@@ -55,7 +55,7 @@ export async function assertQuestionReviewed(tx: Prisma.TransactionClient, quest
 }
 export async function assertQuestionParentsPublished(tx: Prisma.TransactionClient, record: NonNullable<Awaited<ReturnType<typeof questionRevision>>>) {
   const published = { status: "PUBLISHED" as const, active: true };
-  if (!await tx.chapter.findFirst({ where: { id: record.chapterId, ...published, subject: published } })) throw new ValidationApiError("Publish the chapter and subject first");
+  if (!record.chapterId || !await tx.chapter.findFirst({ where: { id: record.chapterId, ...published, subject: published } })) throw new ValidationApiError("Publish the chapter and subject first");
   for (const link of record.exams) {
     if (!await tx.exam.findFirst({ where: { id: link.examId, ...published } }) || !await tx.examSubject.findFirst({ where: { examId: link.examId, subjectId: record.subjectId, ...published } }))
       throw new ValidationApiError("Publish the exam and its subject association first");

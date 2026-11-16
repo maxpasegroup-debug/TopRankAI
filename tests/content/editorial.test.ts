@@ -50,7 +50,7 @@ describe("editorial validation and bounded launch drafts", () => {
   });
 });
 describe("revision-bound publication and authoring (mocked persistence)", () => {
-  it.each(["STUDENT", "PARENT", "TEACHER", "SCHOOL_ADMIN"] as const)("denies %s authoring/review/import before persistence", async role => {
+  it.each(["STUDENT", "PARENT", "PARENT", "PARENT"] as const)("denies %s authoring/review/import before persistence", async role => {
     const actor = { ...admin, role };
     await expect(saveContentDraft(actor, { entity: "LESSON", ...lesson, revision: 2 })).rejects.toBeInstanceOf(AuthorizationApiError);
     await expect(reviewContent(actor, { entity: "LESSON", id: "l1", revision: 2, evidence: "review-evidence", accuracyConfirmed: true, rightsConfirmed: true })).rejects.toBeInstanceOf(AuthorizationApiError);

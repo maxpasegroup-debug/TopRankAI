@@ -1,6 +1,7 @@
 import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { candidateRoles } from "@/server/auth/roles";
 import type { StudentProfileUpdateInput } from "./validation";
 
 export type SupportedExamDto = {
@@ -28,11 +29,22 @@ export type StudentMissionDto = {
   href: string;
 };
 
+export type CandidateExamTargetDto = {
+  id: string;
+  examId: string;
+  code: string;
+  name: string;
+  category: string;
+  targetYear: number;
+  preparationLevel: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXTREME";
+  dailyMinutes: number;
+};
+
 export const supportedExamCodes = ["NEET", "JEE_MAIN", "JEE_ADVANCED", "KEAM", "CUET"] as const;
 
 export function assertStudent(user: AuthUser) {
-  if (user.role !== "STUDENT") {
-    throw new AuthorizationApiError("Only student accounts can access this resource");
+  if (!candidateRoles.includes(user.role as typeof candidateRoles[number])) {
+    throw new AuthorizationApiError("Only candidate accounts can access this resource");
   }
   if (user.requiresLegalConsent) throw new AuthorizationApiError("Complete your account consent before continuing");
 }
@@ -196,11 +208,16 @@ export async function updateStudentProfile(user: AuthUser, input: StudentProfile
 
 export async function getMissionControl(user: AuthUser) {
   const profile = await getStudentProfile(user);
-  const task = await prisma.missionTask.findFirst({ where: { plan: { userId: user.id, active: true }, status: "TODO" },
-    orderBy: [{ dueDate: "asc" }, { id: "asc" }], select: { subject: true, title: true, minutes: true, href: true } });
+  const [task, targets] = await Promise.all([
+    prisma.missionTask.findFirst({ where: { plan: { userId: user.id, active: true }, status: "TODO" },
+      orderBy: [{ dueDate: "asc" }, { id: "asc" }], select: { subject: true, title: true, minutes: true, href: true } }),
+    prisma.candidateExamTarget.findMany({ where: { userId: user.id, active: true, exam: { status: "PUBLISHED", active: true } }, include: { exam: { select: { code: true, name: true, category: true } } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
+  ]);
 
   return {
     profile,
+    targets: targets.map((target) => ({ id: target.id, examId: target.examId, code: target.exam.code, name: target.exam.name,
+      category: target.exam.category, targetYear: target.targetYear, preparationLevel: target.preparationLevel, dailyMinutes: target.dailyMinutes })),
     mission: task?.href ? { subject: task.subject, chapter: task.title, durationMinutes: task.minutes, href: task.href } : null,
   };
 }

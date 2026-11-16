@@ -1,5 +1,5 @@
 import type { AuthUser } from "@/server/auth/session";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { prisma } from "@/server/db";
 import { isTeachingBody } from "@/shared/lesson-content";
 import { editorialFingerprint } from "./editorial";

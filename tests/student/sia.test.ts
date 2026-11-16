@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthUser } from "@/server/auth/session";
 vi.mock("@/server/db", () => ({ prisma: {} }));
-const mocks = vi.hoisted(() => ({ journey: vi.fn(), board: vi.fn(), revision: vi.fn(), competition: vi.fn(), available: vi.fn(), lesson: vi.fn(), practice: vi.fn(), practiceAction: vi.fn() }));
+const mocks = vi.hoisted(() => ({ journey: vi.fn(), board: vi.fn(), revision: vi.fn(), available: vi.fn(), lesson: vi.fn(), practice: vi.fn(), practiceAction: vi.fn() }));
 vi.mock("@/server/sia/actions", () => ({ missionActionAvailable: mocks.available, nextAccessibleLesson: mocks.lesson, nextAvailablePractice: mocks.practiceAction }));
 vi.mock("@/server/practice/revision", () => ({ getPracticeRevision: mocks.practice }));
-vi.mock("@/server/competition/service", () => ({ getCompetitionSuggestion: mocks.competition }));
 vi.mock("@/server/mock/service", () => ({ getMockRevision: mocks.revision }));
 vi.mock("@/server/journey/service", () => ({ getJourney: mocks.journey, getMissionBoard: mocks.board }));
 import { getSiaGuidance } from "@/server/sia/service";
 const user: AuthUser = { id: "student", role: "STUDENT", name: "S", email: "s@example.com" };
-beforeEach(() => { vi.resetAllMocks(); mocks.available.mockResolvedValue(true); mocks.lesson.mockResolvedValue(null); mocks.practiceAction.mockResolvedValue(null); mocks.practice.mockResolvedValue({ entries: [] }); mocks.competition.mockResolvedValue(null); mocks.revision.mockResolvedValue([]); mocks.journey.mockResolvedValue({ profile: { dreamCollege: "My career goal", targetExamId: "exam" } }); });
+beforeEach(() => { vi.resetAllMocks(); mocks.available.mockResolvedValue(true); mocks.lesson.mockResolvedValue(null); mocks.practiceAction.mockResolvedValue(null); mocks.practice.mockResolvedValue({ entries: [] }); mocks.revision.mockResolvedValue([]); mocks.journey.mockResolvedValue({ profile: { dreamCollege: "My career goal", targetExamId: "exam" } }); });
 describe("SIA deterministic guidance", () => {
   it("grounds suggestions in saved unfinished missions without sending personal data externally", async () => {
     mocks.board.mockResolvedValue({ examId: "exam", tasks: [{ status: "COMPLETED", title: "Old", minutes: 60 }, { id: "task", dueDate: new Date("2000-01-01"), status: "TODO", title: "Cells", minutes: 45, href: "/learn/biology/cells/introduction" }] });
@@ -23,7 +22,6 @@ describe("SIA deterministic guidance", () => {
     mocks.board.mockResolvedValue({ tasks: [] }); mocks.revision.mockResolvedValue([{ reviewedAt: null, subject: "Physics", reasons: ["Incorrect"] }]);
     expect(await getSiaGuidance(user)).toMatchObject({ href: "/practice/revision", suggestion: expect.stringContaining("Physics") });
   });
-  it("links to an observed challenge without claiming eligibility", async () => { mocks.board.mockResolvedValue({ tasks: [] }); mocks.competition.mockResolvedValue({ suggestion: "A published challenge is open", href: "/compete?id=c" }); expect(await getSiaGuidance(user)).toMatchObject({ href: "/compete?id=c" }); });
   it("skips unavailable due content", async () => {
     mocks.board.mockResolvedValue({ examId: "exam", tasks: [{ status: "TODO", dueDate: new Date("2000-01-01"), href: "/learn/old", title: "Old" }] }); mocks.available.mockResolvedValue(false);
     expect(await getSiaGuidance(user)).toMatchObject({ href: "/home", skippedUnavailable: 1 });
@@ -56,5 +54,5 @@ describe("SIA deterministic guidance", () => {
     expect(await getSiaGuidance(user)).toMatchObject({ skippedUnavailable: 20 }); expect(mocks.available).toHaveBeenCalledTimes(20);
   });
   it("rejects invalid timezones before any read", async () => { await expect(getSiaGuidance(user, "not/a-zone")).rejects.toThrow(); expect(mocks.journey).not.toHaveBeenCalled(); });
-  it.each(["PARENT", "TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const)("rejects %s before reads", async role => { await expect(getSiaGuidance({ ...user, role })).rejects.toThrow(); expect(mocks.journey).not.toHaveBeenCalled(); });
+  it.each(["PARENT", "PARENT", "PARENT", "PLATFORM_ADMIN"] as const)("rejects %s before reads", async role => { await expect(getSiaGuidance({ ...user, role })).rejects.toThrow(); expect(mocks.journey).not.toHaveBeenCalled(); });
 });

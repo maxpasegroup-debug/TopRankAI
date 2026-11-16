@@ -18,7 +18,7 @@ async function logout(request: Request) {
     }
 
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");
-    const response = acceptsHtml ? NextResponse.redirect(new URL("/login", origin), 303) : apiOk({ loggedOut: true }, requestId);
+    const response = acceptsHtml ? NextResponse.redirect(new URL("/", origin), 303) : apiOk({ loggedOut: true }, requestId);
 
     response.cookies.set(SESSION_COOKIE, "", {
       httpOnly: true,

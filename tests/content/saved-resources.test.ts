@@ -2,13 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthorizationApiError } from "@/server/api/errors";
 const db = vi.hoisted(() => ({ learningResource: { findFirst: vi.fn() }, studentSavedResource: { findUnique: vi.fn(), upsert: vi.fn(), deleteMany: vi.fn(), findMany: vi.fn() }, access: vi.fn() }));
 vi.mock("@/server/db", () => ({ prisma: db }));
-vi.mock("@/server/commerce/access", () => ({ requireResourceAccess: db.access }));
+vi.mock("@/server/content/access", () => ({ requireResourceAccess: db.access }));
 import { getSavedResourceState, listSavedResources, saveResource, saveResourceSchema } from "@/server/content/saved-resources";
 const student = { id: "s1", role: "STUDENT" as const, name: "Student", email: "s@example.com" };
 const row = { resourceId: "r1", resource: { title: "Notes", type: "NOTES", reference: "Original inline notes", url: "https://example.com/notes", lessonId: "l1", lesson: { slug: "lesson", chapter: { slug: "chapter", subject: { slug: "physics" } } } } };
 beforeEach(() => { vi.resetAllMocks(); db.learningResource.findFirst.mockResolvedValue({ id: "r1", lessonId: "l1" }); db.studentSavedResource.findMany.mockResolvedValue([row]); });
 describe("student saved resources (mocked database)", () => {
-  it.each(["PARENT", "TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const)("denies %s before persistence", async role => {
+  it.each(["PARENT", "PARENT", "PARENT", "PLATFORM_ADMIN"] as const)("denies %s before persistence", async role => {
     await expect(saveResource({ ...student, role }, { resourceId: "r1", saved: true })).rejects.toBeInstanceOf(AuthorizationApiError);
     await expect(listSavedResources({ ...student, role })).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.learningResource.findFirst).not.toHaveBeenCalled();
   });

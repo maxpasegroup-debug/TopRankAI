@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { AuthenticationApiError } from "./errors";
 import { apiOk, getRequestId, handleApiError } from "./responses";
 import { requireAuthOrigin, readAuthJson } from "@/server/auth/request-security";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 export function adminRead(handler: (user: AuthUser, request: Request) => Promise<unknown>) {
   return async (request: Request) => { const id = getRequestId(request);
     try { const user = await getCurrentUser(); if (!user) throw new AuthenticationApiError(); assertPlatformAdmin(user);

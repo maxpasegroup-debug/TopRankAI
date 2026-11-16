@@ -6,8 +6,8 @@ import { ApiError, AuthorizationApiError, ValidationApiError } from "@/server/ap
 import { ACCOUNT_POLICY_VERSION, needsGuardian } from "@/shared/account-policy";
 import { accountConsentSchema } from "./validation";
 import { createSessionToken, hashSessionToken, type AuthUser } from "./session";
-import { atomic } from "@/server/commerce/transaction";
-import { adultConsentWhere, withdrawGuardianDependents, withdrawStudentAccess } from "./sharing";
+import { atomic } from "@/server/db/transaction";
+import { adultConsentWhere, withdrawUserAccess } from "./sharing";
 
 type ConsentInput = z.infer<typeof accountConsentSchema>;
 type Receipt = { termsVersion: string; privacyVersion: string; revokedAt: Date | null; ageBand: string;
@@ -54,7 +54,7 @@ export async function saveAccountConsent(tx: Prisma.TransactionClient, userId: s
 }
 
 export async function acceptAccountConsent(user: AuthUser, input: ConsentInput) {
-  if (!["STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
+  if (!["CANDIDATE", "STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
   if (user.role === "PARENT" && input.ageBand !== "18_PLUS") throw new ValidationApiError("Guardian accounts require verified adulthood");
   assertAccountPolicyReady();
   return prisma.$transaction(async tx => {
@@ -66,18 +66,18 @@ export async function acceptAccountConsent(user: AuthUser, input: ConsentInput) 
   });
 }
 export async function withdrawAccountConsent(user: AuthUser) {
-  if (!["STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
+  if (!["CANDIDATE", "STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
   return atomic(async tx => {
     const now = new Date();
-    await withdrawStudentAccess(tx, user.id, now);
-    if (user.role === "PARENT") await withdrawGuardianDependents(tx, user.id, now);
+    await withdrawUserAccess(tx, user.id, now);
+    if (user.role === "PARENT") await tx.guardianRegistrationGrant.updateMany({ where: { guardianId: user.id, revokedAt: null }, data: { revokedAt: now } });
     await tx.auditEvent.create({ data: { actorId: user.id, action: "ACCOUNT_CONSENT_WITHDRAWN", entity: "User", entityId: user.id } });
     return { withdrawn: true };
   });
 }
 
 export const issueGuardianSchema = z.object({
-  guardianId: z.string().min(1).max(100), childEmail: z.email(), country: z.enum(["IN", "AE"]),
+  guardianId: z.string().min(1).max(100), childEmail: z.email(), country: z.literal("IN"),
   verificationReference: z.string().trim().min(8).max(200), guardianIdentityAndAuthorityVerified: z.literal(true), guardianConsentRecorded: z.literal(true),
 }).strict();
 export async function issueGuardianApproval(actor: AuthUser, input: z.infer<typeof issueGuardianSchema>) {
@@ -104,7 +104,7 @@ export async function revokeGuardianApproval(user: AuthUser, grantId: string) {
     await tx.guardianRegistrationGrant.update({ where: { id: grant.id }, data: { revokedAt: new Date() } });
     const receipt = await tx.accountConsent.findUnique({ where: { guardianGrantId: grant.id } });
     if (receipt) {
-      await withdrawStudentAccess(tx, receipt.userId);
+      await withdrawUserAccess(tx, receipt.userId);
     }
     await tx.auditEvent.create({ data: { actorId: user.id, action: "GUARDIAN_REGISTRATION_REVOKED", entity: "GuardianRegistrationGrant", entityId: grant.id } });
     return { revoked: true };
@@ -117,11 +117,11 @@ export async function verifyAdultAccount(actor: AuthUser, input: z.infer<typeof 
   assertAccountPolicyReady();
   if (process.env.ACCOUNT_GUARDIAN_VERIFICATION_APPROVED !== "true") throw new ApiError(503, "ACCOUNT_UNAVAILABLE", "Account verification is temporarily unavailable");
   return atomic(async tx => {
-    if (!await tx.user.findFirst({ where: { id: input.studentId, role: "STUDENT", status: "ACTIVE" } })) throw new ValidationApiError("Student account is unavailable");
+    if (!await tx.user.findFirst({ where: { id: input.studentId, role: { in: ["CANDIDATE", "STUDENT"] }, status: "ACTIVE" } })) throw new ValidationApiError("Candidate account is unavailable");
     const current = await tx.accountConsent.findUnique({ where: { userId: input.studentId } });
     if (!current) throw new ValidationApiError("Account consent record is unavailable");
     await tx.accountConsent.update({ where: { userId: input.studentId }, data: { ageBand: "18_PLUS", guardianGrantId: null, revokedAt: new Date() } });
-    await withdrawStudentAccess(tx, input.studentId);
+    await withdrawUserAccess(tx, input.studentId);
     await tx.auditEvent.create({ data: { actorId: actor.id, action: "ACCOUNT_ADULTHOOD_VERIFIED", entity: "User", entityId: input.studentId,
       detail: JSON.stringify({ verificationReference: input.verificationReference, previousAgeBand: current.ageBand, previousGuardianGrantId: current.guardianGrantId }) } });
     return { verified: true, requiresRenewedConsent: true };

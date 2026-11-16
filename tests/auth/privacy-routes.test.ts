@@ -34,7 +34,7 @@ describe("privacy HTTP boundaries (mocked services, real validators and response
     mocks.user.mockResolvedValue(null); expect((await handler(request(handler === GET ? "GET" : handler === POST ? "POST" : "PATCH", handler === GET ? undefined : input))).status).toBe(401);
     expect(mocks.create).not.toHaveBeenCalled(); expect(mocks.reply).not.toHaveBeenCalled();
   });
-  it.each(["TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"])("does not treat %s as a student or guardian", async role => {
+  it.each(["PARENT", "PARENT", "PLATFORM_ADMIN"])("does not treat %s as a student or guardian", async role => {
     mocks.user.mockResolvedValue({ ...student, role }); expect((await POST(request("POST", input))).status).toBe(403); expect(mocks.create).not.toHaveBeenCalled();
   });
   it("accepts a parent account but derives the actor only from the session", async () => {

@@ -30,7 +30,7 @@ describe("auth validation", () => {
     expect(signupSchema.parse({ name: "Rahul", email: "rahul@example.com", password: "password123", role: "STUDENT", ...consent }).role).toBe("STUDENT");
   });
 
-  it.each(["PLATFORM_ADMIN", "TEACHER", "PARENT", "SCHOOL_ADMIN"])("rejects public signup with role %s", (role) => {
+  it.each(["PLATFORM_ADMIN", "PARENT", "PARENT", "PARENT"])("rejects public signup with role %s", (role) => {
     expect(() => signupSchema.parse({ name: "Rahul", email: "rahul@example.com", password: "password123", role })).toThrow();
   });
 

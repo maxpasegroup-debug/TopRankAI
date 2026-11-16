@@ -4,7 +4,7 @@ import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
 import { assertStudent } from "@/server/student/service";
 import { AuthorizationApiError, ConflictApiError, ValidationApiError } from "@/server/api/errors";
-import { requireResourceAccess } from "@/server/commerce/access";
+import { requireResourceAccess } from "@/server/content/access";
 import { getMissionBoard } from "./service";
 import { plannedTaskSchema, timezoneSchema, dateSchema } from "./validation";
 import { assertDailyCapacity, assertFutureStudyDate } from "./schedule";

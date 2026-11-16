@@ -15,7 +15,7 @@ beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("APP_URL", "https://toprank.te
 afterEach(() => vi.unstubAllEnvs());
 describe("Phase 5 private HTTP boundaries (mocked services)", () => {
   it.each([GET, POST, ADMIN_GET, ADMIN_POST])("rejects anonymous requests", async handler => { mocks.user.mockResolvedValue(null); expect((await handler(request({}))).status).toBe(401); expect(mocks.manage).not.toHaveBeenCalled(); expect(mocks.mutate).not.toHaveBeenCalled(); });
-  it.each(["STUDENT", "TEACHER", "PARENT", "SCHOOL_ADMIN"])("denies %s protected answers and admin writes", async role => {
+  it.each(["STUDENT", "PARENT", "PARENT", "PARENT"])("denies %s protected answers and admin writes", async role => {
     mocks.user.mockResolvedValue({ ...user, role }); expect((await ADMIN_GET(new Request("https://toprank.test/api?id=q"))).status).toBe(403); expect((await ADMIN_POST(request(decision))).status).toBe(403); expect(mocks.question).not.toHaveBeenCalled(); expect(mocks.manage).not.toHaveBeenCalled();
   });
   it("denies foreign-origin mutations before the service", async () => {

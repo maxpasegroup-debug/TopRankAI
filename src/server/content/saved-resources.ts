@@ -3,7 +3,7 @@ import { prisma } from "@/server/db";
 import { assertStudent } from "@/server/student/service";
 import type { AuthUser } from "@/server/auth/session";
 import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
-import { requireResourceAccess } from "@/server/commerce/access";
+import { requireResourceAccess } from "@/server/content/access";
 import { safeResourceUrl } from "./resource-url";
 export const saveResourceSchema = z.object({ resourceId: z.string().min(1).max(100), saved: z.boolean() }).strict();
 const published = { status: "PUBLISHED" as const, active: true };

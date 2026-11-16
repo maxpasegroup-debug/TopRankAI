@@ -1,1 +1,1 @@
-export { SiaAuth as AuthPage } from "./SiaAuth";
+export { CandidateAuth as AuthPage } from "@/components/experience/CandidateAuth";

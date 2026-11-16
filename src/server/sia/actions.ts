@@ -1,7 +1,7 @@
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { AuthorizationApiError } from "@/server/api/errors";
-import { requireResourceAccess } from "@/server/commerce/access";
+import { requireResourceAccess } from "@/server/content/access";
 const published = { status: "PUBLISHED" as const, active: true };
 const lessonSelect = { id: true, title: true, slug: true, chapter: { select: { slug: true, subject: { select: { slug: true } } } } };
 const examSubject = (examId: string) => ({ ...published, examSubjects: { some: { examId, ...published, exam: published } } });

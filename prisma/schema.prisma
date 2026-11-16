@@ -13,10 +13,9 @@ datasource db {
 }
 
 enum UserRole {
+  CANDIDATE
   STUDENT
   PARENT
-  TEACHER
-  SCHOOL_ADMIN
   PLATFORM_ADMIN
 }
 
@@ -25,41 +24,6 @@ enum UserStatus {
   INVITED
   SUSPENDED
   DELETED
-}
-
-enum RelationshipStatus {
-  PENDING
-  ACTIVE
-  REVOKED
-  REJECTED
-  EXPIRED
-}
-
-enum ParentRelationshipType {
-  MOTHER
-  FATHER
-  GUARDIAN
-  OTHER
-}
-
-enum SchoolStatus {
-  ACTIVE
-  TRIAL
-  SUSPENDED
-}
-
-enum SchoolMemberRole {
-  OWNER
-  ADMIN
-  TEACHER
-  STAFF
-}
-
-enum SchoolMembershipStatus {
-  INVITED
-  ACTIVE
-  SUSPENDED
-  REMOVED
 }
 
 enum ContentStatus {
@@ -94,6 +58,107 @@ enum QuestionReviewStatus {
   REVIEWED
 }
 
+enum PreparationLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXTREME
+}
+
+enum SyllabusProgressStatus {
+  NOT_STARTED
+  LEARNING
+  COMPLETED
+  NEEDS_REVISION
+}
+
+enum DailyExamStatus {
+  SCHEDULED
+  IN_PROGRESS
+  SUBMITTED
+  MISSED
+  EXPIRED
+}
+
+enum ExamAttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+}
+
+enum AnswerStatus {
+  CORRECT
+  INCORRECT
+  UNANSWERED
+}
+
+enum QuestionSourceType {
+  AI_GENERATED
+  PREVIOUS_YEAR
+  ADMIN_CREATED
+  SEED
+}
+
+enum RevisionStatus {
+  PENDING
+  COMPLETED
+  DISMISSED
+}
+
+enum CalendarStatus {
+  CONFIRMED
+  TENTATIVE
+  NOT_ANNOUNCED
+}
+
+enum CalendarEventType {
+  APPLICATION_START
+  APPLICATION_END
+  ADMIT_CARD
+  EXAM
+  RESULT
+  COUNSELLING
+  OTHER
+}
+
+enum NotificationType {
+  DAILY_EXAM
+  MISSED_EXAM
+  REVISION
+  TARGET
+  STREAK
+  PERFORMANCE
+  EXAM_DATE
+  MOCK
+  SYSTEM
+  ACHIEVEMENT
+}
+
+enum GoalType {
+  QUESTIONS
+  TOPIC
+  MOCK
+  REVISION
+  MINUTES
+}
+
+enum AchievementMetric {
+  TESTS_COMPLETED
+  STREAK
+  ACCURACY
+  QUESTIONS_SOLVED
+  SYLLABUS_TOPICS
+  PERFECT_SCORE
+  MOCK_COMPLETED
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
 model User {
   id           String     @id @default(cuid())
   email        String     @unique
@@ -105,37 +170,33 @@ model User {
   name         String
   role         UserRole
   status       UserStatus @default(ACTIVE)
+  dateOfBirth  DateTime?  @db.Date
+  gender       String?
+  state        String?
+  city         String?
+  education    String?
+  currentEducationLevel String?
+  preferredLanguage String @default("en")
+  avatarUrl    String?
+  dailyStudyMinutes Int   @default(60)
+  timezone     String     @default("Asia/Kolkata")
+  onboardingCompletedAt DateTime?
+  lastActiveAt DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
   sessions             Session[]
   studentProfile       StudentProfile?
-  parentProfile        ParentProfile?
-  teacherProfile       TeacherProfile?
-  schoolMemberships    SchoolMembership[]
-  parentRelationships  StudentParentRelationship[] @relation("ParentRelationshipParent")
-  studentRelationships StudentParentRelationship[] @relation("ParentRelationshipStudent")
   studyPlans           StudyPlan[]
   studySessions        StudySession[]
   lessonProgress       StudentLessonProgress[]
   savedResources       StudentSavedResource[]
   practiceAttempts     PracticeAttempt[]
   practiceRevisions    PracticeRevisionState[]
+  candidateExamTargets CandidateExamTarget[]
   mockAttempts         MockAttempt[]
-  competitionEntries   CompetitionEntry[]
-  earnedAchievements   EarnedAchievement[]
   helpRequests         HelpRequest[]
   auditEvents          AuditEvent[]
-  commerceOrders       CommerceOrder[]
-  entitlements         Entitlement[]
-  notificationPreference NotificationPreference?
-  commerceNotifications CommerceNotification[]
-  schoolEnrollments SchoolEnrollment[] @relation("EnrolledStudent")
-  enrollmentVerifications SchoolEnrollment[] @relation("EnrollmentVerifier")
-  guardianVerifications StudentParentRelationship[] @relation("GuardianVerifier")
-  portalInvitations PortalInvitation[] @relation("PortalInviter")
-  acceptedPortalInvitations PortalInvitation[] @relation("PortalInviteAccepted")
-  portalFeedback PortalFeedback[]
   accountConsent AccountConsent?
   guardianRegistrationGrants GuardianRegistrationGrant[] @relation("RegistrationGuardian")
   issuedRegistrationGrants GuardianRegistrationGrant[] @relation("RegistrationVerifier")
@@ -150,8 +211,20 @@ model User {
   privacyRequestsAbout AccountPrivacyRequest[] @relation("PrivacySubject")
   privacyRequestsReviewed AccountPrivacyRequest[] @relation("PrivacyReviewer")
 
+  dailyExams          DailyExam[]
+  examAttempts        ExamAttempt[]
+  topicProgress       TopicProgress[]
+  revisionQueue       RevisionQueue[]
+  dailyGoals          DailyGoal[]
+  performanceRecords  PerformanceRecord[]
+  notifications       Notification[]
+  achievements        UserAchievement[]
+  subscription        Subscription?
+  aiUsageLogs         AIUsageLog[]
+
   @@index([role])
   @@index([status])
+  @@index([createdAt])
 }
 
 model Session {
@@ -266,110 +339,82 @@ model StudentProfile {
   @@index([targetExamId])
 }
 
-model ParentProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ExamCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
+  exams Exam[]
 
-model TeacherProfile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model StudentParentRelationship {
-  id               String                 @id @default(cuid())
-  studentUserId    String
-  parentUserId     String
-  relationshipType ParentRelationshipType @default(GUARDIAN)
-  status           RelationshipStatus     @default(PENDING)
-  scopes           String[] @default([])
-  expiresAt        DateTime?
-  authorizationBasis String?
-  verificationReference String?
-  verifiedById     String?
-  verifiedAt       DateTime?
-  studentConsentAt DateTime?
-  parentAcceptedAt DateTime?
-  version          Int @default(0)
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-
-  student User @relation("ParentRelationshipStudent", fields: [studentUserId], references: [id], onDelete: Cascade)
-  parent  User @relation("ParentRelationshipParent", fields: [parentUserId], references: [id], onDelete: Cascade)
-  verifier User? @relation("GuardianVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
-
-  @@unique([studentUserId, parentUserId])
-  @@index([parentUserId])
-  @@index([status])
-}
-
-model School {
-  id        String       @id @default(cuid())
-  name      String
-  slug      String       @unique
-  status    SchoolStatus @default(TRIAL)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  memberships SchoolMembership[]
-  enrollments SchoolEnrollment[]
-  invitations PortalInvitation[]
-  announcements SchoolAnnouncement[]
-  profile String @default("")
-  version Int @default(0)
-}
-
-model SchoolMembership {
-  id        String                 @id @default(cuid())
-  schoolId  String
-  userId    String
-  role      SchoolMemberRole
-  status    SchoolMembershipStatus @default(INVITED)
-  duty      String @default("UNVERIFIED")
-  version   Int @default(0)
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
-
-  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  assignments SchoolStaffAssignment[]
-
-  @@unique([schoolId, userId])
-  @@unique([schoolId, id])
-  @@index([userId])
-  @@index([role])
-  @@index([status])
+  @@index([active, order])
 }
 
 model Exam {
   id        String        @id @default(cuid())
   code      String        @unique
   name      String
+  shortName String?
   status    ContentStatus @default(DRAFT)
   active    Boolean       @default(true)
+  categoryId String?
+  category   String      @default("OTHER")
+  description String?
+  officialUrl String?
+  defaultPreparationLevel PreparationLevel @default(BEGINNER)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
+  examCategory    ExamCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   examSubjects    ExamSubject[]
   questionExams   QuestionExam[]
   studentProfiles StudentProfile[]
-  category        String @default("OTHER")
-  description     String?
-  officialUrl     String?
   studyPlans      StudyPlan[]
+  missionTasks    MissionTask[]
   practiceAttempts PracticeAttempt[]
   mockExams        MockExam[]
   syllabusVersions SyllabusVersion[]
+  candidateTargets CandidateExamTarget[]
+  configuration   ExamConfiguration?
+  syllabusUnits   SyllabusUnit[]
+  dailyExams      DailyExam[]
+  examAttempts    ExamAttempt[]
+  revisionQueue   RevisionQueue[]
+  dailyGoals      DailyGoal[]
+  performanceRecords PerformanceRecord[]
+  calendarEvents  ExamCalendar[]
+  syllabusSources SyllabusSource[]
 
   @@index([status, active])
+  @@index([categoryId, active])
+  @@index([category, active])
+}
+
+model CandidateExamTarget {
+  id                String           @id @default(cuid())
+  userId            String
+  examId            String
+  targetYear        Int
+  preparationLevel  PreparationLevel @default(BEGINNER)
+  dailyMinutes      Int              @default(45)
+  examPart          String?
+  targetExamDate    DateTime?        @db.Date
+  active            Boolean          @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam  @relation(fields: [examId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, examId, targetYear])
+  @@index([userId, active, targetYear])
+  @@index([examId, targetYear])
 }
 
 model Subject {
@@ -385,6 +430,8 @@ model Subject {
   examSubjects ExamSubject[]
   chapters     Chapter[]
   questions    Question[]
+  syllabusUnits SyllabusUnit[]
+  syllabusSources SyllabusSource[]
 
   @@index([status, active])
 }
@@ -573,14 +620,23 @@ model Question {
   status        ContentStatus        @default(DRAFT)
   active        Boolean              @default(true)
   subjectId     String
-  chapterId     String
+  chapterId     String?
   lessonId      String?
+  topicId       String?
   explanation   String?
   solutionRef   String?
   numericalAnswer String?
   supersedesId  String?
   source        String?
   sourceYear    Int?
+  sourceType    QuestionSourceType   @default(ADMIN_CREATED)
+  marks         Decimal              @default(4) @db.Decimal(5, 2)
+  negativeMarks Decimal              @default(1) @db.Decimal(5, 2)
+  syllabusRef   String?
+  checksum      String?              @unique
+  aiJobId       String?
+  approvedAt    DateTime?
+  approvedById  String?
   language      String               @default("en")
   reviewStatus  QuestionReviewStatus @default(NEEDS_REVIEW)
   tags          String[]             @default([])
@@ -588,22 +644,27 @@ model Question {
   updatedAt     DateTime             @updatedAt
 
   subject Subject          @relation(fields: [subjectId], references: [id], onDelete: Restrict)
-  chapter Chapter          @relation(fields: [chapterId], references: [id], onDelete: Restrict)
+  chapter Chapter?         @relation(fields: [chapterId], references: [id], onDelete: SetNull)
   lesson  Lesson?          @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  topic   SyllabusTopic?   @relation(fields: [topicId], references: [id], onDelete: SetNull)
   options QuestionOption[]
   exams   QuestionExam[]
   attempts PracticeAttempt[]
   revisionStates PracticeRevisionState[]
   supersedes Question? @relation("QuestionSuccession", fields: [supersedesId], references: [id], onDelete: Restrict)
   successors Question[] @relation("QuestionSuccession")
+  userAnswers UserAnswer[]
+  revisionItems RevisionQueue[]
 
   @@index([subjectId])
   @@index([chapterId])
   @@index([lessonId])
+  @@index([topicId])
   @@index([type])
   @@index([difficulty])
   @@index([supersedesId])
   @@index([status, active])
+  @@index([sourceType])
 }
 
 model QuestionOption {
@@ -674,6 +735,7 @@ model StudyPlan {
 model MissionTask {
   id           String @id @default(cuid())
   planId       String
+  examId       String?
   title        String
   subject      String
   href         String?
@@ -686,11 +748,13 @@ model MissionTask {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   plan         StudyPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  exam         Exam? @relation(fields: [examId], references: [id], onDelete: Restrict)
   events       MissionTaskEvent[]
   mockRevision MockAnswer?
   studySessions StudySession[]
   @@unique([planId, requestKey])
   @@index([planId, dueDate])
+  @@index([examId, dueDate])
 }
 
 model MissionTaskEvent {
@@ -848,7 +912,6 @@ model MockExam {
   updatedAt       DateTime @updatedAt
   exam            Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
   attempts        MockAttempt[]
-  competition     Competition?
   @@index([examId, status])
 }
 
@@ -866,7 +929,6 @@ model MockAttempt {
   user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
   mockExam    MockExam @relation(fields: [mockExamId], references: [id], onDelete: Restrict)
   answers     MockAnswer[]
-  competitionEntry CompetitionEntry?
   @@unique([userId, requestKey])
   @@index([userId, startedAt])
   @@index([userId, mockExamId, status])
@@ -887,331 +949,429 @@ model MockAnswer {
   @@unique([attemptId, position])
 }
 
-model Competition {
-  id          String @id @default(cuid())
+// ---------------------------------------------------------------------------
+// AI-powered continuous examination platform
+// ---------------------------------------------------------------------------
+
+model ExamConfiguration {
+  id                    String   @id @default(cuid())
+  examId                String   @unique
+  durationMinutes       Int      @default(60)
+  totalQuestions        Int      @default(30)
+  sections              Json     @default("[]")
+  positiveMarks         Decimal  @default(1) @db.Decimal(5, 2)
+  negativeMarks         Decimal  @default(0) @db.Decimal(5, 2)
+  questionTypes         String[] @default(["SINGLE_CHOICE"])
+  dailyTestQuestions    Int      @default(8)
+  dailyTestMinutes      Int      @default(12)
+  dailyTestCount        Json     @default("{\"BEGINNER\":1,\"INTERMEDIATE\":2,\"ADVANCED\":2,\"EXTREME\":3}")
+  markingNote           String?
+  sourceUrl             String?
+  verifiedAt            DateTime?
+  version               Int      @default(1)
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([active])
+}
+
+model SyllabusUnit {
+  id          String   @id @default(cuid())
+  examId      String
+  subjectId   String
   title       String
-  type        String
-  status      String @default("DRAFT")
-  mockExamId  String @unique
-  mockVersion Int
-  startsAt    DateTime
-  endsAt      DateTime
-  config      Json
-  version     Int @default(0)
-  resultsVerifiedAt DateTime?
+  slug        String
+  description String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  mockExam    MockExam @relation(fields: [mockExamId], references: [id], onDelete: Restrict)
-  entries     CompetitionEntry[]
-  @@index([status, startsAt])
+
+  exam     Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subject  Subject  @relation(fields: [subjectId], references: [id], onDelete: Restrict)
+  chapters SyllabusChapter[]
+
+  @@unique([examId, subjectId, slug])
+  @@index([examId, subjectId, order])
+  @@index([active])
 }
 
-model CompetitionEntry {
-  id            String @id @default(cuid())
-  competitionId String
-  userId        String
-  attemptId     String? @unique
-  requestKey    String
-  alias         String @unique
-  visible       Boolean @default(false)
-  joinedAt      DateTime @default(now())
-  disqualified  Boolean @default(false)
-  decision      String?
-  score         Decimal? @db.Decimal(12, 4)
-  timeSeconds   Int?
-  rank          Int?
-  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Restrict)
-  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  attempt       MockAttempt? @relation(fields: [attemptId], references: [id], onDelete: Restrict)
-  @@unique([competitionId, userId])
-  @@unique([userId, requestKey])
-  @@index([competitionId, rank])
+model SyllabusChapter {
+  id          String   @id @default(cuid())
+  unitId      String
+  title       String
+  slug        String
+  description String?
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  unit   SyllabusUnit  @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  topics SyllabusTopic[]
+
+  @@unique([unitId, slug])
+  @@index([unitId, order])
+  @@index([active])
 }
 
-model AchievementDefinition {
-  id        String @id @default(cuid())
-  code      String @unique
+model SyllabusTopic {
+  id          String   @id @default(cuid())
+  chapterId   String
+  title       String
+  slug        String
+  description String?
+  content     String?
+  formulas    String?
+  examples    String?
+  difficulty  QuestionDifficulty @default(MEDIUM)
+  estimatedMinutes Int @default(30)
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chapter      SyllabusChapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  materials    StudyMaterial[]
+  progress     TopicProgress[]
+  questions    Question[]
+  revisionQueue RevisionQueue[]
+
+  @@unique([chapterId, slug])
+  @@index([chapterId, order])
+  @@index([active])
+}
+
+model StudyMaterial {
+  id        String   @id @default(cuid())
+  topicId   String
   title     String
-  kind      String
-  threshold Int
-  badge     String
-  status    String @default("DRAFT")
-  version   Int @default(0)
+  type      LearningResourceType @default(NOTES)
+  url       String?
+  content   String?
+  order     Int      @default(0)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
-  earned    EarnedAchievement[]
+  updatedAt DateTime @updatedAt
+
+  topic SyllabusTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([topicId, order])
 }
 
-model EarnedAchievement {
-  id           String @id @default(cuid())
-  userId       String
-  definitionId String
-  scope        String
-  title        String
-  badge        String
-  explanation  String
-  status       String @default("ACTIVE")
-  revocationSource String?
-  evidence     Json
-  shareHash    String? @unique
-  version      Int @default(0)
-  awardedAt    DateTime @default(now())
-  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  definition   AchievementDefinition @relation(fields: [definitionId], references: [id], onDelete: Restrict)
-  prize        PrizeAward?
-  @@unique([userId, definitionId, scope])
-  @@index([userId, awardedAt])
-  @@index([scope, status])
-}
-
-model PrizeAward {
-  id            String @id @default(cuid())
-  achievementId String @unique
-  label         String
-  status        String @default("PENDING_REVIEW")
-  decision      String?
-  version       Int @default(0)
+model TopicProgress {
+  id            String   @id @default(cuid())
+  userId        String
+  topicId       String
+  status        SyllabusProgressStatus @default(NOT_STARTED)
+  completion    Int      @default(0)
+  bookmarked    Boolean  @default(false)
+  notes         String?
+  lastStudiedAt DateTime?
+  createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  achievement   EarnedAchievement @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic SyllabusTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId, status])
 }
 
-model CommerceFeature {
-  code String @id
-  title String
-  gates CommerceGate[]
-  entitlements Entitlement[]
+model DailyExam {
+  id             String   @id @default(cuid())
+  userId         String
+  examId         String
+  scheduledDate  DateTime @db.Date
+  slot           Int      @default(0)
+  title          String
+  status         DailyExamStatus @default(SCHEDULED)
+  questionIds    String[] @default([])
+  configSnapshot Json     @default("{}")
+  durationMinutes Int     @default(15)
+  totalMarks     Decimal  @default(0) @db.Decimal(7, 2)
+  negativeMarks  Decimal  @default(0) @db.Decimal(7, 2)
+  aiGeneratedCount Int    @default(0)
+  startedAt      DateTime?
+  submittedAt    DateTime?
+  missedAt       DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam    Exam        @relation(fields: [examId], references: [id], onDelete: Cascade)
+  attempt ExamAttempt?
+
+  @@unique([userId, examId, scheduledDate, slot])
+  @@index([userId, scheduledDate, status])
+  @@index([examId, scheduledDate])
 }
 
-model CommerceGate {
-  id String @id @default(cuid())
-  kind String
-  resourceId String
-  featureCode String
-  feature CommerceFeature @relation(fields: [featureCode], references: [code], onDelete: Restrict)
-  @@unique([kind, resourceId])
+model ExamAttempt {
+  id              String   @id @default(cuid())
+  dailyExamId     String   @unique
+  userId          String
+  examId          String
+  status          ExamAttemptStatus @default(IN_PROGRESS)
+  startedAt       DateTime @default(now())
+  deadline        DateTime
+  submittedAt     DateTime?
+  timeTakenSeconds Int     @default(0)
+  totalMarks      Decimal  @default(0) @db.Decimal(7, 2)
+  obtainedMarks   Decimal  @default(0) @db.Decimal(7, 2)
+  correctCount    Int      @default(0)
+  incorrectCount  Int      @default(0)
+  unansweredCount Int      @default(0)
+  negativeMarks   Decimal  @default(0) @db.Decimal(7, 2)
+  accuracy        Decimal  @default(0) @db.Decimal(5, 2)
+  scorePercent    Decimal  @default(0) @db.Decimal(5, 2)
+  subjectBreakdown Json    @default("{}")
+  topicBreakdown  Json     @default("{}")
+  aiFeedback      Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dailyExam DailyExam @relation(fields: [dailyExamId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam      Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  answers   UserAnswer[]
+
+  @@index([userId, submittedAt])
+  @@index([userId, examId, status])
 }
 
-model CommercePackage {
-  id String @id @default(cuid())
-  code String
-  revision Int
-  title String
-  description String
-  status String @default("DRAFT")
-  amountMinor Int
-  currency String
-  interval String
-  durationDays Int
-  features String[]
-  availableFrom DateTime
-  availableUntil DateTime
+model UserAnswer {
+  id           String   @id @default(cuid())
+  attemptId    String
+  questionId   String
+  position     Int
+  selected     Json     @default("[]")
+  status       AnswerStatus @default(UNANSWERED)
+  marksAwarded Decimal  @default(0) @db.Decimal(7, 2)
+  timeSpentSeconds Int  @default(0)
+  flagged      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  attempt  ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Restrict)
+
+  @@unique([attemptId, questionId])
+  @@unique([attemptId, position])
+  @@index([questionId])
+}
+
+model RevisionQueue {
+  id          String   @id @default(cuid())
+  userId      String
+  examId      String
+  questionId  String?
+  topicId     String?
+  reason      String
+  dueDate     DateTime @db.Date
+  status      RevisionStatus @default(PENDING)
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam     Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  question Question?     @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  topic    SyllabusTopic? @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status, dueDate])
+  @@index([examId, dueDate])
+}
+
+model DailyGoal {
+  id          String   @id @default(cuid())
+  userId      String
+  examId      String
+  goalDate    DateTime @db.Date
+  type        GoalType
+  title       String
+  target      Int      @default(1)
+  progress    Int      @default(0)
+  completedAt DateTime?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, goalDate, title])
+  @@index([userId, goalDate])
+}
+
+model PerformanceRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  examId          String
+  recordDate      DateTime @db.Date
+  testsAttended   Int      @default(0)
+  totalQuestions  Int      @default(0)
+  correct         Int      @default(0)
+  incorrect       Int      @default(0)
+  unanswered      Int      @default(0)
+  marksObtained   Decimal  @default(0) @db.Decimal(8, 2)
+  marksTotal      Decimal  @default(0) @db.Decimal(8, 2)
+  accuracy        Decimal  @default(0) @db.Decimal(5, 2)
+  studyMinutes    Int      @default(0)
+  goalsCompleted  Int      @default(0)
+  goalsTotal      Int      @default(0)
+  streak          Int      @default(0)
+  syllabusCompletion Decimal @default(0) @db.Decimal(5, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, recordDate])
+  @@index([userId, recordDate])
+  @@index([examId, recordDate])
+}
+
+model ExamCalendar {
+  id          String   @id @default(cuid())
+  examId      String
+  eventType   CalendarEventType @default(EXAM)
+  title       String
+  startDate   DateTime @db.Date
+  endDate     DateTime? @db.Date
+  status      CalendarStatus @default(NOT_ANNOUNCED)
+  sourceUrl   String?
+  sourceLabel String?
+  verifiedAt  DateTime?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId, startDate])
+  @@index([startDate, status])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
   createdAt DateTime @default(now())
-  orders CommerceOrder[]
-  @@unique([code, revision])
-  @@index([status, availableFrom])
-}
 
-model CommerceOrder {
-  id String @id @default(cuid())
-  userId String
-  packageId String
-  requestKey String
-  status String @default("PENDING")
-  amountMinor Int
-  currency String
-  snapshot Json
-  providerOrderId String? @unique
-  checkoutState String @default("NOT_STARTED")
-  createdAt DateTime @default(now())
-  capturedAt DateTime?
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
-  package CommercePackage @relation(fields: [packageId], references: [id], onDelete: Restrict)
-  payments CommercePayment[]
-  entitlements Entitlement[]
-  receipt CommerceReceipt?
-  refunds CommerceRefund[]
-  @@unique([userId, requestKey])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
   @@index([userId, createdAt])
 }
 
-model CommercePayment {
-  id String @id
-  orderId String
-  amountMinor Int
-  currency String
-  status String
-  capturedAt DateTime?
-  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  refunds CommerceRefund[]
+model AchievementDefinition {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  title       String
+  description String
+  icon        String   @default("award")
+  metric      AchievementMetric
+  threshold   Int
+  xp          Int      @default(50)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  awards UserAchievement[]
 }
 
-model CommerceEvent {
-  id String @id
-  digest String
-  kind String
-  providerOrderId String
-  paymentId String
-  refundId String?
-  status String @default("RECEIVED")
-  errorCode String?
-  createdAt DateTime @default(now())
-  processedAt DateTime?
-  @@index([status, createdAt])
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  examId        String?
+  earnedAt      DateTime @default(now())
+  progress      Int      @default(0)
+
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement AchievementDefinition @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId, earnedAt])
 }
 
-model Entitlement {
-  id String @id @default(cuid())
-  userId String
-  featureCode String
-  source String
-  provenance String @unique
-  orderId String?
-  status String @default("ACTIVE")
-  startsAt DateTime
-  endsAt DateTime
-  reason String?
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
-  feature CommerceFeature @relation(fields: [featureCode], references: [code], onDelete: Restrict)
-  order CommerceOrder? @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  @@index([userId, featureCode, status, endsAt])
+model Subscription {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  plan        String   @default("FREE")
+  status      SubscriptionStatus @default(TRIAL)
+  trialEndsAt DateTime?
+  startsAt    DateTime @default(now())
+  endsAt      DateTime?
+  features    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status, endsAt])
 }
 
-model CommerceReceipt {
-  id String @id
-  orderId String @unique
-  amountMinor Int
-  currency String
-  issuedAt DateTime
-  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+model AIUsageLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  examId       String?
+  provider     String
+  model        String
+  operation    String
+  success      Boolean  @default(true)
+  latencyMs    Int      @default(0)
+  promptChars  Int      @default(0)
+  responseChars Int     @default(0)
+  error        String?
+  createdAt    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([operation, createdAt])
+  @@index([createdAt])
 }
 
-model CommerceRefund {
-  id String @id @default(cuid())
-  orderId String
-  requestKey String
-  amountMinor Int
-  reason String
-  status String @default("REQUESTED")
-  decision String?
-  providerRefundId String? @unique
-  paymentId String?
+enum SyllabusSourceKind {
+  SYLLABUS
+  PYQ
+}
+
+enum SyllabusSourceStatus {
+  PENDING
+  IMPORTED
+  FAILED
+}
+
+/// Raw official documents (syllabus pages, brochures, previous-year papers)
+/// captured by the import pipeline. Keeping the source text next to its URL
+/// makes every AI-generated question traceable to a real official reference.
+model SyllabusSource {
+  id        String   @id @default(cuid())
+  examId    String
+  subjectId String?
+  label     String
+  url       String
+  kind      SyllabusSourceKind   @default(SYLLABUS)
+  format    String   @default("HTML")
+  content   String?
+  status    SyllabusSourceStatus @default(PENDING)
+  error     String?
+  fetchedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  order CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  payment CommercePayment? @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  @@unique([orderId, requestKey])
-}
 
-model NotificationPreference {
-  userId String @id
-  email Boolean @default(false)
-  whatsapp Boolean @default(false)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
+  exam    Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
 
-model CommerceNotification {
-  id String @id @default(cuid())
-  userId String
-  eventKey String
-  channel String
-  template String
-  message String
-  status String @default("PENDING")
-  attempts Int @default(0)
-  nextAttemptAt DateTime @default(now())
-  leaseUntil DateTime?
-  providerMessageId String?
-  errorCode String?
-  readAt DateTime?
-  createdAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  @@unique([userId, eventKey, channel])
-  @@index([status, nextAttemptAt])
-  @@index([userId, channel, status, createdAt], map: "CommerceNotification_inbox_idx")
-}
-
-model SchoolEnrollment {
-  id String @id @default(cuid())
-  schoolId String
-  studentId String
-  status RelationshipStatus @default(PENDING)
-  scopes String[]
-  expiresAt DateTime
-  authorizationBasis String
-  verificationReference String
-  verifiedById String
-  verifiedAt DateTime
-  studentConsentAt DateTime?
-  version Int @default(0)
-  createdAt DateTime @default(now())
-  school School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
-  student User @relation("EnrolledStudent", fields: [studentId], references: [id], onDelete: Restrict)
-  verifier User @relation("EnrollmentVerifier", fields: [verifiedById], references: [id], onDelete: Restrict)
-  assignments SchoolStaffAssignment[]
-  feedback PortalFeedback[]
-  @@unique([schoolId, studentId])
-  @@unique([schoolId, id])
-  @@index([studentId, status])
-  @@index([schoolId, status])
-}
-
-model SchoolStaffAssignment {
-  id String @id @default(cuid())
-  schoolId String
-  enrollmentId String
-  membershipId String
-  active Boolean @default(true)
-  enrollment SchoolEnrollment @relation(fields: [schoolId, enrollmentId], references: [schoolId, id], onDelete: Restrict)
-  membership SchoolMembership @relation(fields: [schoolId, membershipId], references: [schoolId, id], onDelete: Restrict)
-  @@unique([enrollmentId, membershipId])
-  @@index([membershipId, active])
-}
-
-model PortalInvitation {
-  id String @id @default(cuid())
-  schoolId String?
-  issuerId String
-  acceptedUserId String?
-  email String
-  name String
-  role UserRole
-  duty String
-  membershipRole SchoolMemberRole?
-  tokenHash String @unique
-  requestKey String @unique
-  authorizationBasis String
-  verificationReference String
-  expiresAt DateTime
-  status String @default("PENDING")
-  acceptedAt DateTime?
-  createdAt DateTime @default(now())
-  school School? @relation(fields: [schoolId], references: [id], onDelete: Restrict)
-  issuer User @relation("PortalInviter", fields: [issuerId], references: [id], onDelete: Restrict)
-  acceptedUser User? @relation("PortalInviteAccepted", fields: [acceptedUserId], references: [id], onDelete: Restrict)
-  @@index([schoolId, status])
-}
-
-model PortalFeedback {
-  id String @id @default(cuid())
-  enrollmentId String
-  authorId String
-  requestKey String
-  confidential Boolean
-  message String
-  createdAt DateTime @default(now())
-  enrollment SchoolEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Restrict)
-  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
-  @@unique([authorId, requestKey])
-  @@index([enrollmentId, createdAt])
-}
-
-model SchoolAnnouncement {
-  id String @id @default(cuid())
-  schoolId String
-  requestKey String @unique
-  title String
-  message String
-  status String @default("PUBLISHED")
-  createdAt DateTime @default(now())
-  school School @relation(fields: [schoolId], references: [id], onDelete: Restrict)
-  @@index([schoolId, status, createdAt])
+  @@unique([examId, url])
+  @@index([examId, status])
+  @@index([kind, status])
 }

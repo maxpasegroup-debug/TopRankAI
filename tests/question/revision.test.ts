@@ -13,7 +13,7 @@ beforeEach(() => { vi.resetAllMocks(); db.$transaction.mockImplementation(fn => 
   db.practiceAttempt.findMany.mockResolvedValue([attempt]); db.practiceRevisionState.findMany.mockResolvedValue([]); db.practiceRevisionState.findUnique.mockResolvedValue(null);
   db.practiceAttempt.findFirst.mockResolvedValue({ id: "a" }); db.question.findFirst.mockResolvedValue({ id: "q" }); });
 describe("practice mistake and bookmark revision (mocked persistence)", () => {
-  it.each(["TEACHER", "PARENT", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const)("rejects %s before querying", async role => {
+  it.each(["PARENT", "PARENT", "PARENT", "PLATFORM_ADMIN"] as const)("rejects %s before querying", async role => {
     await expect(getPracticeRevision({ ...user, role })).rejects.toMatchObject({ status: 403 });
     await expect(mutatePracticeRevision({ ...user, role }, { questionId: "q", action: "BOOKMARK", bookmarked: true })).rejects.toMatchObject({ status: 403 }); expect(db.studentProfile.findUnique).not.toHaveBeenCalled();
   });

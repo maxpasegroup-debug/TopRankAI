@@ -1,6 +1,7 @@
 import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { candidateRoles } from "@/server/auth/roles";
 
 const publishedActive = {
   status: "PUBLISHED" as const,
@@ -54,7 +55,7 @@ type QuestionRecord = {
   difficulty: string;
   tags: string[];
   subject: { code: string | null; name: string; slug: string };
-  chapter: { title: string; slug: string };
+  chapter: { title: string; slug: string } | null;
   lesson: { title: string; slug: string } | null;
   options: { id: string; code: string; text: string; order: number; isCorrect?: boolean }[];
   exams: { exam: { code: string; name: string } }[];
@@ -68,7 +69,7 @@ export function requireStudentQuestionAccess(user: AuthUser | null) {
     throw new AuthorizationApiError("Authentication required");
   }
 
-  if (user.role !== "STUDENT") {
+  if (!candidateRoles.includes(user.role as typeof candidateRoles[number])) {
     throw new AuthorizationApiError("Only student accounts can access practice questions");
   }
 
@@ -119,6 +120,9 @@ function questionSelect() {
 
 export function sanitizeStudentQuestion(question: QuestionRecord): StudentQuestionDto {
   if (!["SINGLE_CHOICE", "MULTIPLE_CHOICE", "NUMERICAL"].includes(question.type)) {
+    throw new ValidationApiError("Practice question was not found");
+  }
+  if (!question.chapter) {
     throw new ValidationApiError("Practice question was not found");
   }
 

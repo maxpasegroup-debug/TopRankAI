@@ -26,7 +26,7 @@ beforeEach(() => { vi.resetAllMocks(); db.$transaction.mockImplementation(fn => 
   db.contentSource.findUnique.mockResolvedValue({ authorId: "author", reviewerId: admin.id, reviewedAt: new Date(), contentFingerprint: fingerprint, rightsHolder: "Author", licence: "Owned licence", permissionEvidence: "Permission evidence" });
 });
 describe("question authoring and publication (mocked transactions)", () => {
-  it.each(["STUDENT", "TEACHER", "PARENT", "SCHOOL_ADMIN"] as const)("denies %s before database access", async role => {
+  it.each(["STUDENT", "PARENT", "PARENT", "PARENT"] as const)("denies %s before database access", async role => {
     await expect(manageQuestion({ ...admin, role }, draft)).rejects.toMatchObject({ status: 403 }); expect(db.$transaction).not.toHaveBeenCalled();
   });
   it("creates only a draft, stores answers privately and shares editorial/source records", async () => {

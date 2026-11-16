@@ -5,6 +5,7 @@ import { getStudentProfile, updateStudentProfile } from "@/server/student/servic
 import { studentProfileUpdateSchema } from "@/server/student/validation";
 import { readAuthJson, requireAuthOrigin } from "@/server/auth/request-security";
 import { AuthorizationApiError } from "@/server/api/errors";
+import { candidateRoles } from "@/server/auth/roles";
 
 export async function GET(request: Request) {
   const requestId = getRequestId(request);
@@ -32,7 +33,7 @@ export async function PUT(request: Request) {
       throw new AuthenticationApiError();
     }
 
-    if (user.role !== "STUDENT") throw new AuthorizationApiError("Only student accounts can access this resource");
+    if (!candidateRoles.includes(user.role as (typeof candidateRoles)[number])) throw new AuthorizationApiError("Only candidate accounts can access this resource");
     requireAuthOrigin(request);
     const input = studentProfileUpdateSchema.parse(await readAuthJson(request));
 

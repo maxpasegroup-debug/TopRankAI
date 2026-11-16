@@ -29,7 +29,7 @@ export async function getPracticeRevision(user: AuthUser) {
     const state = states.find(s => s.questionId === entry.questionId);
     if (entry.correct !== false && !state?.bookmarked) return [];
     const q = entry.question;
-    const ready = [q, q.subject, q.chapter].every(r => r.active && r.status === "PUBLISHED") && q.reviewStatus === "REVIEWED" &&
+    const ready = [q, q.subject, q.chapter].every(r => Boolean(r) && r!.active && r!.status === "PUBLISHED") && q.reviewStatus === "REVIEWED" &&
       q.exams.some(e => e.examId === profile?.targetExamId && e.scoringMode);
     return [{ questionId: entry.questionId, text: entry.text, attemptId: entry.attemptId, explanation: entry.explanation,
       bookmarked: state?.bookmarked ?? false, incorrect: entry.correct === false,

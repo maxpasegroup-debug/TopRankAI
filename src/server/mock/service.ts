@@ -2,14 +2,13 @@ import { Prisma } from "@/generated/prisma/client";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { assertStudent } from "@/server/student/service";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { scoreAnswer } from "@/server/practice/scoring";
 import { blueprintSchema, mockMutationSchema, adminMockSchema, revisionSchema, idSchema, type Blueprint } from "./validation";
 import { calculateResult, isAnswered, publicQuestion, publicResult, type Snapshot, type SavedAnswer, type Result } from "./engine";
 import type { z } from "zod";
-import { requireWindow } from "@/server/competition/rules";
-import { requireResourceAccess } from "@/server/commerce/access";
+import { requireResourceAccess } from "@/server/content/access";
 import { nextRevisionDate } from "@/server/journey/schedule";
 import { editorialFingerprint } from "@/server/content/editorial";
 
@@ -72,7 +71,7 @@ async function freeze(tx: Tx, blueprint: Blueprint): Promise<Snapshot> {
  if (links.length !== ids.length) throw new ValidationApiError("All selected questions must be reviewed, published and linked to this exam");
  const questions = blueprint.sections.flatMap((section, sectionIndex) => section.questionIds.map((id) => {
    const link = links.find((l) => l.questionId === id)!; const q = link.question;
-   if (q.chapter.subjectId !== q.subjectId || (q.lesson && q.lesson.chapterId !== q.chapterId)) throw new ValidationApiError("Selected question has inconsistent content relationships");
+   if (!q.chapter || q.chapter.subjectId !== q.subjectId || (q.lesson && q.lesson.chapterId !== q.chapterId)) throw new ValidationApiError("Selected question has inconsistent content relationships");
    if (q.options.length > 50) throw new ValidationApiError("A question has too many options");
    const frozen = { id: q.id, text: q.text, type: q.type, section: sectionIndex, subject: q.subject.name,
      lessonId: q.lessonId, lessonHref: q.lesson ? `/learn/${q.subject.slug}/${q.chapter.slug}/${q.lesson.slug}` : null,
@@ -114,8 +113,7 @@ export async function listStudentMocks(user: AuthUser) {
  assertStudent(user);
  return atomic(async (tx) => {
    const examId = await eligible(tx, user);
-   const mocks = await tx.mockExam.findMany({ where: { examId, status: "PUBLISHED", exam: published,
-     OR: [{ competition: null }, { competition: { status: "CANCELLED" } }] }, orderBy: { title: "asc" }, take: 100 });
+   const mocks = await tx.mockExam.findMany({ where: { examId, status: "PUBLISHED", exam: published }, orderBy: { title: "asc" }, take: 100 });
    const history = await tx.mockAttempt.findMany({ where: { userId: user.id }, orderBy: { startedAt: "desc" }, take: 50, include: includeAnswers });
    const attempts = [];
    for (const a of history) { const finalized = await finalize(tx, a, new Date()); const snap = snapshotOf(finalized);
@@ -125,7 +123,7 @@ export async function listStudentMocks(user: AuthUser) {
      maxAttempts: m.maxAttempts, revealPolicy: m.revealPolicy, sections: b.sections.map(({ title, questionCount, marks, negativeMarks, unansweredMarks }) => ({ title, questionCount, marks, negativeMarks, unansweredMarks })) }; }), attempts };
  });
 }
-export async function mutateMock(user: AuthUser, raw: z.infer<typeof mockMutationSchema>, competitionId?: string) {
+export async function mutateMock(user: AuthUser, raw: z.infer<typeof mockMutationSchema>) {
  assertStudent(user); const input = mockMutationSchema.parse(raw);
  return atomic(async (tx) => {
    if (input.action === "start") {
@@ -136,12 +134,6 @@ export async function mutateMock(user: AuthUser, raw: z.infer<typeof mockMutatio
      const mock = await tx.mockExam.findFirst({ where: { id: input.mockId, examId, status: "PUBLISHED", exam: published } });
      if (!mock) throw absent();
      await requireResourceAccess("MOCK", mock.id, user, tx);
-     const reserved = await tx.competition.findFirst({ where: { mockExamId: mock.id, status: { not: "CANCELLED" } } });
-     if (reserved) {
-       if (reserved.id !== competitionId) throw new ValidationApiError("Start this reserved mock through its competition");
-       requireWindow(reserved.status, reserved.startsAt, reserved.endsAt, new Date());
-       if (mock.version !== reserved.mockVersion) throw new ValidationApiError("Competition blueprint changed");
-     } else if (competitionId) throw absent();
      const active = await tx.mockAttempt.findFirst({ where: { userId: user.id, mockExamId: mock.id, status: "IN_PROGRESS" }, include: includeAnswers });
      let expired: Attempt | null = null;
      if (active) { const current = await finalize(tx, active, new Date()); if (current.status === "IN_PROGRESS") return attemptDto(current); expired = current; }
@@ -200,9 +192,6 @@ export async function mutateAdminMock(user: AuthUser, raw: z.infer<typeof adminM
    }
    const mock = await tx.mockExam.findUnique({ where: { id: input.id } }); if (!mock) throw absent();
    if (mock.version !== input.version) throw new ConflictApiError("Blueprint changed. Reload first.");
-   if (input.action !== "validate" && await tx.competition.findFirst({ where: { mockExamId: mock.id, status: { not: "CANCELLED" } }, select: { id: true } })) {
-     throw new ValidationApiError("This blueprint is reserved for a competition. Cancel the competition before changing it.");
-   }
    if (input.action === "edit" && mock.status !== "DRAFT") throw new ValidationApiError("Unpublish before editing");
    if (["validate", "publish", "review"].includes(input.action)) await freeze(tx, blueprintOf(mock));
    if (input.action === "validate") return { id: mock.id, version: mock.version, valid: true };

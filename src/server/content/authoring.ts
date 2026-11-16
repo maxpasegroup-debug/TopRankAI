@@ -2,7 +2,7 @@ import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { contentImportSchema, draftRecordSchema, reviewContentSchema, type DraftRecord, type EditorialEntity } from "./authoring-validation";
 import { assertReviewable, editorialFingerprint, readEditorialRecord } from "./editorial";

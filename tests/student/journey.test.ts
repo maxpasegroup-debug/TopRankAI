@@ -15,7 +15,7 @@ const db = vi.hoisted(() => ({
   lesson: { findFirst: vi.fn() }, questionExam: { findFirst: vi.fn() }, $transaction: vi.fn(), access: vi.fn(),
 }));
 vi.mock("@/server/db", () => ({ prisma: db }));
-vi.mock("@/server/commerce/access", () => ({ requireResourceAccess: db.access }));
+vi.mock("@/server/content/access", () => ({ requireResourceAccess: db.access }));
 import { saveJourney, previewJourneyPlan, confirmJourneyPlan, changeMissionTask, getMissionBoard,
   updateStudySession, getLearningProgress, updateLearningProgress, getVerifiedProgress } from "@/server/journey/service";
 const user: AuthUser = { id: "student-a", name: "Student", email: "s@example.com", role: "STUDENT" };

@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const id = getRequestId(request);
   try {
     const user = await getCurrentUser(true); if (!user) throw new AuthenticationApiError();
-    if (!["STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
+    if (!["CANDIDATE", "STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
     const receipt = await prisma.accountConsent.findUnique({ where: { userId: user.id }, select: { country: true, ageBand: true, termsVersion: true, privacyVersion: true, acceptedAt: true, revokedAt: true } });
     return apiOk(receipt ? { ...receipt, current: !user.requiresLegalConsent } : null, id, { headers: { "Cache-Control": "no-store" } });
   } catch (error) { return handleApiError(error, id); }

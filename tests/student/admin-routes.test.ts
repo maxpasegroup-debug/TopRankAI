@@ -11,7 +11,7 @@ beforeEach(() => { vi.resetAllMocks(); vi.stubEnv("APP_URL", "https://toprank.te
 afterEach(() => vi.unstubAllEnvs());
 describe("admin HTTP boundary (mocked services)", () => {
   it("requires a session", async () => { mocks.user.mockResolvedValue(null); expect((await PATCH(request())).status).toBe(401); expect(mocks.update).not.toHaveBeenCalled(); });
-  it.each(["STUDENT", "PARENT", "TEACHER", "SCHOOL_ADMIN"])("rejects %s even with a forged role query", async (role) => {
+  it.each(["STUDENT", "PARENT", "PARENT", "PARENT"])("rejects %s even with a forged role query", async (role) => {
     mocks.user.mockResolvedValue({ ...admin, role }); expect((await PATCH(request())).status).toBe(403);
     expect((await GET(new Request("https://toprank.test/api/admin/publication?entity=QUESTION&role=PLATFORM_ADMIN"))).status).toBe(403);
     expect(mocks.update).not.toHaveBeenCalled(); expect(mocks.list).not.toHaveBeenCalled();

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthorizationApiError } from "@/server/api/errors";
 const db = vi.hoisted(() => ({ lesson: { findFirst: vi.fn(), findMany: vi.fn() }, questionExam: { findFirst: vi.fn() } }));
 const access = vi.hoisted(() => vi.fn());
-vi.mock("@/server/db", () => ({ prisma: db })); vi.mock("@/server/commerce/access", () => ({ requireResourceAccess: access }));
+vi.mock("@/server/db", () => ({ prisma: db })); vi.mock("@/server/content/access", () => ({ requireResourceAccess: access }));
 import { missionActionAvailable, nextAccessibleLesson, nextAvailablePractice } from "@/server/sia/actions";
 const user = { id: "student", name: "Student", email: "private@example.com", role: "STUDENT" as const };
 beforeEach(() => { vi.resetAllMocks(); db.lesson.findFirst.mockResolvedValue({ id: "lesson" }); db.lesson.findMany.mockResolvedValue([]); db.questionExam.findFirst.mockResolvedValue({ id: "link" }); });

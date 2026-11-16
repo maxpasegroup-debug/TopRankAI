@@ -8,7 +8,7 @@ import { createSessionToken, hashSessionToken } from "./session";
 
 export const RECOVERY_MESSAGE = "If an eligible account exists, recovery instructions will be sent.";
 export const RESET_DURATION_MS = 30 * 60 * 1000;
-export const RECOVERABLE_ROLES = ["STUDENT", "PARENT"] as const;
+export const RECOVERABLE_ROLES = ["CANDIDATE", "STUDENT", "PARENT"] as const;
 type DeliveryConfig = { key: Buffer; apiKey: string; from: string; appUrl: string };
 export function readRecoveryConfig(): DeliveryConfig {
   const unavailable = () => new ApiError(503, "RECOVERY_UNAVAILABLE", "Account recovery is temporarily unavailable");

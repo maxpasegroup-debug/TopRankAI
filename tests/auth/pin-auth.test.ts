@@ -36,7 +36,7 @@ async function verified(reset = false) {
 const sha = (value: string) => createHash("sha256").update(value).digest("hex");
 
 describe("email OTP and mobile/PIN service (mocked persistence and mail)", () => {
-  it.each(["PLATFORM_ADMIN", "TEACHER", "PARENT", "SCHOOL_ADMIN"])("rejects public %s registration", role => expect(registrationSchema.safeParse({ ...registration, role }).success).toBe(false));
+  it.each(["PLATFORM_ADMIN", "PARENT", "PARENT", "PARENT"])("rejects public %s registration", role => expect(registrationSchema.safeParse({ ...registration, role }).success).toBe(false));
   it.each(["000000", "111111", "123456", "654321", "12345", "1234567", "abcdef"])("rejects predictable or malformed PIN %s", pin => expect(pinSchema.safeParse(pin).success).toBe(false));
   it("rejects confirmation mismatch and unrecognized status claims", () => {
     expect(pinRequestSchema.safeParse({ action: "reset", challenge: "a".repeat(43), proof: "b".repeat(43), pin: "482619", confirmPin: "482610" }).success).toBe(false);

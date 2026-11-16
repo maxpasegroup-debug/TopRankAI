@@ -3,6 +3,12 @@ import { z } from "zod";
 export const dateSchema = z.iso.date().transform((value) => new Date(`${value}T00:00:00.000Z`));
 export const journeySchema = z.object({
   aspiration: z.string().trim().max(2000).optional(),
+  examTargets: z.array(z.object({
+    examId: z.string().min(1).max(100),
+    targetYear: z.number().int().min(new Date().getFullYear()).max(new Date().getFullYear() + 8),
+    preparationLevel: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXTREME"]),
+    dailyMinutes: z.number().int().min(15).max(720),
+  }).strict()).min(1).max(12).optional(),
   targetExamId: z.string().min(1).max(100).optional(),
   targetYear: z.number().int().min(new Date().getFullYear()).max(new Date().getFullYear() + 8).optional(),
   dreamCollege: z.string().trim().min(2).max(160).optional(),

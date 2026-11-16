@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { studentRequest } from "./client";
-import { AchievementHistory } from "@/components/competition/CompetitionWorkspace";
 import type { getStudentEvidence } from "@/server/journey/progress";
 import { accuracy } from "@/shared/progress-evidence";
 
@@ -16,12 +15,11 @@ export function ProgressDashboard() {
     return () => { active = false; };
   }, [timezone, refresh]);
   return <main className="journey-shell" style={{ minWidth: 0, overflowWrap: "anywhere" }}><span className="journey-kicker">TOPRANK DIGITAL PROFILE</span><h1>My Progress</h1>
-    <nav className="mock-links"><Link href="/home">Study board</Link><Link href="/practice/review">Practice history</Link><Link href="/practice/mock-tests">Mock history</Link><Link href="/consent">Consent & shared feedback</Link><Link href="/packages">Packages & access</Link></nav>
+    <nav className="mock-links"><Link href="/home">Study board</Link><Link href="/practice/review">Practice history</Link><Link href="/practice/mock-tests">Mock history</Link><Link href="/account/consent">Account consent</Link></nav>
     <nav className="mock-links"><Link href="/get-help">Notifications & support</Link></nav>
     <div className="journey-actions"><label className="journey-field">Calendar timezone<select value={timezone} onChange={e => setTimezone(e.target.value)}><option value="Asia/Kolkata">India</option><option value="Asia/Dubai">UAE</option><option value="UTC">UTC</option></select></label><button onClick={() => setRefresh(value => value + 1)}>Refresh progress</button></div>
     {error && <p role="alert" className="journey-error">{error}<button onClick={() => setRefresh(value => value + 1)}>Retry</button></p>}
     {!data ? <p role="status">{error ? "Progress unavailable" : "Loading progress..."}</p> : <ProgressEvidence data={data} />}
-    <AchievementHistory compact />
   </main>;
 }
 export function ProgressEvidence({ data }: { data: Progress }) {

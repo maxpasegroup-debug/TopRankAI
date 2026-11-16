@@ -14,7 +14,7 @@ describe("retired password signup cannot bypass email OTP", () => {
     expect(await response.json()).toMatchObject({ error: { code: "SIGNUP_UPDATED" } });
     expect(response.headers.get("set-cookie")).toBeNull(); expect(db.transaction).not.toHaveBeenCalled(); expect(db.user).not.toHaveBeenCalled();
   });
-  it.each(["PLATFORM_ADMIN", "TEACHER", "PARENT", "SCHOOL_ADMIN", "UNKNOWN"])("still rejects %s role manipulation", async role => {
+  it.each(["PLATFORM_ADMIN", "PARENT", "PARENT", "PARENT", "UNKNOWN"])("still rejects %s role manipulation", async role => {
     expect((await POST(request({ role }))).status).toBe(400); expect(db.transaction).not.toHaveBeenCalled();
   });
   it.each([{ termsAccepted: false }, { privacyVersion: "old" }, { ageBand: "UNDER_13" }])("does not accept invalid consent", async extra => {

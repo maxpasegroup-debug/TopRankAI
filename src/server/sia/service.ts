@@ -1,7 +1,6 @@
 import type { AuthUser } from "@/server/auth/session";
 import { getJourney, getMissionBoard } from "@/server/journey/service";
 import { getMockRevision } from "@/server/mock/service";
-import { getCompetitionSuggestion } from "@/server/competition/service";
 import { getPracticeRevision } from "@/server/practice/revision";
 import { assertStudent } from "@/server/student/service";
 import { calendarDay } from "@/shared/study-calendar";
@@ -36,7 +35,6 @@ export async function getSiaGuidance(user: AuthUser, timezoneValue = "Asia/Kolka
   if (lesson) return { ...base, reason: "LESSON", skippedUnavailable, suggestion: `Continue with ${lesson.title}, an available lesson not yet marked complete.`, href: lesson.href };
   const availablePractice = await nextAvailablePractice(journey.profile.targetExamId);
   if (availablePractice) return { ...base, reason: "PRACTICE", skippedUnavailable, suggestion: `Practice ${availablePractice.title} with available reviewed questions.`, href: availablePractice.href };
-  const competition = await getCompetitionSuggestion(user);
-  return { ...base, reason: competition ? "COMPETITION_ELIGIBILITY" : "NO_AVAILABLE_ACTION", skippedUnavailable,
-    suggestion: competition?.suggestion ?? "No available due mission, pending revision, unfinished lesson or reviewed practice was found. Review your study board or ask for help.", href: competition?.href ?? "/home" };
+  return { ...base, reason: "NO_AVAILABLE_ACTION", skippedUnavailable,
+    suggestion: "No available due mission, pending revision, unfinished lesson or reviewed practice was found. Review your study board or ask for help.", href: "/home" };
 }

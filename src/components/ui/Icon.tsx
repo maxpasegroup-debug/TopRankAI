@@ -56,8 +56,6 @@ const paths: Record<IconProps["name"], string> = {
   taraMoodTired: "M8 10h2M14 10h2M8 15h8M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   taraReflection: "M5 5h14v14H5zM8 9h8M8 13h6M8 17h4",
   me: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0",
-  parentPreview: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0",
-  schoolPreview: "M4 20h16M6 20V9l6-4 6 4v11M9 20v-6h6v6",
   settings: "M12 8a4 4 0 100 8 4 4 0 000-8zM4 12h2M18 12h2M12 4v2M12 18v2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M17.7 6.3l-1.4 1.4M7.7 16.3l-1.4 1.4",
   arrow: "M5 12h14M13 6l6 6-6 6",
   spark: "M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3z",

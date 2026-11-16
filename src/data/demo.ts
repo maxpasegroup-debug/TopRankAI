@@ -14,7 +14,5 @@ export const demoSteps = [
   { label: "Practice", path: "/practice", note: "The next practice action is obvious." },
   { label: "Progress", path: "/progress", note: "Effort and consistency are celebrated." },
   { label: "Tara", path: "/tara", note: "Tara guides Rahul back to action." },
-  { label: "Parent", path: "/parent", note: "Parents see if Rahul is moving forward." },
-  { label: "School", path: "/school", note: "Schools see student engagement." },
   { label: "Me", path: "/me", note: "The profile keeps demo access clear." },
 ];

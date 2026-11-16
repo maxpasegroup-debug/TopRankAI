@@ -1,5 +1,5 @@
 import { requireRole } from "@/server/auth/session";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { AdminMocks } from "@/components/mock/AdminMocks";
 import { PageContainer } from "@/components/ui/PageContainer";
 export const dynamic = "force-dynamic";

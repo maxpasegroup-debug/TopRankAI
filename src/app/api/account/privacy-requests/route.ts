@@ -8,7 +8,7 @@ import { createPrivacyRequest, listPrivacyRequests, privacyReplySchema, privacyR
 async function accountUser() {
   const user = await getCurrentUser(true);
   if (!user) throw new AuthenticationApiError();
-  if (!["STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
+  if (!["CANDIDATE", "STUDENT", "PARENT"].includes(user.role)) throw new AuthorizationApiError();
   return user;
 }
 export async function GET(request: Request) {

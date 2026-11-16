@@ -1,0 +1,21 @@
+{
+  "examCode": "CAT",
+  "sourceUrl": "https://iimcat.ac.in/",
+  "questions": [
+    {
+      "year": 2024,
+      "subjectCode": "QUANTITATIVE_APTITUDE",
+      "topic": "Percentages",
+      "type": "SINGLE_CHOICE",
+      "difficulty": "MEDIUM",
+      "text": "Replace this placeholder with a real question transcribed from the official paper.",
+      "options": [
+        { "text": "Option A", "correct": true },
+        { "text": "Option B", "correct": false },
+        { "text": "Option C", "correct": false },
+        { "text": "Option D", "correct": false }
+      ],
+      "explanation": "Explain the correct method in your own words."
+    }
+  ]
+}

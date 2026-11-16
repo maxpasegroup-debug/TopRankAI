@@ -42,5 +42,5 @@ describe("consolidated private progress, mocked persistence", () => {
   it("does not finalize attempts or mutate progress on read", async () => { await getStudentEvidence(user, "UTC", now); expect(db.mockAttempt.findMany.mock.calls[0][0].where.status).toEqual({ not: "IN_PROGRESS" }); expect(Object.keys(db.mockAttempt)).not.toContain("update"); });
   it("handles a missing profile without inventing a target", async () => { db.studentProfile.findUnique.mockResolvedValue(null); expect((await getStudentEvidence(user, "UTC", now)).profile).toEqual({ displayName: "Student" }); });
   it("validates timezone before reads", async () => { await expect(getStudentEvidence(user, "invalid")).rejects.toThrow(); expect(mocks.activity).not.toHaveBeenCalled(); expect(db.studentProfile.findUnique).not.toHaveBeenCalled(); });
-  it.each(["PARENT", "TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const)("denies %s before reads", async role => { await expect(getStudentEvidence({ ...user, role })).rejects.toThrow(); expect(db.studentProfile.findUnique).not.toHaveBeenCalled(); });
+  it.each(["PARENT", "PARENT", "PARENT", "PLATFORM_ADMIN"] as const)("denies %s before reads", async role => { await expect(getStudentEvidence({ ...user, role })).rejects.toThrow(); expect(db.studentProfile.findUnique).not.toHaveBeenCalled(); });
 });

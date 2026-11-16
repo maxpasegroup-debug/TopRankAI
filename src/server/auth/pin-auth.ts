@@ -1,7 +1,7 @@
 import { createHmac, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/server/db";
-import { atomic, type Tx } from "@/server/commerce/transaction";
+import { atomic, type Tx } from "@/server/db/transaction";
 import { ApiError, AuthenticationApiError, ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { assertAccountPolicyReady, childEmailHash, prepareAccountConsent } from "./account-consent";
 import { adultConsentWhere } from "./sharing";
@@ -57,7 +57,7 @@ export async function requestPinOtp(email: string, registration?: Registration, 
     if (await tx.emailOtpChallenge.count({ where: recent }) >= 3) throw new AuthThrottleError(900);
     if (await tx.emailOtpChallenge.count({ where: { email, purpose, createdAt: { gt: new Date(Date.now() - 86400000) } } }) >= 10) throw new AuthThrottleError(86400);
     if (await tx.emailOtpChallenge.count({ where: { email, purpose, createdAt: { gt: new Date(Date.now() - 60000) } } })) throw new AuthThrottleError(60);
-    const candidate = registration ? null : await tx.user.findFirst({ where: { email, role: "STUDENT", status: "ACTIVE", phone: { not: null } }, select: { id: true, pinVersion: true, phone: true } });
+    const candidate = registration ? null : await tx.user.findFirst({ where: { email, role: { in: ["CANDIDATE", "STUDENT"] }, status: "ACTIVE", phone: { not: null } }, select: { id: true, pinVersion: true, phone: true } });
     const user = candidate && mobileSchema.safeParse(candidate.phone).success ? candidate : null;
     await tx.emailOtpChallenge.create({ data: { id, tokenHash: hashSessionToken(challenge), purpose, email,
       bindingHash: registration ? binding(registration) : user ? digest("reset-phone:" + user.phone) : null, codeHash: digest(id + ":" + code),
@@ -99,7 +99,7 @@ export async function finishPinSignup(input: Extract<z.infer<typeof pinRequestSc
     if (await tx.user.findFirst({ where: { OR: [{ email: row.email }, { phone: input.registration.phone }] }, select: { id: true } })) throw new ConflictApiError("Account details are unavailable. Log in or contact support.");
     const saveConsent = await prepareAccountConsent(tx, row.email, input.registration);
     const user = await tx.user.create({ data: { name: input.registration.name, email: row.email, phone: input.registration.phone,
-      passwordHash, pinHash, emailVerifiedAt: new Date(), role: "STUDENT" } });
+      passwordHash, pinHash, emailVerifiedAt: new Date(), role: "CANDIDATE" } });
     await tx.studentProfile.create({ data: { userId: user.id } }); await saveConsent(user.id);
     const session = await createSession(user.id, tx);
     return { user: { id: user.id, name: user.name, role: user.role }, session };
@@ -109,9 +109,9 @@ export async function finishPinReset(input: Extract<z.infer<typeof pinRequestSch
   assertPinReady(); const pinHash = await hashPassword(input.pin), passwordHash = await hashPassword(createSessionToken());
   return atomic(async tx => {
     const row = await claim(tx, input.challenge, input.proof, "RESET"); if (!row.userId) throw invalid();
-    const user = await tx.user.findFirst({ where: { id: row.userId, email: row.email, role: "STUDENT", status: "ACTIVE", pinVersion: row.pinVersion ?? -1 }, select: { phone: true } });
+    const user = await tx.user.findFirst({ where: { id: row.userId, email: row.email, role: { in: ["CANDIDATE", "STUDENT"] }, status: "ACTIVE", pinVersion: row.pinVersion ?? -1 }, select: { phone: true } });
     if (!user || !mobileSchema.safeParse(user.phone).success || !matches(row.bindingHash ?? "", digest("reset-phone:" + user.phone))) throw invalid();
-    const changed = await tx.user.updateMany({ where: { id: row.userId, email: row.email, role: "STUDENT", status: "ACTIVE", pinVersion: row.pinVersion ?? -1, phone: user.phone },
+    const changed = await tx.user.updateMany({ where: { id: row.userId, email: row.email, role: { in: ["CANDIDATE", "STUDENT"] }, status: "ACTIVE", pinVersion: row.pinVersion ?? -1, phone: user.phone },
       data: { pinHash, passwordHash, emailVerifiedAt: new Date(), pinVersion: { increment: 1 } } });
     if (changed.count !== 1) throw invalid();
     await tx.pinAttemptWindow.updateMany({ where: { id: { in: [digest("login:" + user.phone), digest("login-day:" + user.phone)] } }, data: { count: 0 } });
@@ -133,11 +133,11 @@ export async function loginWithPin(phone: string, pin: string) {
       else await tx.pinAttemptWindow.update({ where: { id }, data: { count: { increment: 1 } } });
     }
   });
-  const user = await prisma.user.findFirst({ where: { phone, role: "STUDENT", status: "ACTIVE", pinHash: { not: null } } });
+  const user = await prisma.user.findFirst({ where: { phone, role: { in: ["CANDIDATE", "STUDENT"] }, status: "ACTIVE", pinHash: { not: null } } });
   dummyHash ??= hashPassword("not-a-real-account-pin");
   if (!await verifyPassword(pin, user?.pinHash ?? await dummyHash) || !user) throw new AuthenticationApiError("Invalid mobile number or PIN");
   return atomic(async tx => {
-    if (!await tx.user.findFirst({ where: { id: user.id, phone, role: "STUDENT", status: "ACTIVE", pinHash: user.pinHash, pinVersion: user.pinVersion }, select: { id: true } })) throw new AuthenticationApiError("Invalid mobile number or PIN");
+    if (!await tx.user.findFirst({ where: { id: user.id, phone, role: { in: ["CANDIDATE", "STUDENT"] }, status: "ACTIVE", pinHash: user.pinHash, pinVersion: user.pinVersion }, select: { id: true } })) throw new AuthenticationApiError("Invalid mobile number or PIN");
     const session = await createSession(user.id, tx);
     await tx.pinAttemptWindow.updateMany({ where: { id: { in: [digest("login:" + phone), digest("login-day:" + phone)] } }, data: { count: 0 } });
     return { user: { id: user.id, name: user.name, role: user.role }, session };

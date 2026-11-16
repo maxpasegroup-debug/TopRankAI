@@ -1,6 +1,7 @@
 import type { UserRole } from "@/generated/prisma/enums";
 
-export const userRoles = ["STUDENT", "PARENT", "TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const;
+export const candidateRoles = ["CANDIDATE", "STUDENT"] as const;
+export const userRoles = ["CANDIDATE", "STUDENT", "PARENT", "PLATFORM_ADMIN"] as const;
 
 export type Role = (typeof userRoles)[number];
 
@@ -12,7 +13,6 @@ export function canAccessRole(userRole: UserRole | Role, allowedRoles: readonly 
   return allowedRoles.includes(userRole);
 }
 
-export const studentRoles = ["STUDENT", "PLATFORM_ADMIN"] as const;
+export const studentRoles = ["CANDIDATE", "STUDENT", "PLATFORM_ADMIN"] as const;
 export const parentRoles = ["PARENT", "PLATFORM_ADMIN"] as const;
-export const schoolRoles = ["TEACHER", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const;
 export const platformAdminRoles = ["PLATFORM_ADMIN"] as const;

@@ -4,7 +4,7 @@ import { AuthorizationApiError, ConflictApiError, ValidationApiError } from "@/s
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
 import { assertStudent } from "@/server/student/service";
-import { requireResourceAccess } from "@/server/commerce/access";
+import { requireResourceAccess } from "@/server/content/access";
 import { previewStudyPlan } from "./planner";
 import { journeySchema, learningProgressSchema, planSchema, sessionSchema, taskSchema } from "./validation";
 import type { z } from "zod";
@@ -18,13 +18,16 @@ const profileSelect = { aspiration: true, targetExamId: true, targetYear: true, 
 export async function getJourney(user: AuthUser) {
   assertStudent(user);
   const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id }, select: profileSelect });
-  const exams = await prisma.exam.findMany({ where: published, orderBy: { name: "asc" },
-    select: { id: true, name: true, code: true, category: true, description: true, officialUrl: true } });
+  const [exams, targets] = await Promise.all([
+    prisma.exam.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, code: true, category: true, description: true, officialUrl: true, status: true } }),
+    prisma.candidateExamTarget.findMany({ where: { userId: user.id, active: true }, include: { exam: { select: { id: true, name: true, code: true, category: true } } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
+  ]);
   const subjects = profile?.targetExamId ? await prisma.examSubject.findMany({
     where: { examId: profile.targetExamId, ...published, subject: published }, orderBy: { order: "asc" },
     select: { subject: { select: { id: true, name: true } } },
   }) : [];
-  return { profile, exams, subjects: subjects.map((row) => row.subject) };
+  return { profile, exams, targets, subjects: subjects.map((row) => row.subject) };
 }
 
 export async function saveJourney(user: AuthUser, input: z.infer<typeof journeySchema>) {
@@ -32,17 +35,39 @@ export async function saveJourney(user: AuthUser, input: z.infer<typeof journeyS
   return prisma.$transaction(async (tx) => {
     const current = await tx.studentProfile.findUnique({ where: { userId: user.id } });
     if (!current) throw new ValidationApiError("Student profile does not exist");
-    const examId = input.targetExamId ?? current.targetExamId;
+    const { examTargets, ...profileInput } = input;
+    const currentTargets = examTargets ? await tx.candidateExamTarget.findMany({ where: { userId: user.id, active: true }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }) : [];
+    const examId = examTargets?.[0]?.examId ?? input.targetExamId ?? current.targetExamId;
+    const targetYear = examTargets?.[0]?.targetYear ?? input.targetYear ?? current.targetYear;
     if (examId && !await tx.exam.findFirst({ where: { id: examId, ...published } })) {
       throw new ValidationApiError("Selected exam is unavailable");
     }
-    const changedExam = input.targetExamId !== undefined && input.targetExamId !== current.targetExamId;
+    if (examTargets) {
+      const distinctExamIds = [...new Set(examTargets.map((target) => target.examId))];
+      if (distinctExamIds.length !== examTargets.length) throw new ValidationApiError("Choose each exam once and set one target year for it");
+      const available = await tx.exam.count({ where: { id: { in: distinctExamIds }, ...published } });
+      if (available !== distinctExamIds.length) throw new ValidationApiError("One or more selected exams are unavailable");
+      const activeIds: string[] = [];
+      for (const target of examTargets) {
+        const saved = await tx.candidateExamTarget.upsert({
+          where: { userId_examId_targetYear: { userId: user.id, examId: target.examId, targetYear: target.targetYear } },
+          create: { userId: user.id, ...target, active: true },
+          update: { preparationLevel: target.preparationLevel, dailyMinutes: target.dailyMinutes, active: true },
+          select: { id: true },
+        });
+        activeIds.push(saved.id);
+      }
+      await tx.candidateExamTarget.updateMany({ where: { userId: user.id, active: true, id: { notIn: activeIds } }, data: { active: false } });
+    }
+    const changedExam = examTargets !== undefined
+      ? currentTargets.length !== examTargets.length || currentTargets.some((target, index) => target.examId !== examTargets[index]?.examId || target.targetYear !== examTargets[index]?.targetYear)
+      : input.targetExamId !== undefined && input.targetExamId !== current.targetExamId;
     const focus = input.focusSubjectIds ?? (changedExam ? [] : current.focusSubjectIds);
     if (focus.length) {
       const count = await tx.examSubject.count({ where: { examId: examId ?? "", subjectId: { in: focus }, ...published, subject: published } });
       if (count !== focus.length) throw new ValidationApiError("Choose subjects from your selected exam");
     }
-    return tx.studentProfile.update({ where: { userId: user.id }, data: { ...input, focusSubjectIds: focus,
+    return tx.studentProfile.update({ where: { userId: user.id }, data: { ...profileInput, targetExamId: examId, targetYear, focusSubjectIds: focus,
       onboardingCompletedAt: changedExam ? null : undefined }, select: profileSelect });
   });
 }
@@ -50,31 +75,58 @@ export async function saveJourney(user: AuthUser, input: z.infer<typeof journeyS
 export async function previewJourneyPlan(user: AuthUser, db: Prisma.TransactionClient = prisma, startDate?: Date) {
   assertStudent(user);
   const profile = await db.studentProfile.findUnique({ where: { userId: user.id } });
-  if (!profile?.targetExamId || !profile.targetYear || !profile.dreamCollege || !profile.dailyStudyMins || !profile.preparationStart) {
-    throw new ValidationApiError("Save your exam, target year, goal, start date and daily study time first");
+  if (!profile?.targetExamId || !profile.targetYear || !profile.dailyStudyMins || !profile.preparationStart) {
+    throw new ValidationApiError("Choose at least one exam, target year, start date and daily study time first");
   }
-  const links = await db.examSubject.findMany({
-    where: { examId: profile.targetExamId, exam: published, ...published,
-      subjectId: profile.focusSubjectIds.length ? { in: profile.focusSubjectIds } : undefined, subject: published },
-    orderBy: [{ order: "asc" }, { id: "asc" }],
-    select: { subject: { select: { id: true, name: true, slug: true,
-      chapters: { where: published, orderBy: [{ order: "asc" }, { id: "asc" }], take: 10,
-        select: { slug: true, lessons: { where: published, orderBy: [{ order: "asc" }, { id: "asc" }],
-          take: 10, select: { id: true, title: true, slug: true } } } },
-    } } },
-  });
-  const lessons = [];
-  for (const { subject } of links) for (const chapter of subject.chapters) for (const lesson of chapter.lessons) {
-    if (lessons.length >= 21) continue;
-    try { await requireResourceAccess("LESSON", lesson.id, user, db); }
-    catch (error) { if (error instanceof AuthorizationApiError) continue; throw error; }
-    lessons.push({ title: lesson.title, subject: subject.name, href: `/learn/${subject.slug}/${chapter.slug}/${lesson.slug}` });
-  }
-  for (const { subject } of links) {
-    if (lessons.length >= 21) break;
-    if (await db.questionExam.findFirst({ where: { examId: profile.targetExamId, ...published, exam: published, scoringMode: { not: null }, question: { ...published, reviewStatus: "REVIEWED", subjectId: subject.id, subject: published, chapter: { ...published, subject: published } } }, select: { id: true } })) {
-      lessons.push({ title: `Practice: ${subject.name}`, subject: subject.name, href: `/practice/subjects/${subject.slug}/questions` });
+  const savedTargets = await db.candidateExamTarget.findMany({ where: { userId: user.id, active: true }, include: { exam: { select: { id: true, name: true } } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] });
+  const primaryExam = savedTargets.length ? null : await db.exam.findFirst({ where: { id: profile.targetExamId, ...published }, select: { id: true, name: true } });
+  const targets = savedTargets.length ? savedTargets.map((target) => ({ examId: target.examId, examName: target.exam.name, dailyMinutes: target.dailyMinutes })) :
+    primaryExam ? [{ examId: primaryExam.id, examName: primaryExam.name, dailyMinutes: profile.dailyStudyMins }] : [];
+  if (!targets.length) throw new ValidationApiError("Your selected exam is no longer available");
+
+  const lessonsByTarget: { examId: string; dailyMinutes: number; lessons: { title: string; subject: string; href: string; examId: string }[] }[] = [];
+  for (const target of targets) {
+    const links = await db.examSubject.findMany({
+      where: { examId: target.examId, exam: published, ...published,
+        subjectId: target.examId === profile.targetExamId && profile.focusSubjectIds.length ? { in: profile.focusSubjectIds } : undefined, subject: published },
+      orderBy: [{ order: "asc" }, { id: "asc" }],
+      select: { subject: { select: { id: true, name: true, slug: true,
+        chapters: { where: published, orderBy: [{ order: "asc" }, { id: "asc" }], take: 10,
+          select: { slug: true, lessons: { where: published, orderBy: [{ order: "asc" }, { id: "asc" }], take: 10,
+            select: { id: true, title: true, slug: true } } } },
+      } } },
+    });
+    const targetLessons: { title: string; subject: string; href: string; examId: string }[] = [];
+    for (const { subject } of links) for (const chapter of subject.chapters) for (const lesson of chapter.lessons) {
+      if (targetLessons.length >= 21) continue;
+      try { await requireResourceAccess("LESSON", lesson.id, user, db); }
+      catch (error) { if (error instanceof AuthorizationApiError) continue; throw error; }
+      targetLessons.push({ title: `${target.examName} · ${lesson.title}`, subject: `${target.examName} / ${subject.name}`,
+        href: `/learn/${subject.slug}/${chapter.slug}/${lesson.slug}`, examId: target.examId });
     }
+    for (const { subject } of links) {
+      if (targetLessons.length >= 21) break;
+      if (await db.questionExam.findFirst({ where: { examId: target.examId, ...published, exam: published, scoringMode: { not: null }, question: { ...published, reviewStatus: "REVIEWED", subjectId: subject.id, subject: published, chapter: { ...published, subject: published } } }, select: { id: true } })) {
+        targetLessons.push({ title: `${target.examName} · Practice ${subject.name}`, subject: `${target.examName} / ${subject.name}`,
+          href: `/practice/subjects/${subject.slug}/questions`, examId: target.examId });
+      }
+    }
+    if (!targetLessons.length) throw new ValidationApiError(`No reviewed lessons or practice are published for ${target.examName} yet`);
+    lessonsByTarget.push({ examId: target.examId, dailyMinutes: target.dailyMinutes, lessons: targetLessons });
+  }
+
+  const lessons = [];
+  const positions = lessonsByTarget.map(() => 0);
+  while (lessons.length < 21) {
+    let added = false;
+    for (const [targetIndex, target] of lessonsByTarget.entries()) {
+      const weight = Math.max(1, Math.min(8, Math.ceil(target.dailyMinutes / 30)));
+      for (let slot = 0; slot < weight && lessons.length < 21; slot++) {
+        const lesson = target.lessons[positions[targetIndex]++];
+        if (lesson) { lessons.push(lesson); added = true; }
+      }
+    }
+    if (!added) break;
   }
   if (!lessons.length) throw new ValidationApiError("No available lessons or reviewed practice activities are published for this exam yet");
   const effectiveStart = startDate ?? new Date(Math.max(profile.preparationStart.getTime(), new Date(calendarDay(new Date(), "Asia/Kolkata")).getTime()));
@@ -94,7 +146,8 @@ export async function confirmJourneyPlan(user: AuthUser, input: z.infer<typeof p
     if (preview.previewToken !== input.previewToken) throw new ConflictApiError("Your goals or lessons changed. Review the plan again");
     await tx.studyPlan.updateMany({ where: { userId: user.id, active: true }, data: { active: false } });
     const plan = await tx.studyPlan.create({ data: { userId: user.id, title: input.title, requestKey: input.requestKey,
-      examId: preview.examId, startDate: preview.startDate, dailyMinutes: preview.dailyMinutes, tasks: { create: preview.tasks } } });
+      examId: preview.examId, startDate: preview.startDate, dailyMinutes: preview.dailyMinutes,
+      tasks: { create: preview.tasks.map((task) => ({ ...task, examId: task.examId ?? preview.examId })) } } });
     await tx.studentProfile.update({ where: { userId: user.id }, data: { onboardingCompletedAt: new Date() } });
     return { id: plan.id };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });

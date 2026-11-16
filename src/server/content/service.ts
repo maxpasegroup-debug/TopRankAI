@@ -1,8 +1,9 @@
 import { AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
+import { candidateRoles } from "@/server/auth/roles";
 import { safeResourceUrl } from "./resource-url";
-import { requireResourceAccess } from "@/server/commerce/access";
+import { requireResourceAccess } from "@/server/content/access";
 import { lessonBodySchema, type LessonBody } from "@/shared/lesson-content";
 
 const publishedActive = {
@@ -62,8 +63,8 @@ export function requireStudentContentAccess(user: AuthUser | null) {
     throw new AuthorizationApiError("Authentication required");
   }
 
-  if (user.role !== "STUDENT") {
-    throw new AuthorizationApiError("Only student accounts can access learning content");
+  if (!candidateRoles.includes(user.role as (typeof candidateRoles)[number])) {
+    throw new AuthorizationApiError("Only candidate accounts can access learning content");
   }
 
   return user;

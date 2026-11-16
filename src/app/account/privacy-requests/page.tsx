@@ -5,6 +5,6 @@ export const dynamic = "force-dynamic";
 export default async function Page() {
   const user = await getCurrentUser(true);
   if (!user) redirect("/login");
-  if (user.role !== "STUDENT" && user.role !== "PARENT") redirect("/workspace");
+  if (user.role !== "CANDIDATE" && user.role !== "STUDENT" && user.role !== "PARENT") redirect("/workspace");
   return <PrivacyRequests guardian={user.role === "PARENT"} />;
 }

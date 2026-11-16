@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { prisma } from "@/server/db";
 import type { AuthUser } from "./session";
-import { atomic, type Tx } from "@/server/commerce/transaction";
-import { freshActor } from "@/server/portal/authorization";
+import { atomic, type Tx } from "@/server/db/transaction";
 import { AuthorizationApiError, ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
 import { adultConsentWhere } from "./sharing";
@@ -20,20 +19,25 @@ export const privacyReplySchema = z.object({ id: z.string().min(1).max(100), exp
   requestKey: z.uuid(), message: z.string().trim().min(10).max(1000) }).strict();
 const select = { id: true, subjectId: true, kind: true, message: true, followUp: true, status: true, response: true, version: true, createdAt: true, updatedAt: true };
 const pageSchema = z.coerce.number().int().min(1).max(1000);
+async function freshActor(user: AuthUser, tx: Tx, roles: readonly string[]) {
+  const actor = await tx.user.findUnique({ where: { id: user.id }, select: { id: true, role: true, status: true } });
+  if (!actor || actor.status !== "ACTIVE" || !roles.includes(actor.role)) throw new AuthorizationApiError();
+  return actor;
+}
 function privacyProcessingEnabled() { return process.env.ACCOUNT_POLICY_REVIEWED === "true" && process.env.ACCOUNT_PRIVACY_PROCESSING_APPROVED === "true"; }
 async function authorizeSubject(user: AuthUser, subjectId: string, tx: Tx) {
-  const actor = await freshActor(user, tx, ["STUDENT", "PARENT"]);
+  const actor = await freshActor(user, tx, ["CANDIDATE", "STUDENT", "PARENT"]);
   if (subjectId !== actor.id) {
     if (actor.role !== "PARENT") throw new AuthorizationApiError();
     const grant = await tx.guardianRegistrationGrant.findFirst({ where: { guardianId: actor.id, revokedAt: null, usedAt: { not: null },
-      policyVersion: ACCOUNT_POLICY_VERSION, receipt: { is: { userId: subjectId, user: { role: "STUDENT" } } }, guardian: { role: "PARENT", status: "ACTIVE", accountConsent: { is: adultConsentWhere() } } }, select: { id: true } });
+      policyVersion: ACCOUNT_POLICY_VERSION, receipt: { is: { userId: subjectId, user: { role: { in: ["CANDIDATE", "STUDENT"] } } } }, guardian: { role: "PARENT", status: "ACTIVE", accountConsent: { is: adultConsentWhere() } } }, select: { id: true } });
     if (!grant) throw new AuthorizationApiError("Verified guardian authority is required");
   }
   return actor;
 }
 export async function listPrivacyRequests(user: AuthUser, rawPage: unknown = 1) {
   const page = pageSchema.parse(rawPage);
-  await freshActor(user, prisma, ["STUDENT", "PARENT"]);
+  await freshActor(user, prisma, ["CANDIDATE", "STUDENT", "PARENT"]);
   const rows = await prisma.accountPrivacyRequest.findMany({ where: { requesterId: user.id }, select, orderBy: [{ createdAt: "desc" }, { id: "desc" }], skip: (page - 1) * 25, take: 26 });
   return { records: rows.slice(0, 25), page, hasNext: rows.length > 25 };
 }

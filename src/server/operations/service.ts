@@ -8,7 +8,6 @@ import { scoreAnswer } from "@/server/practice/scoring";
 import { safeResourceUrl } from "@/server/content/resource-url";
 import { assertReviewedPublication } from "@/server/content/editorial";
 import { assertQuestionReviewed, assertQuestionParentsPublished } from "@/server/question/authoring";
-import { inAppNotice } from "@/server/notifications/service";
 export const entitySchema = z.enum(["EXAM", "SUBJECT", "EXAM_SUBJECT", "CHAPTER", "LESSON", "RESOURCE", "QUESTION", "QUESTION_EXAM"]);
 export const publicationSchema = z.object({ entity: entitySchema, id: z.string().min(1).max(100),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]), active: z.boolean(),
@@ -106,7 +105,6 @@ export async function respondToHelp(user: AuthUser, input: z.infer<typeof helpRe
     if (current.status === input.status && current.response === input.response) return { id: current.id, version: current.version };
     const changed = await tx.helpRequest.updateMany({ where: { id: input.id, version: input.version }, data: { status: input.status, response: input.response, version: { increment: 1 } } });
     if (changed.count !== 1) throw new ConflictApiError("Support request changed. Reload before replying.");
-    await inAppNotice(tx, current.userId, `help:${current.id}:${input.version + 1}`, "SUPPORT_UPDATED");
     await tx.auditEvent.create({ data: { actorId: user.id, entity: "HELP_REQUEST", entityId: input.id, action: `HELP_${input.status}` } });
     return { id: input.id, version: input.version + 1 };
   });

@@ -3,7 +3,7 @@ import { Prisma } from "@/generated/prisma/client";
 import type { AuthUser } from "@/server/auth/session";
 import { ConflictApiError, AuthorizationApiError, ValidationApiError } from "@/server/api/errors";
 import { calculateResult, type Snapshot } from "@/server/mock/engine";
-const db = vi.hoisted(() => ({ $transaction: vi.fn(), commerceGate: { findUnique: vi.fn() }, entitlement: { findFirst: vi.fn() }, studentProfile: { findUnique: vi.fn() }, competition: { findFirst: vi.fn() },
+const db = vi.hoisted(() => ({ $transaction: vi.fn(), studentProfile: { findUnique: vi.fn() },
  mockExam: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
  mockAttempt: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
  mockAnswer: { updateMany: vi.fn(), update: vi.fn() }, exam: { findFirst: vi.fn(), findUnique: vi.fn(), findMany: vi.fn() },
@@ -35,8 +35,6 @@ beforeEach(() => {
  db.contentEditorialRecord.findUnique.mockResolvedValue({ authorId: "author", reviewerId: "reviewer", revision: 0, reviewedRevision: 0,
    reviewedAt: now, reviewEvidence: "Checked blueprint and marking", reviewedFingerprint: editorialFingerprint(blueprint) });
  db.$transaction.mockImplementation((fn) => fn(db)); db.mockAttempt.findFirst.mockImplementation(async (args) => args.where.id ? attempt : null);
- db.competition.findFirst.mockResolvedValue(null);
- db.commerceGate.findUnique.mockResolvedValue(null);
  db.mockAttempt.findUnique.mockResolvedValue(null); db.mockAttempt.findMany.mockResolvedValue([]); db.mockAttempt.count.mockResolvedValue(0);
  db.mockAttempt.updateMany.mockImplementation(async ({ data }) => { Object.assign(attempt, data); return { count: 1 }; });
  db.mockAnswer.updateMany.mockImplementation(async ({ data }) => { Object.assign(attempt.answers[0], data, { version: attempt.answers[0].version + 1 }); return { count: 1 }; });
@@ -52,10 +50,6 @@ beforeEach(() => {
  db.lesson.findMany.mockResolvedValue([]); db.lesson.findFirst.mockResolvedValue(null);
 });
 describe("timed mock lifecycle (mocked database only)", () => {
- it("enforces a configured paid feature before creating a new mock attempt", async () => {
-   db.commerceGate.findUnique.mockResolvedValue({ featureCode: "MOCK_ACCESS" }); db.entitlement.findFirst.mockResolvedValue(null);
-   await expect(mutateMock(user, startInput)).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.mockAttempt.create).not.toHaveBeenCalled();
- });
  it("starts with server timestamps, unique request key, frozen private keys and persisted blank answers", async () => {
    const value = await mutateMock(user, startInput); expect(value).toMatchObject({ startedAt: now.toISOString(), deadline: new Date(now.getTime() + 60000).toISOString() });
    expect(db.$transaction).toHaveBeenCalledWith(expect.any(Function), { isolationLevel: "Serializable" });
@@ -69,9 +63,6 @@ describe("timed mock lifecycle (mocked database only)", () => {
  it("enforces attempt limits before creation", async () => { db.mockAttempt.count.mockResolvedValue(2); await expect(mutateMock(user, startInput)).rejects.toBeInstanceOf(ValidationApiError); expect(db.mockAttempt.create).not.toHaveBeenCalled(); });
  it("requires completed onboarding and target exam eligibility", async () => { db.studentProfile.findUnique.mockResolvedValue({ targetExamId: "exam", onboardingCompletedAt: null }); await expect(mutateMock(user, startInput)).rejects.toBeInstanceOf(ValidationApiError); expect(db.mockAttempt.create).not.toHaveBeenCalled(); });
  it("does not start inaccessible or unpublished exams", async () => { db.mockExam.findFirst.mockResolvedValue(null); await expect(mutateMock(user, startInput)).rejects.toBeInstanceOf(ValidationApiError); });
- it("does not allow public practice to start a reserved competition mock", async () => { db.competition.findFirst.mockResolvedValue({ id: "c", status: "PUBLISHED", mockVersion: 0, startsAt: now, endsAt: new Date(now.getTime() + 60000) }); await expect(mutateMock(user, startInput)).rejects.toThrow("through its competition"); expect(db.mockAttempt.create).not.toHaveBeenCalled(); });
- it("permits only the trusted internal competition path within its window", async () => { db.competition.findFirst.mockResolvedValue({ id: "c", status: "PUBLISHED", mockVersion: 0, startsAt: now, endsAt: new Date(now.getTime() + 60000) }); expect(await mutateMock(user, startInput, "c")).toMatchObject({ id: "attempt" }); });
- it("rejects a client-injected competition identifier", async () => { await expect(mutateMock(user, { ...startInput, competitionId: "c" } as typeof startInput)).rejects.toThrow(); expect(db.mockAttempt.create).not.toHaveBeenCalled(); });
  it("does not start with unpublished/missing question links", async () => { db.questionExam.findMany.mockResolvedValue([]); await expect(mutateMock(user, startInput)).rejects.toBeInstanceOf(ValidationApiError); expect(db.mockAttempt.create).not.toHaveBeenCalled(); });
  it("persists answers and flags with compare-and-swap versioning", async () => {
    const value = await mutateMock(user, saveInput); expect(value.answers[0]).toMatchObject({ answer: { numerical: "1" }, flagged: true, bookmarked: true, version: 1 });
@@ -117,7 +108,7 @@ describe("timed mock lifecycle (mocked database only)", () => {
    expect(result.status).toBe("EXPIRED"); expect(result.answers[0].answer).toEqual(saveInput.answer); expect(db.mockAnswer.updateMany).toHaveBeenCalledTimes(1);
  });
  it("uses only owner-bound attempt lookups and rejects foreign attempts", async () => { db.mockAttempt.findFirst.mockResolvedValue(null); await expect(getMockAttempt(user, "foreign")).rejects.toBeInstanceOf(ValidationApiError); expect(db.mockAttempt.findFirst.mock.calls[0][0].where).toEqual({ id: "foreign", userId: user.id }); });
- it.each(["TEACHER", "PARENT", "SCHOOL_ADMIN", "PLATFORM_ADMIN"] as const)("rejects %s before any database access", async (role) => { await expect(mutateMock({ ...user, role }, startInput)).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.$transaction).not.toHaveBeenCalled(); });
+ it.each(["PARENT", "PARENT", "PARENT", "PLATFORM_ADMIN"] as const)("rejects %s before any database access", async (role) => { await expect(mutateMock({ ...user, role }, startInput)).rejects.toBeInstanceOf(AuthorizationApiError); expect(db.$transaction).not.toHaveBeenCalled(); });
  it("retries serialization conflicts with bounded retries", async () => {
    db.$transaction.mockRejectedValueOnce(new Prisma.PrismaClientKnownRequestError("retry", { code: "P2034", clientVersion: "7" }));
    await getMockAttempt(user, "attempt"); expect(db.$transaction).toHaveBeenCalledTimes(2);

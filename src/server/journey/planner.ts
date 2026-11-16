@@ -1,4 +1,4 @@
-export type PlanLesson = { title: string; subject: string; href: string };
+export type PlanLesson = { title: string; subject: string; href: string; examId?: string };
 export function previewStudyPlan(start: Date, dailyMinutes: number, lessons: PlanLesson[]) {
   if (!Number.isInteger(dailyMinutes) || dailyMinutes < 30 || dailyMinutes > 720 || !lessons.length || Number.isNaN(start.getTime())) {
     throw new Error("A start date, study availability and published lessons are required");

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ACCOUNT_POLICY_VERSION, needsGuardian, type AccountAgeBand } from "@/shared/account-policy";
 import { studentRequest } from "@/components/journey/client";
 
-export function AccountConsent({ accountRole = "STUDENT" }: { accountRole?: "STUDENT" | "PARENT" }) {
+export function AccountConsent({ accountRole = "CANDIDATE" }: { accountRole?: "CANDIDATE" | "STUDENT" | "PARENT" }) {
   const [country, setCountry] = useState(""); const [ageBand, setAgeBand] = useState<AccountAgeBand | "">(accountRole === "PARENT" ? "18_PLUS" : "");
   const [busy, setBusy] = useState(true); const [error, setError] = useState(""); const [accepted, setAccepted] = useState(false);
   useEffect(() => { let active = true;
@@ -28,7 +28,7 @@ export function AccountConsent({ accountRole = "STUDENT" }: { accountRole?: "STU
   return <main className="journey-shell"><h1>Account consent</h1><nav className="mock-links"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/account/privacy-requests">Account support &amp; privacy</a><a href="/workspace">Workspace</a></nav>
     {error && <p role="alert">{error}</p>}{busy && <p role="status">Please wait...</p>}
     {accepted ? <><p>Current policies accepted.</p><button className="button button-secondary" disabled={busy} onClick={() => void withdraw()}>Withdraw consent</button></> : <form className="commerce-form" onSubmit={save}>
-      <label>Country<select required value={country} onChange={e => setCountry(e.target.value)}><option value="">Select country</option><option value="IN">India</option><option value="AE">United Arab Emirates</option></select></label>
+      <label>Country<select required value={country} onChange={e => setCountry(e.target.value)}><option value="">Select country</option><option value="IN">India</option></select></label>
       {accountRole === "PARENT" ? <p>Guardian accounts require verified adulthood.</p> : <label>Age group<select required value={ageBand} onChange={e => setAgeBand(e.target.value as AccountAgeBand)}><option value="">Select age group</option><option value="UNDER_13">Under 13</option><option value="13_TO_17">13 to 17</option><option value="18_PLUS">18 or older</option></select></label>}
       {ageBand && needsGuardian(ageBand) && <label>Guardian authorization code<input name="guardianApproval" type="password" autoComplete="off" minLength={43} maxLength={43} required /></label>}
       <label><input type="checkbox" name="termsAccepted" required /> I accept the Terms.</label><label><input type="checkbox" name="privacyAccepted" required /> I have read and accept the Privacy Notice.</label>

@@ -73,7 +73,7 @@ export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser
     return null;
   }
 
-  const consentRequired = ["STUDENT", "PARENT"].includes(session.user.role);
+  const consentRequired = ["CANDIDATE", "STUDENT", "PARENT"].includes(session.user.role);
   const receipt = consentRequired ? await prisma.accountConsent.findUnique({
       where: { userId: session.user.id }, include: { guardianGrant: { include: { guardian: { select: { status: true, role: true, accountConsent: { select: { ageBand: true, termsVersion: true, privacyVersion: true, revokedAt: true } } } } } } },
     }) : null;

@@ -1,16 +1,8 @@
-import { MissionBoard } from "../components/journey/MissionBoard";
-import { PageContainer } from "../components/ui/PageContainer";
-import type { StudentMissionDto, StudentProfileDto } from "../server/student/service";
-
-type HomeProps = {
-  profile?: StudentProfileDto;
-  mission?: StudentMissionDto | null;
-};
-
-export function Home({ profile }: HomeProps) {
-  return (
-    <PageContainer>
-      <MissionBoard name={profile?.name} />
-    </PageContainer>
-  );
+import Link from "next/link";
+import { Motion } from "@/components/experience/Motion";
+import { MissionBoard } from "@/components/journey/MissionBoard";
+import type { CandidateExamTargetDto, StudentMissionDto, StudentProfileDto } from "@/server/student/service";
+const levels = { BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced", EXTREME: "Extreme" };
+export function Home({ profile, targets = [] }: { profile?: StudentProfileDto; mission?: StudentMissionDto | null; targets?: CandidateExamTargetDto[] }) {
+  return <Motion className="rank-dashboard"><div className="rank-dashboard-heading" data-enter><div><span className="rank-eyebrow">MAKE TODAY COUNT</span><h1>Hello, {profile?.name?.split(" ")[0] ?? "candidate"}.</h1><p>Your goals are big. Let’s give today a clear direction.</p></div><Link href="/onboarding" className="rank-button small">+ Add or change exams</Link></div><section className="rank-dashboard-welcome" data-enter><div><span className="rank-eyebrow">YOUR PREPARATION, AT YOUR PACE</span><h2>One focused session.<br />One step forward.</h2><p>{targets.length ? `You’re preparing for ${targets.length} exam${targets.length === 1 ? "" : "s"}. Open a workspace below or continue your saved study plan.` : "Start by choosing your exam goals. We’ll help you set a level, target year and daily study time for each."}</p></div><span className="rank-orb" aria-hidden="true">✳</span></section><section data-reveal><div className="rank-dashboard-section-head"><h2>Your exams</h2><Link href="/learn/catalogue">Explore catalogue ↗</Link></div><div className="rank-target-grid">{targets.length ? targets.map(target => <Link className="rank-target-card" key={target.id} href={`/learn/catalogue/${encodeURIComponent(target.code)}`}><small>{target.category.replace(/_/g, " ")} / {target.targetYear}</small><h3>{target.name}</h3><div><span>{levels[target.preparationLevel]} · {target.dailyMinutes} min/day</span><span>Open workspace ↗</span></div></Link>) : <div className="rank-empty"><h3>Your first goal belongs here.</h3><p>Select the exams you’re working toward. You can add more or change your pace later.</p><Link href="/onboarding" className="rank-button small">Choose my exams ↗</Link></div>}</div></section><div className="rank-dashboard-actions" data-reveal>{[["/learn/catalogue", "▤", "Learn a concept", "Explore the syllabus and published lessons for your exam."], ["/practice", "✎", "Put it into practice", "Work through questions and save your attempts."], ["/practice/revision", "↻", "Return to your mistakes", "Review explanations and revisit what needs another look."]].map(([href, icon, title, text]) => <Link href={href} key={href}><span>{icon}</span><strong>{title}</strong><p>{text}</p></Link>)}</div><section className="rank-dashboard-plan" data-reveal><div className="rank-dashboard-section-head"><h2>Your study board</h2><Link href="/progress">View your progress ↗</Link></div><MissionBoard name={profile?.name} /></section></Motion>;
 }

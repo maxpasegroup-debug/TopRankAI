@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 vi.mock("@/components/journey/client", () => ({ studentRequest: vi.fn() }));
-vi.mock("@/components/competition/CompetitionWorkspace", () => ({ AchievementHistory: () => null }));
 import { ProgressDashboard, ProgressEvidence } from "@/components/journey/ProgressDashboard";
 import type { getStudentEvidence } from "@/server/journey/progress";
 import { summarizeEvidence } from "@/shared/progress-evidence";

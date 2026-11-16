@@ -8,12 +8,12 @@ export type RouteConfig = {
 };
 
 export const navigationRoutes: RouteConfig[] = [
-  { path: "/home", label: "Home", screen: "home", isAppRoute: true },
+  { path: "/home", label: "Today", screen: "home", isAppRoute: true },
+  { path: "/learn/catalogue", label: "My exams", screen: "learn", isAppRoute: true },
   { path: "/learn", label: "Learn", screen: "learn", isAppRoute: true },
-  { path: "/get-help", label: "Get Help", screen: "getHelp", isAppRoute: true },
-  { path: "/compete", label: "Compete", screen: "compete", isAppRoute: true },
-  { path: "/progress", label: "My Progress", screen: "progress", isAppRoute: true },
-  { path: "/me", label: "Me", screen: "me", isAppRoute: true },
+  { path: "/practice", label: "Practice", screen: "practice", isAppRoute: true },
+  { path: "/progress", label: "Progress", screen: "progress", isAppRoute: true },
+  { path: "/me", label: "Account", screen: "me", isAppRoute: true },
 ];
 
 export const allRoutes: RouteConfig[] = [
@@ -63,8 +63,6 @@ export const allRoutes: RouteConfig[] = [
   { path: "/tara/mood/stressed", label: "Stressed", screen: "taraMoodStressed", isAppRoute: true },
   { path: "/tara/mood/tired", label: "Tired", screen: "taraMoodTired", isAppRoute: true },
   { path: "/tara/reflection", label: "Reflection", screen: "taraReflection", isAppRoute: true },
-  { path: "/parent", label: "Parent Preview", screen: "parentPreview", isAppRoute: true },
-  { path: "/school", label: "School Preview", screen: "schoolPreview", isAppRoute: true },
   { path: "/settings", label: "Settings", screen: "settings", isAppRoute: true },
 ];
 

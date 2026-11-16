@@ -1,7 +1,7 @@
 import { Prisma, type ContentSource } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
-import { assertPlatformAdmin } from "@/server/operations/service";
+import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
 import { configuredKnowledgeAdapter } from "@/server/sia/knowledge-adapter";
 import { assertReviewedPublication, editorialFingerprint, readEditorialRecord } from "./editorial";

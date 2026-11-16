@@ -6,7 +6,7 @@ describe("Prisma client foundation", () => {
     const { prisma } = await import("@/server/db");
 
     expect(prisma.user).toBeDefined();
-    expect(prisma.school).toBeDefined();
+    expect(prisma.candidateExamTarget).toBeDefined();
     expect(prisma.exam).toBeDefined();
     expect(prisma.lesson).toBeDefined();
     expect(prisma.learningResource).toBeDefined();
