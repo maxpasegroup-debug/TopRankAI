@@ -185,7 +185,7 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
                         <input
                           type="number"
                           min={15}
-                          max={720}
+                          max={1440}
                           className="tp-input"
                           style={{ width: 84, minHeight: 32, padding: "2px 8px", fontSize: 12 }}
                           value={item.dailyMinutes}
@@ -289,8 +289,8 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
         <section className="tp-card tp-card-pad">
           <h3 style={{ fontSize: 16, marginBottom: 10 }}>How this affects today</h3>
           <p className="tp-small tp-muted">
-            The active exam drives today&apos;s paper. The level sets how many full official papers you sit each day;
-            the study-time target is the paper time (papers × official duration), or your own higher daily target.
+            The active exam drives today&apos;s paper. The level sets how many full official papers you sit each day.
+            Study minutes are your own syllabus/revision target per exam, separate from exam time.
             Paper size and marking always follow the official exam configuration.
           </p>
           <div className="tp-note tp-mt-16">

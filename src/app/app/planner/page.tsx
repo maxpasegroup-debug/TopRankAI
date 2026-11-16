@@ -128,8 +128,8 @@ export default async function PlannerPage() {
               <PlanGenerator code={exam.code} />
             </div>
             <p className="tp-small tp-muted">
-              Built from your recorded weak topics and your {exam.dailyMinutes}-minute daily target. Every full paper
-              contributes its actual exam time to that target.
+              Built from your recorded weak topics and your {exam.dailyMinutes}-minute daily study target. Sitting papers is
+              tracked separately from syllabus study time.
             </p>
             {plan.plan ? (
               <div className="tp-note tp-mt-16">

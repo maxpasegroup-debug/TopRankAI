@@ -25,7 +25,7 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
   }, [pathname]);
 
   // The public site deliberately stays public for administrators. They have a
-  // separate console at /login/admin and a footer link to reach it.
+  // separate console at /login/admin that is not linked from public pages.
   const workspace = user && user.role !== "PLATFORM_ADMIN" ? "/app" : null;
 
   return (
@@ -50,7 +50,6 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
             <Link className="tp-btn tp-btn-sm tp-workspace-link" href={workspace}>My workspace</Link>
           ) : (
             <>
-              {!user && <Link className="tp-btn tp-btn-ghost tp-btn-sm tp-workspace-link" href="/login">My workspace</Link>}
               <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/login">Sign in</Link>
               <Link className="tp-btn tp-btn-sm" href="/register">Start preparing</Link>
             </>

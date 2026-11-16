@@ -68,6 +68,23 @@ export function StudyNotes({ content }: { content: string }) {
       continue;
     }
 
+    const image = trimmed.match(/^!\[([^\]]*)\]\((https:\/\/[^\s)]+)\)$/);
+    if (image) {
+      blocks.push(
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="tp-notes-image"
+          key={`img-${index}`}
+          src={image[2]}
+          alt={image[1] || "Study diagram"}
+          loading="lazy"
+          decoding="async"
+        />,
+      );
+      index += 1;
+      continue;
+    }
+
     if (trimmed.startsWith("> ")) {
       blocks.push(
         <div className="tp-notes-callout" key={`quote-${index}`}>{inline(trimmed.slice(2))}</div>,

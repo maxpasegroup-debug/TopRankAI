@@ -46,7 +46,6 @@ export function SiteFooter() {
             <div className="tp-footer-links">
               <Link href="/terms">Terms of use</Link>
               <Link href="/privacy">Privacy notice</Link>
-              <Link href="/login/admin">Administrator sign in</Link>
             </div>
           </div>
         </div>

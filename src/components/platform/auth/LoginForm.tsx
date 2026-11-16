@@ -70,9 +70,6 @@ export function LoginForm() {
       <p className="tp-small tp-muted tp-center">
         New to TopRank? <Link className="tp-link" href="/register">Create an account</Link>
       </p>
-      <p className="tp-xs tp-faint tp-center">
-        Administrators sign in with the same form and are routed to the admin workspace.
-      </p>
     </form>
   );
 }

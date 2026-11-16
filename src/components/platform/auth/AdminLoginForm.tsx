@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Icon } from "../Icon";
@@ -110,11 +109,6 @@ export function AdminLoginForm() {
           </p>
         </form>
       )}
-
-      <div className="tp-divider" />
-      <p className="tp-small tp-muted tp-center">
-        Candidate? <Link className="tp-link" href="/login">Use the candidate login</Link>.
-      </p>
     </div>
   );
 }

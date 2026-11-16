@@ -14,7 +14,7 @@ import { readExamPattern } from "@/server/platform/patterns";
 import { getOfficialSyllabusExcerpt } from "@/server/platform/syllabus-sources";
 import { profileUpdateSchema, syllabusProgressSchema, attemptAnswerSchema, examSelectionSchema } from "@/server/platform/validation";
 import { ACTIVE_EXAM_COOKIE } from "@/server/platform/cookies";
-import { dailyCapacity, includedPapers, mockMonthlyActive } from "@/shared/daily-workload";
+import { includedPapers, MAX_DAILY_PAPERS, mockMonthlyActive } from "@/shared/daily-workload";
 import { targetWorkload } from "@/server/platform/target-workload";
 import { ValidationApiError } from "@/server/api/errors";
 import { z } from "zod";
@@ -261,31 +261,52 @@ export async function updateCandidateProfile(raw: unknown) {
 export async function saveDailyWorkload(targetId: string, count: number, activateMonthly: boolean) {
   const user = await requireAuth();
   const exam = (await getCandidateExams(user.id)).find((item) => item.targetId === targetId);
-  if (!exam || !Number.isInteger(count) || count < 1 || count > dailyCapacity(exam.durationMinutes)) {
+  if (!exam || !Number.isInteger(count) || count < 1 || count > MAX_DAILY_PAPERS) {
     return { ok: false, message: "Choose a valid number of daily papers." };
   }
   return prisma.$transaction(async (tx) => {
     const target = await tx.candidateExamTarget.findFirst({ where: { id: targetId, userId: user.id, active: true } });
     if (!target) return { ok: false, message: "Choose an active exam first." };
-    const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
-    if (count > includedPapers(target.preparationLevel) && !mockMonthlyActive(subscription)) {
-      if (activateMonthly !== true) return { ok: false, message: "Activate the mock monthly subscription for extra papers." };
+    let subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
+    const included = includedPapers(target.preparationLevel);
+    const extra = count > included;
+    let mockPayment = false;
+    let monthlyUntil = mockMonthlyActive(subscription) ? subscription!.endsAt : null;
+    if (extra && !mockMonthlyActive(subscription)) {
+      if (activateMonthly !== true) {
+        return { ok: false, message: "Activate the mock monthly plan for extra papers." };
+      }
       if (subscription && !["FREE", "MOCK_MONTHLY"].includes(subscription.plan)) {
         return { ok: false, message: "Your existing subscription cannot be replaced by the mock plan." };
       }
       const startsAt = new Date();
       const endsAt = new Date(startsAt.getTime() + 30 * 86_400_000);
-      const monthly = { plan: "MOCK_MONTHLY", status: "ACTIVE" as const, startsAt, endsAt };
-      await tx.subscription.upsert({ where: { userId: user.id }, create: { userId: user.id, ...monthly }, update: monthly });
+      const monthly = {
+        plan: "MOCK_MONTHLY",
+        status: "ACTIVE" as const,
+        startsAt,
+        endsAt,
+        features: { mockPayment: true, source: "mock-monthly-checkout" },
+      };
+      subscription = await tx.subscription.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id, ...monthly },
+        update: monthly,
+      });
+      monthlyUntil = endsAt;
+      mockPayment = true;
     }
     await tx.candidateExamTarget.update({
       where: { id: target.id },
-      data: {
-        dailyPaperCount: count,
-        dailyMinutes: Math.max(target.dailyMinutes, count * exam.durationMinutes),
-      },
+      data: { dailyPaperCount: count },
     });
-    return { ok: true, message: "Daily schedule saved." };
+    return {
+      ok: true,
+      message: mockPayment
+        ? "Mock payment successful — no money was charged. Extra papers are active."
+        : "Daily schedule saved.",
+      data: { mockPayment, monthlyUntil },
+    };
   });
 }
 
@@ -315,18 +336,13 @@ export async function updateExamPlan(raw: unknown) {
       await tx.candidateExamTarget.updateMany({ where: { userId: user.id, active: true, examId: { notIn: exams.map((exam) => exam.id) } }, data: { active: false } });
       for (const item of parsed.data) {
         const workload = await targetWorkload(tx, user.id, item.examId, item.level);
-        const exam = examById.get(item.examId)!;
-        const pattern = readExamPattern(exam.configuration?.sections);
-        const part = item.partCode ? pattern?.parts.find((entry) => entry.code === item.partCode) ?? null : pattern?.parts[0] ?? null;
-        const papers = workload.dailyPaperCount ?? includedPapers(item.level);
-        const alignedMinutes = Math.max(item.dailyMinutes, papers * (part?.durationMinutes ?? 60));
         await tx.candidateExamTarget.updateMany({
           where: { userId: user.id, examId: item.examId, targetYear: { not: item.targetYear }, active: true }, data: { active: false },
         });
         await tx.candidateExamTarget.upsert({
           where: { userId_examId_targetYear: { userId: user.id, examId: item.examId, targetYear: item.targetYear } },
-          update: { ...workload, dailyMinutes: alignedMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
-          create: { userId: user.id, examId: item.examId, targetYear: item.targetYear, ...workload, dailyMinutes: alignedMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
+          update: { ...workload, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
+          create: { userId: user.id, examId: item.examId, targetYear: item.targetYear, ...workload, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
         });
       }
     }, { timeout: 20_000 });

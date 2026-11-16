@@ -1,4 +1,4 @@
-import { dailyCapacity, includedPapers, levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
+import { includedPapers, levelForPapers, MAX_DAILY_PAPERS, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
 import { cache } from "react";
 import { prisma } from "@/server/db";
 import { findExamPart, readExamPattern, type PatternPart } from "./patterns";
@@ -52,7 +52,7 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
     const pattern = readExamPattern(target.exam.configuration?.sections);
     const part = findExamPart(pattern, target.examPart);
     const duration = part?.durationMinutes ?? target.exam.configuration?.durationMinutes ?? 60;
-    const count = Math.min(dailyCapacity(duration), paperCount(target.preparationLevel, target.dailyPaperCount, monthly));
+    const count = Math.min(MAX_DAILY_PAPERS, paperCount(target.preparationLevel, target.dailyPaperCount, monthly));
     return {
       targetId: target.id,
       examId: target.examId,
@@ -65,7 +65,7 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
       includedPapers: includedPapers(target.preparationLevel),
       monthlyUntil: monthly ? subscription!.endsAt : null,
       targetYear: target.targetYear,
-      dailyMinutes: Math.max(target.dailyMinutes, count * duration),
+      dailyMinutes: target.dailyMinutes,
       targetExamDate: target.targetExamDate,
       durationMinutes: duration,
       dailyTestQuestions: target.exam.configuration?.dailyTestQuestions ?? 8,

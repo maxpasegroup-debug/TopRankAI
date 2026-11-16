@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { DailyWorkloadForm } from "@/components/platform/app/DailyWorkloadForm";
+import { ExamScheduleList } from "@/components/platform/app/ExamScheduleList";
 import { NextPaperNotice } from "@/components/platform/app/NextPaperNotice";
 import { getPaperSchedule } from "@/server/platform/paper-schedule";
-import { dailyCapacity, EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
+import { EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
 import { requireAuth } from "@/server/auth/session";
-import { getSelectedExam } from "@/server/platform/candidate";
+import { getCandidateExams, getSelectedExam } from "@/server/platform/candidate";
 import { getActiveExam } from "@/server/platform/active";
 import { getDailyHistory, readPaperMeta } from "@/server/platform/daily-exam";
 import { formatDate, formatDateTime, todayDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
@@ -60,7 +61,11 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
   }
 
   const day = todayDate();
-  const [history, schedule] = await Promise.all([getDailyHistory(user.id, exam.examId), getPaperSchedule(user.id, exam, day)]);
+  const [history, schedule, allExams] = await Promise.all([
+    getDailyHistory(user.id, exam.examId),
+    getPaperSchedule(user.id, exam, day),
+    getCandidateExams(user.id),
+  ]);
   const todayPapers = history.filter((paper) => paper.scheduledDate.getTime() === day.getTime());
   const submitted = history.filter((item) => item.attempt?.status === "SUBMITTED");
   const bestScore = submitted.reduce((best, item) => Math.max(best, percent(toNumber(item.attempt?.obtainedMarks), toNumber(item.attempt?.totalMarks))), 0);
@@ -128,8 +133,22 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
         })}
       </section>
       <DailyWorkloadForm key={exam.targetId} targetId={exam.targetId} count={exam.papersPerDay}
-        capacity={dailyCapacity(exam.durationMinutes)} included={exam.includedPapers} durationMinutes={exam.durationMinutes}
+        included={exam.includedPapers} durationMinutes={exam.durationMinutes}
         monthlyUntil={exam.monthlyUntil ? formatDateTime(exam.monthlyUntil) + " IST" : null} />
+
+      <ExamScheduleList
+        activeCode={exam.code}
+        rows={allExams.map((entry) => ({
+          targetId: entry.targetId,
+          code: entry.code,
+          name: entry.name,
+          count: entry.papersPerDay,
+          included: entry.includedPapers,
+          durationMinutes: entry.durationMinutes,
+          studyMinutes: entry.dailyMinutes,
+          monthlyUntil: entry.monthlyUntil ? formatDateTime(entry.monthlyUntil) + " IST" : null,
+        }))}
+      />
 
       <h2 style={{ fontSize: 20, marginBottom: 14 }}>Paper history</h2>
       {history.length ? (

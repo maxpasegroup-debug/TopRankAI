@@ -6,7 +6,7 @@ export const examSelectionSchema = z.object({
   partCode: z.string().min(1).max(80).optional(),
   level: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXTREME"]),
   targetYear: z.number().int().min(new Date().getFullYear()).max(new Date().getFullYear() + 8),
-  dailyMinutes: z.number().int().min(15).max(720),
+  dailyMinutes: z.number().int().min(15).max(1440),
 }).strict();
 
 const baseProfile = {
