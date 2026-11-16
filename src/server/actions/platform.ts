@@ -278,7 +278,13 @@ export async function saveDailyWorkload(targetId: string, count: number, activat
       const monthly = { plan: "MOCK_MONTHLY", status: "ACTIVE" as const, startsAt, endsAt };
       await tx.subscription.upsert({ where: { userId: user.id }, create: { userId: user.id, ...monthly }, update: monthly });
     }
-    await tx.candidateExamTarget.update({ where: { id: target.id }, data: { dailyPaperCount: count } });
+    await tx.candidateExamTarget.update({
+      where: { id: target.id },
+      data: {
+        dailyPaperCount: count,
+        dailyMinutes: Math.max(target.dailyMinutes, count * exam.durationMinutes),
+      },
+    });
     return { ok: true, message: "Daily schedule saved." };
   });
 }
@@ -309,13 +315,18 @@ export async function updateExamPlan(raw: unknown) {
       await tx.candidateExamTarget.updateMany({ where: { userId: user.id, active: true, examId: { notIn: exams.map((exam) => exam.id) } }, data: { active: false } });
       for (const item of parsed.data) {
         const workload = await targetWorkload(tx, user.id, item.examId, item.level);
+        const exam = examById.get(item.examId)!;
+        const pattern = readExamPattern(exam.configuration?.sections);
+        const part = item.partCode ? pattern?.parts.find((entry) => entry.code === item.partCode) ?? null : pattern?.parts[0] ?? null;
+        const papers = workload.dailyPaperCount ?? includedPapers(item.level);
+        const alignedMinutes = Math.max(item.dailyMinutes, papers * (part?.durationMinutes ?? 60));
         await tx.candidateExamTarget.updateMany({
           where: { userId: user.id, examId: item.examId, targetYear: { not: item.targetYear }, active: true }, data: { active: false },
         });
         await tx.candidateExamTarget.upsert({
           where: { userId_examId_targetYear: { userId: user.id, examId: item.examId, targetYear: item.targetYear } },
-          update: { ...workload, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
-          create: { userId: user.id, examId: item.examId, targetYear: item.targetYear, ...workload, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
+          update: { ...workload, dailyMinutes: alignedMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
+          create: { userId: user.id, examId: item.examId, targetYear: item.targetYear, ...workload, dailyMinutes: alignedMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
         });
       }
     }, { timeout: 20_000 });

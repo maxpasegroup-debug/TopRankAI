@@ -89,7 +89,7 @@ export default async function PlannerPage() {
             {plan.revision.length ? (
               <div>
                 {plan.revision.slice(0, 12).map((item) => {
-                  const attempt = item.question?.userAnswers[0]?.attempt;
+                  const topicId = item.resolvedTopic?.id;
                   const due = item.dueDate.getTime() <= Date.now();
                   return (
                     <div className="tp-list-item" key={item.id} style={{ alignItems: "flex-start" }}>
@@ -98,7 +98,7 @@ export default async function PlannerPage() {
                       </span>
                       <div className="tp-grow">
                         <div className="tp-activity-title" style={{ fontWeight: 600 }}>
-                          {item.topic?.title ?? (item.question ? `${item.question.subject.name} revision` : "Revision item")}
+                          {item.resolvedTopic?.title ?? (item.question ? `${item.question.subject.name} revision` : "Revision item")}
                         </div>
                         <div className="tp-activity-meta" style={{ marginTop: 2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                           {item.question?.text ?? "Question no longer published"}
@@ -108,8 +108,9 @@ export default async function PlannerPage() {
                         </div>
                       </div>
                       <div className="tp-row tp-gap-8 tp-wrap">
-                        {attempt && item.question && <Link className="tp-btn tp-btn-soft tp-btn-sm"
-                          href={`/app/daily/${attempt.dailyExamId}/result?question=${item.question.id}#answer-${item.question.id}`}>Review answer</Link>}
+                        {topicId ? (
+                          <Link className="tp-btn tp-btn-soft tp-btn-sm" href={`/app/learn/${topicId}`}>Revise topic</Link>
+                        ) : null}
                         <RevisionActions id={item.id} />
                       </div>
                     </div>
@@ -127,7 +128,8 @@ export default async function PlannerPage() {
               <PlanGenerator code={exam.code} />
             </div>
             <p className="tp-small tp-muted">
-              Built from your recorded weak topics and the {exam.dailyMinutes} minutes you set aside each day.
+              Built from your recorded weak topics and your {exam.dailyMinutes}-minute daily target. Every full paper
+              contributes its actual exam time to that target.
             </p>
             {plan.plan ? (
               <div className="tp-note tp-mt-16">

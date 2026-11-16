@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { saveDailyWorkload } from "@/server/actions/platform";
 import { levelForPapers } from "@/shared/daily-workload";
 
-export function DailyWorkloadForm({ targetId, count, included, capacity, monthlyUntil }: {
-  targetId: string; count: number; included: number; capacity: number; monthlyUntil: string | null;
+export function DailyWorkloadForm({ targetId, count, included, capacity, monthlyUntil, durationMinutes }: {
+  targetId: string; count: number; included: number; capacity: number; monthlyUntil: string | null; durationMinutes: number;
 }) {
   const [requested, setRequested] = useState(count);
   const [message, setMessage] = useState("");
@@ -27,6 +27,10 @@ export function DailyWorkloadForm({ targetId, count, included, capacity, monthly
       <h2 style={{ fontSize: 18 }}>Daily workload</h2>
       <p className="tp-small tp-muted">{included} {included === 1 ? "paper" : "papers"} per day included.
         {monthlyUntil ? ` Mock monthly access through ${monthlyUntil}.` : " Extra papers require mock monthly access."}</p>
+      <p className="tp-small tp-muted">
+        Each paper is the full official paper: {durationMinutes} minutes. Your study target becomes
+        {" "}<strong>{requested * durationMinutes} minutes</strong> of paper time for {requested} paper{requested === 1 ? "" : "s"}.
+      </p>
       <div className="tp-row tp-wrap">
         <label htmlFor="daily-count">Papers per day</label>
         <select id="daily-count" className="tp-select" style={{ width: "auto" }} value={requested}

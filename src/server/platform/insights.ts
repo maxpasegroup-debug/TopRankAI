@@ -1,6 +1,7 @@
 import { prisma } from "@/server/db";
 import { fallbackPlan, type StudyPlanSuggestion } from "@/server/ai/tasks";
 import { computeStreak, getSyllabusCompletion, type CandidateExam } from "./candidate";
+import { loadTopicIndex, pickTopic } from "./daily-exam";
 import { addDays, daysBetween, localDateKey, percent, toNumber, todayDate } from "./utils";
 
 type Breakdown = Record<string, { total: number; correct: number; incorrect: number; unanswered: number; marks: number }>;
@@ -116,11 +117,8 @@ export async function getPlannerData(userId: string, exam: CandidateExam) {
       take: 40,
       include: {
         question: { select: {
-          id: true, text: true, subject: { select: { name: true } },
-          userAnswers: {
-            where: { status: "INCORRECT", attempt: { userId, examId: exam.examId, status: "SUBMITTED" } },
-            orderBy: { createdAt: "desc" }, take: 1, select: { attempt: { select: { dailyExamId: true } } },
-          },
+          id: true, text: true, topicId: true, subject: { select: { id: true, name: true } },
+          topic: { select: { id: true, title: true } },
         } },
         topic: { select: { id: true, title: true } },
       },
@@ -136,6 +134,18 @@ export async function getPlannerData(userId: string, exam: CandidateExam) {
       select: { topicBreakdown: true },
     }),
   ]);
+
+  const unresolvedSubjects = [...new Set(revision.flatMap((item) =>
+    !item.topic && !item.question?.topic && item.question?.subject.id ? [item.question.subject.id] : [],
+  ))];
+  const topicIndex: Awaited<ReturnType<typeof loadTopicIndex>> = unresolvedSubjects.length
+    ? await loadTopicIndex(exam.examId, unresolvedSubjects)
+    : new Map();
+  const revisionWithTopic = revision.map((item) => {
+    const direct = item.topic ?? item.question?.topic ?? null;
+    const resolved = direct ?? pickTopic(item.question?.text ?? "", item.question?.subject.id ?? null, topicIndex);
+    return { ...item, resolvedTopic: resolved ? { id: resolved.id, title: resolved.title } : null };
+  });
 
   const weakMap = new Map<string, { total: number; correct: number }>();
   for (const attempt of weakTopics) {
@@ -164,8 +174,8 @@ export async function getPlannerData(userId: string, exam: CandidateExam) {
 
   return {
     goals,
-    revision,
-    dueRevision: revision.filter((item) => item.dueDate.getTime() <= today.getTime()),
+    revision: revisionWithTopic,
+    dueRevision: revisionWithTopic.filter((item) => item.dueDate.getTime() <= today.getTime()),
     nextEvent,
     weakest,
     plan,

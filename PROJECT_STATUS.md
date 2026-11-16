@@ -73,8 +73,9 @@ Every exam carries its real official pattern, not a generic daily size.
 
 - **Pattern storage.** `ExamConfiguration.sections` holds `{ parts: [...], note }`. Each part has a code, name, duration, total questions, total marks, marking rules and section definitions (section name, subject code, question count, marks per question, negative marks, MCQ/numerical mix).
 - **Part selection.** Multi-paper exams (JEE Main Paper 1 / 2A / 2B, JEE Advanced Paper 1 / 2, CUET papers, NIFT programmes) are chosen at registration and in My Exams. The choice is stored in `CandidateExamTarget.examPart` and drives the pattern shown and the paper built.
-- **One paper per day.** `DailyExam` is unique on `(userId, examId, scheduledDate, slot)`, so the day's paper is fixed once prepared. A 10-day recency window rotates questions and avoids repeating the same items too often.
-- **Full mock vs practice set is decided honestly.** If the reviewed pool covers the part's official total, the paper is a `FULL_MOCK` with the official question count, official duration and per-section marks. Otherwise it is a `PRACTICE_SET` sized at roughly half the official paper (never below the admin-configured practice floor, never beyond the pool), and the UI states exactly how many of the official questions it covers.
+- **Daily papers.** The preparation level sets how many papers the candidate sits in a day (1–4), and `DailyExam` is unique on `(userId, examId, scheduledDate, slot)`. Every sitting uses the complete official pattern: same question count, duration, marks and negative marking. A 10-day recency window rotates questions and avoids repeating the same items too often.
+- **Full mock vs practice set is decided honestly.** If the reviewed pool covers the part's official total, every slot is a `FULL_MOCK` with the official question count, official duration and per-section marks. A follow-up paper is never shortened to 60 minutes/60 questions. Otherwise the paper is a `PRACTICE_SET` sized at roughly half the official paper (never below the admin-configured practice floor, never beyond the pool), and the UI states exactly how many official questions it covers.
+- **Study target is derived from the papers.** `dailyMinutes = max(candidate target, papersPerDay × official duration)`. One 180-minute NEET paper therefore produces a 180-minute study goal; two produce 360 minutes. Breaks are not counted as study time. The planner and daily-workload card show this calculation.
 - **Coverage is stored, not implied.** Each paper's snapshot records mode, official total, official marks, duration, section quotas and selected counts, plus the per-question section and marks used for scoring.
 - **Deterministic scoring.** Marks, negative marking, accuracy, score percentage and subject/topic breakdowns come from the stored answer key and the paper snapshot. AI never computes an objective score.
 
@@ -185,7 +186,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 - Learning centre: exam → subject → unit → chapter → topic, topic search, "continue studying" from the last visit (recorded by `recordTopicVisit` without overwriting a completed/needs-revision status), saved topics, note-availability counts, topic status and bookmarks.
 - Topic reader: the exact official syllabus passage with its source link; curated notes and detailed AI-generated notes rendered with headings, lists, formulas, worked examples and callouts; official external resources (NCERT, ePathshala, DIKSHA, SWAYAM, NPTEL) with publisher, licence/usage note and an "external" label; previous/next topic navigation.
 - Result question review paginates ten questions at a time with page controls, instead of rendering the whole 180-question paper in one DOM tree. The exam player fills the viewport and the question palette scrolls inside its own column, removing the large empty gap under the question card.
-- Planner: daily goals, revision queue (complete/dismiss), weakest topics and AI/fallback study plans.
+- Planner: daily goals, revision queue with a direct "Revise topic" link into the learning centre (the exam result is no longer used as the revision entry point), weakest topics and AI/fallback study plans.
 - Analytics: readiness components, score trend, subject accuracy, weak topics, syllabus coverage and submitted-paper history.
 - Calendar: target dates and verified events only, with source links and confirmed/tentative states.
 - Achievements: 14 real milestones evaluated from recorded activity, earned states, progress meters and XP.
@@ -235,7 +236,7 @@ The original bootstrap administrator was removed. The remaining administrator is
 
 The 16 exams are CAT, CLAT, CUET (UG), GATE Computer Science, IBPS PO, JEE Advanced, JEE Main, KEAM, NATA, NEET (UG), NIFT Entrance, SSC CGL, UCEED, UGC NET, UPSC CSE and UPSC NDA & NA.
 
-Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_compat`, `20261115000300_exam_parts` and `20261115000400_syllabus_sources` are applied. The legacy tables and legacy admin pages are preserved rather than destructively dropped; the new product layer uses the new platform models.
+Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_compat`, `20261115000300_exam_parts`, `20261115000400_syllabus_sources` and `20261116000100_daily_paper_count` are applied. The legacy tables and legacy admin pages are preserved rather than destructively dropped; the new product layer uses the new platform models.
 
 ## Verification performed
 
@@ -245,6 +246,9 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Administrator login at `/login/admin` renders the dedicated sign-in and reset-password tabs; `/admin` redirects when signed out. Admin sign-out returns to the public homepage with the public navbar (`Sign in` / `Start preparing`, no admin link).
 - End-to-end candidate browser test: registration → dashboard → prepare daily paper → start → answer → submit → result → analytics → planner → learning centre → topic status → calendar → achievements → notifications → profile → exam plan.
 - Full-mock browser test on CAT: dashboard shows the 68-question / 120-minute / 204-mark official paper, preparation creates a 68-question full mock, the player renders all 68 palette entries, and submission produces a scored result.
+- Follow-up paper checked directly after the fix: NEET slot 2 (previously 60 Q / 60 min / 240 marks) rebuilt as **180 Q / 180 min / 720 marks**, `FULL_MOCK`, exactly 4 marks per question and 1 negative mark per question. The short untouched paper was deleted and regenerated; submitted history was not rewritten.
+- Study goal checked directly: one 180-minute NEET paper produces a 180-minute goal; two produce 360 minutes. The previous fixed level minutes (30/45/90/120) are now a floor, not the whole calculation.
+- Planner revision link checked in the browser: a revision item resolved to `/app/learn/<topicId>` with the label "Revise topic"; the old exam-result link and its `Review answer` label are gone.
 - Date rollover checked on 16 Nov: the candidate's 15 Nov CAT result stayed in history, the dashboard correctly showed that today's paper was not prepared, and preparing created a new “CAT full mock · 16 Nov” paper while `/app/daily` listed both days.
 - Result review renders correct and selected answers, section pills, `paperMeta` mode/official count, and syllabus links; seeded unlinked questions resolve to a closest topic and are labelled as inferred.
 - Result review pagination was verified with a 48-question submitted fixture: page 2 showed questions 11–20, ten review items, and Previous/1/2/3/4/5/Next controls pointing at the right pages. The fixture was removed after the check.

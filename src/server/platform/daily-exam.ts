@@ -39,7 +39,7 @@ type PoolItem = {
   text: string;
 };
 
-type TopicRow = {
+export type TopicRow = {
   id: string;
   title: string;
   description: string | null;
@@ -86,6 +86,8 @@ const TOPIC_HINTS: { match: RegExp; titles: string[] }[] = [
   { match: /\bconstituent assembly/i, titles: ["preamble", "parliament"] },
   { match: /\bright to life|fundamental right|constitution/i, titles: ["fundamental rights", "preamble"] },
   { match: /\bgreenhouse/i, titles: ["greenhouse"] },
+  { match: /\bmoles?\b|molar mass|avogadro/i, titles: ["mole"] },
+  { match: /\boxidation (state|number)|redox|permanganate|kmno4/i, titles: ["redox", "oxidation"] },
 ];
 
 function topicTokens(value: string) {
@@ -129,7 +131,7 @@ function scoreTopic(questionText: string, topic: TopicRow) {
  * so this picks the best-scoring topic in the same subject. It returns null
  * rather than inventing a link when nothing matches.
  */
-function pickTopic(questionText: string, subjectId: string | null, index: Map<string, TopicRow[]>) {
+export function pickTopic(questionText: string, subjectId: string | null, index: Map<string, TopicRow[]>) {
   if (!subjectId) return null;
   const candidates = index.get(subjectId) ?? [];
   let best: TopicRow | null = null;
@@ -144,7 +146,7 @@ function pickTopic(questionText: string, subjectId: string | null, index: Map<st
   return bestScore >= 3 ? best : null;
 }
 
-async function loadTopicIndex(examId: string, subjectIds: string[]) {
+export async function loadTopicIndex(examId: string, subjectIds: string[]) {
   const index = new Map<string, TopicRow[]>();
   if (!subjectIds.length) return index;
   const rows = await prisma.syllabusTopic.findMany({
@@ -344,10 +346,9 @@ async function buildDailyPaper(input: {
   const officialTotal = part ? objectiveTotal(part, exam.totalQuestions) : Math.max(1, exam.totalQuestions);
   const officialDuration = Math.max(10, part?.durationMinutes ?? exam.durationMinutes);
   const officialMarksTotal = part ? objectiveMarks(part, part.totalMarks) : exam.totalQuestions * exam.positiveMarks;
-  const isFullMock = input.slot === 0 && pool.length >= officialTotal;
+  const isFullMock = pool.length >= officialTotal;
   const practiceTarget = practiceSize(officialTotal, exam.dailyTestQuestions);
-  const followUpTarget = Math.max(1, Math.floor(officialTotal * Math.min(1, 60 / officialDuration)));
-  const target = isFullMock ? officialTotal : Math.min(pool.length, practiceTarget, input.slot ? followUpTarget : officialTotal);
+  const target = isFullMock ? officialTotal : Math.min(pool.length, practiceTarget);
 
   const recentPapers = await prisma.dailyExam.findMany({
     where: { userId, examId: exam.examId, scheduledDate: { gte: addDays(today, -10) } },
@@ -433,16 +434,35 @@ async function ensureGoals(userId: string, exam: CandidateExam, questionCount: n
     where: { userId, examId: exam.examId, scheduledDate: today }, select: { questionIds: true },
   });
   const assigned = papers.reduce((sum, paper) => sum + paper.questionIds.length, 0);
-  const goals = [
+  const fixedGoals = [
     { type: "QUESTIONS" as const, title: "Answer today's questions", target: Math.max(1, questionCount, assigned), order: 1 },
     { type: "REVISION" as const, title: "Clear due revision", target: Math.max(1, revisionDue), order: 2 },
-    { type: "MINUTES" as const, title: `Study for ${exam.dailyMinutes} minutes`, target: exam.dailyMinutes, order: 3 },
   ];
-  for (const goal of goals) {
+  for (const goal of fixedGoals) {
     await prisma.dailyGoal.upsert({
       where: { userId_examId_goalDate_title: { userId, examId: exam.examId, goalDate: today, title: goal.title } },
       update: { target: goal.target },
       create: { userId, examId: exam.examId, goalDate: today, ...goal },
+    });
+  }
+
+  // The study target is derived from the scheduled papers, so its title changes
+  // when the workload changes. Update the existing MINUTES goal instead of
+  // creating a second "Study for …" goal for the same day.
+  const minuteGoal = await prisma.dailyGoal.findFirst({
+    where: { userId, examId: exam.examId, goalDate: today, type: "MINUTES" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  const title = `Study for ${exam.dailyMinutes} minutes`;
+  if (minuteGoal) {
+    await prisma.dailyGoal.update({ where: { id: minuteGoal.id }, data: { title, target: exam.dailyMinutes, order: 3 } });
+    await prisma.dailyGoal.deleteMany({
+      where: { userId, examId: exam.examId, goalDate: today, type: "MINUTES", id: { not: minuteGoal.id } },
+    });
+  } else {
+    await prisma.dailyGoal.create({
+      data: { userId, examId: exam.examId, goalDate: today, type: "MINUTES", title, target: exam.dailyMinutes, order: 3 },
     });
   }
 }
@@ -450,18 +470,6 @@ async function ensureGoals(userId: string, exam: CandidateExam, questionCount: n
 export async function ensureDailyExam(userId: string, exam: CandidateExam, slot = 0) {
   const today = todayDate();
   await checkPaperSlot(userId, exam, slot, today);
-  const existing = await prisma.dailyExam.findFirst({
-    where: { userId, examId: exam.examId, scheduledDate: today, slot },
-    include: { attempt: true },
-  });
-
-  const revisionDue = await prisma.revisionQueue.count({ where: { userId, status: "PENDING", dueDate: { lte: today } } });
-
-  if (existing) {
-    await ensureGoals(userId, exam, existing.questionIds.length || exam.dailyTestQuestions, revisionDue);
-    return existing;
-  }
-
   const pool = await prisma.questionExam.findMany({
     where: {
       examId: exam.examId,
@@ -480,6 +488,28 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam, slot 
 
   if (!pool.length) {
     throw new Error("The curated question bank for this exam is still being prepared. Please explore the learning centre in the meantime.");
+  }
+
+  const officialTotal = exam.part ? objectiveTotal(exam.part, exam.totalQuestions) : Math.max(1, exam.totalQuestions);
+  const officialDuration = Math.max(10, exam.part?.durationMinutes ?? exam.durationMinutes);
+  const existing = await prisma.dailyExam.findFirst({
+    where: { userId, examId: exam.examId, scheduledDate: today, slot },
+    include: { attempt: true },
+  });
+  const revisionDue = await prisma.revisionQueue.count({ where: { userId, status: "PENDING", dueDate: { lte: today } } });
+
+  if (existing) {
+    const attemptStatus = existing.attempt?.status;
+    // An untouched paper created before the bank covered the official pattern
+    // (or before the official duration was applied) is rebuilt instead of being
+    // shown as a short "official" paper. Submitted/in-progress work is kept.
+    const stale = !attemptStatus && pool.length >= officialTotal &&
+      (existing.questionIds.length < officialTotal || existing.durationMinutes !== officialDuration);
+    if (!stale) {
+      await ensureGoals(userId, exam, existing.questionIds.length || exam.dailyTestQuestions, revisionDue);
+      return existing;
+    }
+    await prisma.dailyExam.delete({ where: { id: existing.id } });
   }
 
   const plan = await buildDailyPaper({

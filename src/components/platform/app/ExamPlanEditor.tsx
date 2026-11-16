@@ -270,10 +270,10 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
           <h3 style={{ fontSize: 16, marginBottom: 10 }}>Preparation levels</h3>
           <div className="tp-stack tp-gap-12">
             {[
-              ["Beginner", "30 min/day", "Build the foundation with shorter papers."],
-              ["Intermediate", "45 min/day", "Balance learning with consistent practice."],
-              ["Advanced", "90 min/day", "Push speed and accuracy with mixed papers."],
-              ["Extreme", "120 min/day", "Peak-intensity preparation for exam conditions."],
+              ["Beginner", "1 full paper/day", "Build the foundation with one complete official paper."],
+              ["Intermediate", "2 full papers/day", "Balance learning with consistent full-paper practice."],
+              ["Advanced", "3 full papers/day", "Push speed and accuracy under exam conditions."],
+              ["Extreme", "4 full papers/day", "Peak-intensity preparation with the maximum daily papers."],
             ].map(([label, minutes, body]) => (
               <div key={label}>
                 <div className="tp-row-between tp-small">
@@ -289,8 +289,9 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
         <section className="tp-card tp-card-pad">
           <h3 style={{ fontSize: 16, marginBottom: 10 }}>How this affects today</h3>
           <p className="tp-small tp-muted">
-            The active exam drives today&apos;s paper. The level affects your study-time target and goals, while the
-            paper size and marking follow the exam configuration set by the administrator.
+            The active exam drives today&apos;s paper. The level sets how many full official papers you sit each day;
+            the study-time target is the paper time (papers × official duration), or your own higher daily target.
+            Paper size and marking always follow the official exam configuration.
           </p>
           <div className="tp-note tp-mt-16">
             <strong>Removing an exam</strong> keeps your past attempts in the database but stops new papers being

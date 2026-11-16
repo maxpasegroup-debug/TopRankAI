@@ -16,11 +16,11 @@ export function mockMonthlyActive(plan: { plan: string; status: string; endsAt: 
   return plan?.plan === "MOCK_MONTHLY" && plan.status === "ACTIVE" && !!plan.endsAt && plan.endsAt > now;
 }
 
-// Fit the full first sitting, subsequent timed sets and all breaks between
-// the 08:00 IST reminder and the end of the study day.
+// Fit the full official papers and all breaks between the 08:00 IST reminder
+// and the end of the study day. Every sitting is a complete paper, not a
+// shortened follow-up set.
 export function dailyCapacity(duration: number) {
-  const followUpMinutes = Math.min(duration, 60);
-  return 1 + Math.max(0, Math.floor((16 * 60 - duration) / (followUpMinutes + EXAM_BREAK_MINUTES)));
+  return 1 + Math.max(0, Math.floor((16 * 60 - duration) / (duration + EXAM_BREAK_MINUTES)));
 }
 
 export function paperCount(level: DailyLevel, requested: number | null, monthly: boolean) {
@@ -47,7 +47,7 @@ export function dailySchedule(day: Date, count: number, duration: number, papers
     const available = slot === 0 ? carryOver <= Date.now() : Boolean(previous?.submittedAt && startsAt.getTime() <= Date.now());
     const sitting = { slot, startsAt, available, status: paper?.status ?? "SCHEDULED" };
     const finish = paper?.submittedAt ?? paper?.attempt?.deadline
-      ?? new Date(Math.max(Date.now(), startsAt.getTime()) + (slot === 0 ? duration : Math.min(duration, 60)) * 60_000);
+      ?? new Date(Math.max(Date.now(), startsAt.getTime()) + duration * 60_000);
     startsAt = new Date(finish.getTime() + EXAM_BREAK_MINUTES * 60_000);
     return sitting;
   });

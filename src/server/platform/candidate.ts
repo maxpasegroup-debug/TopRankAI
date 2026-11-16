@@ -65,7 +65,7 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
       includedPapers: includedPapers(target.preparationLevel),
       monthlyUntil: monthly ? subscription!.endsAt : null,
       targetYear: target.targetYear,
-      dailyMinutes: target.dailyMinutes,
+      dailyMinutes: Math.max(target.dailyMinutes, count * duration),
       targetExamDate: target.targetExamDate,
       durationMinutes: duration,
       dailyTestQuestions: target.exam.configuration?.dailyTestQuestions ?? 8,

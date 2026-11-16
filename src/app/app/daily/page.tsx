@@ -104,8 +104,8 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
       <section className="tp-card tp-card-pad tp-mb-24">
         <h2 style={{ fontSize: 19 }}>Today’s papers</h2>
         <p className="tp-small tp-muted tp-mb-16">
-          Start with a full mock when the reviewed bank covers the official pattern.
-          Additional timed sets last up to 60 minutes. Allow {EXAM_BREAK_MINUTES} minutes after submitting each paper.
+          Every paper is the complete official paper — the same question count, duration and marks as the real exam.
+          Allow {EXAM_BREAK_MINUTES} minutes after submitting each paper before the next sitting opens.
         </p>
         {schedule.map((sitting) => {
           const paper = todayPapers.find((entry) => entry.slot === sitting.slot);
@@ -113,7 +113,7 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
           const submitted = paper?.attempt?.status === "SUBMITTED";
           return <div key={sitting.slot} className="tp-list-item tp-row-between">
             <div>
-              <h3 style={{ fontSize: 16 }}>Paper {sitting.slot + 1} · {meta ? modeLabel[meta.mode] : sitting.slot ? "Timed practice" : "Full mock target"}</h3>
+              <h3 style={{ fontSize: 16 }}>Paper {sitting.slot + 1} · {meta ? modeLabel[meta.mode] : "Full official mock"}</h3>
               <p className="tp-xs tp-muted">{submitted ? "Submitted" : paper?.attempt ? "In progress" : sitting.available
                 ? "Ready to prepare" : `Planned for ${formatDateTime(sitting.startsAt)} IST`}</p>
             </div>
@@ -128,7 +128,8 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
         })}
       </section>
       <DailyWorkloadForm key={exam.targetId} targetId={exam.targetId} count={exam.papersPerDay}
-        capacity={dailyCapacity(exam.durationMinutes)} included={exam.includedPapers} monthlyUntil={exam.monthlyUntil ? formatDateTime(exam.monthlyUntil) + " IST" : null} />
+        capacity={dailyCapacity(exam.durationMinutes)} included={exam.includedPapers} durationMinutes={exam.durationMinutes}
+        monthlyUntil={exam.monthlyUntil ? formatDateTime(exam.monthlyUntil) + " IST" : null} />
 
       <h2 style={{ fontSize: 20, marginBottom: 14 }}>Paper history</h2>
       {history.length ? (
