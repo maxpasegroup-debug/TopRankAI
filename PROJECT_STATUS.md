@@ -54,6 +54,8 @@ npm run syllabus:sync                               # download + extract every o
 npm run generate:questions -- --exam=NEET           # author a full paper from the imported syllabus
 npm run generate:questions -- --exam=NEET --target=20 --batch=10 --dry-run
 npm run verify:papers                               # build one paper per exam for a throwaway candidate
+npm run generate:notes -- --exam=NEET               # detailed topic notes from the official syllabus
+npm run notes:share -- --apply                      # reuse a note for the same subject/topic in other exams
 npm run questions:audit                             # find keys that contradict their own explanation
 npm run questions:dedupe -- --apply                 # archive duplicate stems and move their exam links
 ```
@@ -115,7 +117,7 @@ AI is optional. Without a key the application still works end to end and labels 
 AI is used for:
 
 - Narrative feedback after a submitted paper.
-- Structured study notes for a syllabus topic, anchored to official syllabus excerpts when available.
+- Detailed study notes for a syllabus topic, anchored to the official syllabus excerpt. Notes are generated in chapter batches by `scripts/generate-notes.ts`, stored as a clearly labelled `StudyMaterial` row, and reused across exams when the subject and topic match.
 - A suggested study plan from recorded weak topics.
 - Draft practice questions written from a syllabus topic, anchored to official syllabus excerpts when available.
 - Batch authoring of full-length papers (`scripts/generate-questions.ts`), one section at a time, against the downloaded official syllabus.
@@ -180,7 +182,9 @@ There is **no single free, official, machine-readable API** for the syllabus and
 - Daily exams: prepare, start, resume, timed player, flagging, palette, server deadline, local answer persistence across refresh, submission and result review.
 - Result page: objective score, accuracy, negative marks, section/subject/topic breakdown, correct and selected answers, explanations, and a “revise this topic” link into the learning centre.
 - Result review resolves a syllabus topic even for seeded questions that were never linked to one. It picks the closest topic in the same subject by keyword scoring and labels it “Closest syllabus topic for this question” instead of pretending it is an exact mapping. When nothing matches it says so and shows a subject-level revision label.
-- Learning centre: exam → subject → unit → chapter → topic, topic status, bookmarks, curated notes, formulas, examples and AI notes.
+- Learning centre: exam → subject → unit → chapter → topic, topic search, "continue studying" from the last visit (recorded by `recordTopicVisit` without overwriting a completed/needs-revision status), saved topics, note-availability counts, topic status and bookmarks.
+- Topic reader: the exact official syllabus passage with its source link; curated notes and detailed AI-generated notes rendered with headings, lists, formulas, worked examples and callouts; official external resources (NCERT, ePathshala, DIKSHA, SWAYAM, NPTEL) with publisher, licence/usage note and an "external" label; previous/next topic navigation.
+- Result question review paginates ten questions at a time with page controls, instead of rendering the whole 180-question paper in one DOM tree. The exam player fills the viewport and the question palette scrolls inside its own column, removing the large empty gap under the question card.
 - Planner: daily goals, revision queue (complete/dismiss), weakest topics and AI/fallback study plans.
 - Analytics: readiness components, score trend, subject accuracy, weak topics, syllabus coverage and submitted-paper history.
 - Calendar: target dates and verified events only, with source links and confirmed/tentative states.
@@ -218,6 +222,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 | Active subjects | 13 |
 | Syllabus topics | 1,456 |
 | Active questions | 1,377 (1,274 AI-authored from official syllabus, 103 curated legacy) |
+| AI-generated topic notes | 392 rows, reuse-checked (0 duplicate notes per topic) |
 | Duplicate question stems | 0 across the whole bank |
 | Achievements | 14 |
 | Exam parts / patterns | 16 exams with at least one paper pattern |
@@ -242,6 +247,10 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Full-mock browser test on CAT: dashboard shows the 68-question / 120-minute / 204-mark official paper, preparation creates a 68-question full mock, the player renders all 68 palette entries, and submission produces a scored result.
 - Date rollover checked on 16 Nov: the candidate's 15 Nov CAT result stayed in history, the dashboard correctly showed that today's paper was not prepared, and preparing created a new “CAT full mock · 16 Nov” paper while `/app/daily` listed both days.
 - Result review renders correct and selected answers, section pills, `paperMeta` mode/official count, and syllabus links; seeded unlinked questions resolve to a closest topic and are labelled as inferred.
+- Result review pagination was verified with a 48-question submitted fixture: page 2 showed questions 11–20, ten review items, and Previous/1/2/3/4/5/Next controls pointing at the right pages. The fixture was removed after the check.
+- The topic reader was verified in the browser: it rendered the official JEE Advanced syllabus passage, the "AI-generated" detailed note (Overview, Key points, Formulas, Worked example, Common mistakes), the official NCERT/ePathshala/DIKSHA/SWAYAM/NPTEL resource card with publisher and usage notes, and previous/next topic links.
+- Learning-centre search was verified with `?q=thermo`: three matching JEE Advanced topics with subject and chapter context. The "Notes ready" counter reflected the stored notes.
+- Player layout was checked at a 718px viewport: the question card and palette fill the player row, the palette scrolls inside its own column, and the Previous/Next actions sit at the bottom of the question card.
 - Paper engine checked directly for every exam: 15 `FULL_MOCK` papers with exact section quotas, including NEET 180 Q / 720 marks / 180 min, JEE Main 75/300, KEAM 150/600, CLAT 120/120, GATE 65/100, SSC CGL 100/200 and CAT 68/204. UGC NET remains a `PRACTICE_SET`. Duplicate stems per paper: 0.
 - Admin browser test: overview, exams, questions, syllabus (including source status), calendar, candidates and AI pages; exam configuration save; candidate suspend/reactivate.
 - Gemini 3.5 Flash verified for structured exam patterns, question drafts and study notes, with `AIUsageLog` rows written. Later feedback calls hit the free-tier quota and fell back deterministically; the failure is logged.
@@ -257,6 +266,9 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - **Full mocks now cover 15 of 16 exams, and every paper of the defence and JEE Advanced pathways.** NEET, JEE Main Paper 1, JEE Advanced Paper 1 + Paper 2, KEAM, CLAT, CUET, CAT, GATE CS, SSC CGL, IBPS PO, UPSC CSE, NDA Paper 1 + Paper 2, NIFT, NATA and UCEED build their complete objective paper with exact section quotas. UGC NET remains a practice set because Paper 2 is subject-specific and no subject is selected in the plan. JEE Main Paper 2A/2B remain practice sets because their Aptitude and Planning sections have no topic map yet; filling them with Mathematics would misrepresent the paper.
 - **Subjective design sections are excluded from objective mocks.** NATA A1–A3, UCEED Part B and NIFT Creative Ability cannot be scored from a stored key. The paper engine now omits them and records "subjective — not auto-scored" in section coverage, so a drawing slot is never filled with an unrelated MCQ. NATA therefore runs 50 objective questions, UCEED 57 and NIFT 100.
 - **AI-authored keys are mechanically checked, not guaranteed.** Every batch passes structural validation, a reasoning-leak filter, exact and near-duplicate checks, and `npm run questions:audit`, which compares the key with the last value proved by the explanation. That audit found one genuinely contradictory key in 1,274 questions (a polygon-angle item) and it was corrected. Remaining heuristic flags are intermediate values in correct explanations. A human spot-check is still required before treating an AI bank as publication-grade.
+- **Notes coverage is improving but not complete.** 392 AI note rows cover 86 of 102 NEET topics, 59 of 105 JEE Main/JEE Advanced/KEAM topics, and 14 each in the common-subject exams after `notes:share`. Some chapters still lack a note because Gemini returned `503` repeatedly during the run. Re-run `npm run generate:notes -- --exam=...`, then `npm run notes:share -- --apply`; the script skips topics that already have a note.
+- **Official notes are linked, not copied.** NCERT, ePathshala, DIKSHA, SWAYAM and NPTEL are copyrighted or have item-level licences, so the product opens them on the publisher's site and shows publisher/usage notes. Only original AI notes and the quoted official syllabus passages are stored.
+- **AI notes are clearly labelled and need judgement.** They are grounded in the official syllabus and passed length/structure checks, but they are not a textbook and may contain errors. The page labels them "AI-generated" and tells the student to review critically.
 - **Generation is resumable, not automatic.** Flash Lite served the authoring run, but transient `503` "high demand" responses interrupted several batches and quota limits how much can be authored in one day. Re-run `npm run generate:questions -- --exam=...` to fill any shortfall; the script never duplicates a stem.
 - **GATE CS learning topics and generated questions use different sources.** GATE questions are authored directly from the official GATE CS syllabus PDF (`--official` mode) and link to that document, but the curated learning-centre topic list for GATE still uses the shared Computer Awareness topics. The result review therefore relies on the closest-topic resolver for GATE, labelled as inferred, until the GATE topic catalogue is rewritten from the official sections.
 - **CAT and IBPS PO have no official topic list.** Their questions are authored from the curated topic map and labelled `CURATED_TOPICS`; the product does not claim an official topic-wise syllabus for them.

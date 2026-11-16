@@ -258,7 +258,7 @@ export function DailyPlayer({
 
           {error ? <div className="tp-error tp-mt-16" role="alert">{error}</div> : null}
 
-          <div className="tp-row-between tp-mt-24">
+          <div className="tp-row-between tp-question-actions">
             <button type="button" className="tp-btn tp-btn-ghost tp-btn-sm" onClick={toggleFlag}>
               <Icon name="flag" size={14} /> {answers[current.id]?.flagged ? "Unflag" : "Flag for review"}
             </button>

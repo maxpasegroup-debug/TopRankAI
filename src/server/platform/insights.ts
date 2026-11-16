@@ -190,7 +190,11 @@ export async function getSyllabusView(userId: string, exam: CandidateExam) {
           topics: {
             where: { active: true },
             orderBy: { order: "asc" },
-            include: { progress: { where: { userId }, select: { status: true, completion: true, lastStudiedAt: true } } },
+            include: {
+              progress: { where: { userId }, select: { status: true, completion: true, lastStudiedAt: true, bookmarked: true } },
+              materials: { where: { active: true }, select: { id: true }, take: 1 },
+              _count: { select: { materials: true } },
+            },
           },
         },
       },

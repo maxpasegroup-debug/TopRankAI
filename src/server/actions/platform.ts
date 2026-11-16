@@ -98,8 +98,37 @@ export async function updateTopicProgress(raw: unknown) {
   return { ok: true as const, data: { status } };
 }
 
-export async function requestTopicNotes(topicId: string): Promise<PlatformActionResult<StudyNotes>> {
+/**
+ * Records that the candidate opened a topic. It powers "Continue studying"
+ * without changing a topic the candidate has already completed or flagged.
+ */
+export async function recordTopicVisit(topicId: string): Promise<PlatformActionResult<null>> {
   const user = await requireAuth();
+  const topic = await prisma.syllabusTopic.findUnique({
+    where: { id: topicId },
+    select: { chapter: { select: { unit: { select: { examId: true } } } } },
+  });
+  if (!topic) return { ok: false, message: "Topic not found." };
+  const target = await prisma.candidateExamTarget.findFirst({
+    where: { userId: user.id, examId: topic.chapter.unit.examId, active: true },
+    select: { id: true },
+  });
+  if (!target) return { ok: false, message: "This topic is outside your preparation plan." };
+  const existing = await prisma.topicProgress.findUnique({
+    where: { userId_topicId: { userId: user.id, topicId } },
+    select: { id: true },
+  });
+  if (existing) {
+    await prisma.topicProgress.update({ where: { id: existing.id }, data: { lastStudiedAt: new Date() } });
+  } else {
+    await prisma.topicProgress.create({
+      data: { userId: user.id, topicId, status: "LEARNING", lastStudiedAt: new Date() },
+    });
+  }
+  return { ok: true, data: null };
+}
+
+export async function requestTopicNotes(topicId: string): Promise<PlatformActionResult<StudyNotes>> {  const user = await requireAuth();
   const view = await getTopicView(user.id, topicId);
   if (!view) return { ok: false, message: "Topic not found." };
   if (!view.exam) return { ok: false, message: "This topic is not attached to an exam." };
@@ -122,26 +151,40 @@ export async function requestTopicNotes(topicId: string): Promise<PlatformAction
   });
   if (!result.ok) return { ok: false, message: result.message };
 
-  const content = [
+  const notesContent = [
+    "## Overview",
     result.data.overview,
     "",
-    "Key points",
+    "## Key points",
     ...result.data.keyPoints.map((point) => `- ${point}`),
-    ...(result.data.formulas.length ? ["", "Formulas", ...result.data.formulas.map((formula) => `- ${formula}`)] : []),
-    ...(result.data.workedExample ? ["", "Worked example", result.data.workedExample.question, "", result.data.workedExample.solution] : []),
-    ...(result.data.commonMistakes.length ? ["", "Common mistakes", ...result.data.commonMistakes.map((item) => `- ${item}`)] : []),
+    ...(result.data.formulas.length ? ["", "## Formulas", ...result.data.formulas.map((formula) => `- ${formula}`)] : []),
+    ...(result.data.workedExample
+      ? ["", "## Worked example", `**Question:** ${result.data.workedExample.question}`, "", `**Solution:** ${result.data.workedExample.solution}`]
+      : []),
+    ...(result.data.commonMistakes.length ? ["", "## Common mistakes", ...result.data.commonMistakes.map((item) => `- ${item}`)] : []),
   ].join("\n");
 
-  await prisma.studyMaterial.create({
-    data: {
-      topicId,
-      title: "AI study notes",
-      type: "NOTES",
-      content,
-      order: 10,
-      active: true,
-    },
+  const existing = await prisma.studyMaterial.findFirst({
+    where: { topicId, title: "AI-generated detailed notes", active: true },
+    select: { id: true },
   });
+  if (existing) {
+    await prisma.studyMaterial.update({
+      where: { id: existing.id },
+      data: { content: notesContent, active: true },
+    });
+  } else {
+    await prisma.studyMaterial.create({
+      data: {
+        topicId,
+        title: "AI-generated detailed notes",
+        type: "NOTES",
+        content: notesContent,
+        order: -1,
+        active: true,
+      },
+    });
+  }
   return { ok: true, data: result.data };
 }
 

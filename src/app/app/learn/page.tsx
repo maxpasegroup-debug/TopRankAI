@@ -9,8 +9,13 @@ import { getSyllabusView } from "@/server/platform/insights";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Learning centre" };
 
-export default async function LearnPage() {
+export default async function LearnPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const user = await requireAuth();
+  const query = ((await searchParams).q ?? "").trim();
   const exam = await getActiveExam(user.id);
 
   if (!exam) {
@@ -52,6 +57,32 @@ export default async function LearnPage() {
     {} as Record<string, number>,
   );
 
+  const allTopics = view.subjects.flatMap((subject) =>
+    subject.units.flatMap((unit) =>
+      unit.chapters.flatMap((chapter) =>
+        chapter.topics.map((topic) => ({ topic, subject, unit, chapter })),
+      ),
+    ),
+  );
+  const normalizedQuery = query.toLowerCase();
+  const searchResults = normalizedQuery
+    ? allTopics.filter(({ topic, chapter }) =>
+        `${topic.title} ${topic.description ?? ""} ${chapter.title}`.toLowerCase().includes(normalizedQuery),
+      )
+    : [];
+  const notesReady = allTopics.filter(
+    ({ topic }) => (topic.content ?? "").trim().length > 200 || topic.materials.length > 0,
+  ).length;
+  const continueTopics = allTopics
+    .filter(({ topic }) => Boolean(topic.progress[0]?.lastStudiedAt))
+    .sort(
+      (left, right) =>
+        new Date(right.topic.progress[0]!.lastStudiedAt!).getTime() -
+        new Date(left.topic.progress[0]!.lastStudiedAt!).getTime(),
+    )
+    .slice(0, 3);
+  const savedTopics = allTopics.filter(({ topic }) => topic.progress[0]?.bookmarked).slice(0, 4);
+
   return (
     <>
       <div className="tp-page-head">
@@ -66,11 +97,25 @@ export default async function LearnPage() {
         </div>
       </div>
 
+      <form className="tp-row tp-gap-8 tp-wrap tp-mb-20" action="/app/learn" method="get" role="search">
+        <label className="tp-label" htmlFor="topic-search" style={{ position: "absolute", left: -9999 }}>Search topics</label>
+        <input
+          id="topic-search"
+          className="tp-input"
+          name="q"
+          defaultValue={query}
+          placeholder="Search a topic or chapter, for example 'Entropy' or 'Mendel'"
+          style={{ flex: "1 1 280px", maxWidth: 520 }}
+        />
+        <button className="tp-btn tp-btn-sm" type="submit"><Icon name="search" size={14} /> Search</button>
+        {query ? <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/app/learn">Clear</Link> : null}
+      </form>
+
       <div className="tp-grid tp-grid-4 tp-mb-24">
         {[
           { label: "Total topics", value: completion.total, note: "In this exam syllabus" },
           { label: "Completed", value: completion.completed, note: "Marked complete by you" },
-          { label: "In progress", value: statusCounts.LEARNING ?? 0, note: "Learning status" },
+          { label: "Notes ready", value: notesReady, note: "Curated or syllabus-grounded AI notes" },
           { label: "Needs revision", value: statusCounts.NEEDS_REVISION ?? 0, note: "Flagged by you" },
         ].map((card) => (
           <div className="tp-stat" key={card.label}>
@@ -83,7 +128,69 @@ export default async function LearnPage() {
 
       <div className="tp-meter tp-mb-24"><span style={{ width: `${completion.percent}%` }} /></div>
 
-      {view.subjects.length ? (
+      {continueTopics.length ? (
+        <section className="tp-mb-28">
+          <div className="tp-row-between tp-gap-12 tp-wrap" style={{ marginBottom: 12 }}>
+            <h2 style={{ fontSize: 18 }}>Continue studying</h2>
+            <span className="tp-xs tp-faint">Based on your last visit</span>
+          </div>
+          <div className="tp-grid tp-grid-3">
+            {continueTopics.map(({ topic, subject, chapter }) => (
+              <Link className="tp-card tp-card-pad" href={`/app/learn/${topic.id}`} key={topic.id} style={{ textDecoration: "none" }}>
+                <div className="tp-xs tp-faint">{subject.name} · {chapter.title}</div>
+                <div style={{ fontWeight: 650, margin: "6px 0" }}>{topic.title}</div>
+                <span className="tp-link tp-small">Continue reading <Icon name="arrow-right" size={13} /></span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {savedTopics.length ? (
+        <section className="tp-mb-28">
+          <div className="tp-row-between tp-gap-12 tp-wrap" style={{ marginBottom: 12 }}>
+            <h2 style={{ fontSize: 18 }}>Saved topics</h2>
+            <span className="tp-xs tp-faint">Bookmarked by you</span>
+          </div>
+          <div className="tp-row tp-gap-8 tp-wrap">
+            {savedTopics.map(({ topic }) => (
+              <Link className="tp-pill tp-pill-brand" href={`/app/learn/${topic.id}`} key={topic.id} style={{ textDecoration: "none" }}>
+                <Icon name="star" size={12} /> {topic.title}
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {query ? (
+        <section className="tp-card tp-card-pad tp-mb-24">
+          <div className="tp-row-between tp-gap-12 tp-wrap" style={{ marginBottom: 12 }}>
+            <h2 style={{ fontSize: 18 }}>Results for “{query}”</h2>
+            <span className="tp-pill">{searchResults.length} matching topic{searchResults.length === 1 ? "" : "s"}</span>
+          </div>
+          {searchResults.length ? (
+            <div className="tp-stack tp-gap-8">
+              {searchResults.slice(0, 80).map(({ topic, subject, chapter }) => {
+                const status = topic.progress[0]?.status ?? "NOT_STARTED";
+                return (
+                  <Link className="tp-topic-row" href={`/app/learn/${topic.id}`} key={topic.id}>
+                    <span className="tp-topic-status" data-status={status} />
+                    <span className="tp-grow">
+                      {topic.title}
+                      <span className="tp-xs tp-faint" style={{ display: "block", marginTop: 2 }}>{subject.name} · {chapter.title}</span>
+                    </span>
+                    <Icon name="chevron-right" size={14} />
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="tp-small tp-muted" style={{ margin: 0 }}>
+              No topic in this exam matches that search. Try a shorter phrase, the chapter name, or clear the search.
+            </p>
+          )}
+        </section>
+      ) : view.subjects.length ? (
         <div className="tp-stack tp-gap-28">
           {view.subjects.map((subject) => (
             <section className="tp-subject-block" key={subject.id}>
@@ -118,6 +225,9 @@ export default async function LearnPage() {
                               <Link className="tp-topic-row" href={`/app/learn/${topic.id}`} key={topic.id}>
                                 <span className="tp-topic-status" data-status={status} />
                                 <span className="tp-grow">{topic.title}</span>
+                                {(topic.content ?? "").trim().length > 200 || topic.materials.length > 0 ? (
+                                  <span className="tp-xs tp-faint">notes</span>
+                                ) : null}
                                 <span className="tp-xs tp-faint">{topic.estimatedMinutes}m</span>
                                 <Icon name="chevron-right" size={14} />
                               </Link>

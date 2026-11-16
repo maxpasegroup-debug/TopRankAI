@@ -15,8 +15,65 @@ const statusPill: Record<string, string> = {
   UNANSWERED: "",
 };
 
-export default async function DailyExamResultPage({ params }: { params: Promise<{ id: string }> }) {
+function ReviewPager({
+  page,
+  totalPages,
+  hrefFor,
+}: {
+  page: number;
+  totalPages: number;
+  hrefFor: (target: number) => string;
+}) {
+  if (totalPages <= 1) return null;
+  const numbers: (number | "gap")[] = [];
+  for (let value = 1; value <= totalPages; value += 1) {
+    const near = Math.abs(value - page) <= 2 || value === 1 || value === totalPages;
+    if (near) {
+      numbers.push(value);
+    } else if (numbers[numbers.length - 1] !== "gap") {
+      numbers.push("gap");
+    }
+  }
+  return (
+    <nav className="tp-pager" aria-label="Question review pages">
+      {page > 1 ? (
+        <Link className="tp-pager-link" href={hrefFor(page - 1)} rel="prev">Previous</Link>
+      ) : (
+        <span className="tp-pager-link" data-disabled="true">Previous</span>
+      )}
+      {numbers.map((value, index) =>
+        value === "gap" ? (
+          <span className="tp-pager-gap" key={`gap-${index}`}>…</span>
+        ) : (
+          <Link
+            className="tp-pager-link"
+            href={hrefFor(value)}
+            key={value}
+            aria-current={value === page ? "page" : undefined}
+            data-active={value === page ? "true" : undefined}
+          >
+            {value}
+          </Link>
+        ),
+      )}
+      {page < totalPages ? (
+        <Link className="tp-pager-link" href={hrefFor(page + 1)} rel="next">Next</Link>
+      ) : (
+        <span className="tp-pager-link" data-disabled="true">Next</span>
+      )}
+    </nav>
+  );
+}
+
+export default async function DailyExamResultPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
   const { id } = await params;
+  const requestedPage = Number((await searchParams).page ?? "1");
   const user = await requireAuth();
 
   const attempt = await prisma.examAttempt.findFirst({
@@ -35,6 +92,13 @@ export default async function DailyExamResultPage({ params }: { params: Promise<
   const { attempt: info, review, subjectBreakdown, topicBreakdown, scorePercent, paperMeta } = result;
   const feedback = info.aiFeedback;
   const topicByName = new Map(review.flatMap((item) => (item.topic ? [[item.topic.title, item.topic] as const] : [])));
+
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(review.length / pageSize));
+  const page = Math.min(Math.max(1, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 1), totalPages);
+  const pageStart = (page - 1) * pageSize;
+  const pageItems = review.slice(pageStart, pageStart + pageSize);
+  const pagerHref = (target: number) => `/app/daily/${id}/result?page=${target}#review`;
 
   return (
     <>
@@ -96,7 +160,7 @@ export default async function DailyExamResultPage({ params }: { params: Promise<
         </div>
       </section>
 
-      <div className="tp-grid tp-grid-2 tp-mt-24" style={{ alignItems: "start" }}>
+      <div className="tp-grid tp-grid-2 tp-mt-24" style={{ alignItems: "stretch" }}>
         <section className="tp-card tp-card-pad">
           <div className="tp-row-between" style={{ marginBottom: 14 }}>
             <h3 style={{ fontSize: 17 }}>Subject breakdown</h3>
@@ -220,13 +284,18 @@ export default async function DailyExamResultPage({ params }: { params: Promise<
         </section>
       ) : null}
 
-      <section className="tp-mt-32">
-        <div className="tp-row-between" style={{ marginBottom: 14 }}>
-          <h2 style={{ fontSize: 20 }}>Question review</h2>
-          <span className="tp-xs tp-faint">{review.length} questions</span>
+      <section className="tp-mt-32" id="review">
+        <div className="tp-row-between tp-gap-12 tp-wrap" style={{ marginBottom: 14 }}>
+          <div>
+            <h2 style={{ fontSize: 20 }}>Question review</h2>
+            <p className="tp-xs tp-faint" style={{ marginTop: 4 }}>
+              Showing {pageStart + 1}–{Math.min(review.length, pageStart + pageSize)} of {review.length} questions
+            </p>
+          </div>
+          <ReviewPager page={page} totalPages={totalPages} hrefFor={pagerHref} />
         </div>
         <div className="tp-card tp-card-pad">
-          {review.map((item) => (
+          {pageItems.map((item) => (
             <article className="tp-review-item" key={item.id}>
               <div className="tp-review-head">
                 <span className="tp-review-num">{item.position}</span>
@@ -291,6 +360,12 @@ export default async function DailyExamResultPage({ params }: { params: Promise<
             </article>
           ))}
         </div>
+        {totalPages > 1 ? (
+          <div className="tp-row-between tp-gap-12 tp-wrap tp-mt-16">
+            <span className="tp-xs tp-faint">Page {page} of {totalPages}</span>
+            <ReviewPager page={page} totalPages={totalPages} hrefFor={pagerHref} />
+          </div>
+        ) : null}
       </section>
 
       <div className="tp-note tp-mt-24">

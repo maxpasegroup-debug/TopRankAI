@@ -31,6 +31,110 @@ export const paperQuestionSchema = z.object({
 });
 export type PaperQuestion = z.infer<typeof paperQuestionSchema>["questions"][number];
 
+/**
+ * Batch notes contract. One call covers a small group of topics from the same
+ * chapter so the model can write detailed, grounded notes without one request
+ * per topic. The content is stored as a StudyMaterial row, never as a claim
+ * that it came from a textbook.
+ */
+export const topicNotesBatchSchema = z.object({
+  notes: z.array(z.object({
+    topic: z.string().min(2).max(160),
+    overview: z.string().min(120).max(2000),
+    keyPoints: z.array(z.string().min(3).max(320)).min(3).max(8),
+    formulas: z.array(z.string().min(1).max(320)).max(8).default([]),
+    workedExample: z.object({
+      question: z.string().min(8).max(900),
+      solution: z.string().min(20).max(1600),
+    }).nullable(),
+    commonMistakes: z.array(z.string().min(3).max(320)).max(5).default([]),
+  })).min(1).max(8),
+});
+export type TopicNote = z.infer<typeof topicNotesBatchSchema>["notes"][number];
+
+const topicNotesResponseSchema: GeminiResponseSchema = {
+  type: "object",
+  properties: {
+    notes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          topic: { type: "string" },
+          overview: { type: "string" },
+          keyPoints: { type: "array", items: { type: "string" } },
+          formulas: { type: "array", items: { type: "string" } },
+          workedExample: {
+            type: "object",
+            properties: { question: { type: "string" }, solution: { type: "string" } },
+            required: ["question", "solution"],
+          },
+          commonMistakes: { type: "array", items: { type: "string" } },
+        },
+        required: ["topic", "overview", "keyPoints", "formulas", "workedExample", "commonMistakes"],
+      },
+    },
+  },
+  required: ["notes"],
+};
+
+export type TopicNotesInput = {
+  examName: string;
+  subjectName: string;
+  chapterTitle: string;
+  topics: { title: string; description: string; syllabusText: string }[];
+  examId: string;
+  model?: string;
+};
+
+export function generateTopicNotesBatch(input: TopicNotesInput): Promise<AiResult<TopicNote[]>> {
+  const topicBlock = input.topics
+    .map(
+      (topic, index) =>
+        `${index + 1}. ${topic.title}\nDescription: ${topic.description || "No extra description."}\nOfficial syllabus passage: ${(topic.syllabusText || "No matching passage; stay inside the title.").slice(0, 1_800)}`,
+    )
+    .join("\n\n");
+  return generateStructured({
+    operation: "generate_topic_notes",
+    examId: input.examId,
+    model: input.model,
+    temperature: 0.35,
+    maxOutputTokens: 8_192,
+    timeoutMs: 150_000,
+    attempts: 1,
+    schema: topicNotesBatchSchema,
+    responseSchema: topicNotesResponseSchema,
+    system: `${SAFETY_RULE} You are writing original study notes for an Indian competitive exam. Use only the supplied official syllabus passage and the topic title. Do not quote textbooks, invent previous-year questions, or claim an official citation. ${JSON_RULE}`,
+    prompt: [
+      `Exam: ${input.examName}`,
+      `Subject: ${input.subjectName}`,
+      `Chapter: ${input.chapterTitle}`,
+      `Write one detailed note per topic below.`,
+      topicBlock,
+      "For each topic return the topic title exactly as given.",
+      "The overview must be at least 150 words, teach the concept rather than repeat the syllabus, and define every symbol used.",
+      "Key points must be specific and exam-oriented. Formulas must include the meaning of each variable and its unit where applicable.",
+      "The worked example must be a new, solvable example with a full step-by-step solution; never label it as a previous-year question.",
+      "Common mistakes should name the exact error a student is likely to make.",
+      "Use plain text with short paragraphs and bullet points. Do not use HTML.",
+      "Format: {\"notes\":[{\"topic\":\"...\",\"overview\":\"...\",\"keyPoints\":[\"...\"],\"formulas\":[\"...\"],\"workedExample\":{\"question\":\"...\",\"solution\":\"...\"},\"commonMistakes\":[\"...\"]}]}",
+    ].join("\n"),
+  }).then((result) => {
+    if (!result.ok) return result;
+    const valid = result.data.notes.filter(
+      (note) => note.overview.trim().length >= 120 && note.keyPoints.length >= 3,
+    );
+    if (!valid.length) {
+      return {
+        ok: false as const,
+        code: "INVALID_RESPONSE" as const,
+        message: "The AI returned notes that failed validation. Please try again.",
+      };
+    }
+    return { ...result, data: valid };
+  });
+}
+
 const paperQuestionsResponseSchema: GeminiResponseSchema = {
   type: "object",
   properties: {

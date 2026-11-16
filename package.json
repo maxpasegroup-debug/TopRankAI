@@ -18,6 +18,8 @@
     "import:pyq": "tsx scripts/import-pyq.ts",
     "syllabus:sync": "tsx scripts/sync-syllabus-library.ts",
     "generate:questions": "tsx scripts/generate-questions.ts",
+    "generate:notes": "tsx scripts/generate-notes.ts",
+    "notes:share": "tsx scripts/share-notes.ts",
     "questions:dedupe": "tsx scripts/dedupe-questions.ts",
     "questions:audit": "tsx scripts/audit-questions.ts",
     "verify:papers": "tsx scripts/verify-papers.ts",

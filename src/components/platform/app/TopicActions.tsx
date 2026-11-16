@@ -18,10 +18,12 @@ export function TopicActions({
   topicId,
   status,
   bookmarked,
+  hasAiNotes = false,
 }: {
   topicId: string;
   status: Status;
   bookmarked: boolean;
+  hasAiNotes?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -99,10 +101,12 @@ export function TopicActions({
 
       <h3 style={{ fontSize: 16, marginBottom: 6 }}>AI study notes</h3>
       <p className="tp-xs tp-faint" style={{ lineHeight: 1.5, marginBottom: 10 }}>
-        Generates a structured summary for this topic. It is labelled AI-assisted and saved to the topic for later.
+        {hasAiNotes
+          ? "Regenerates the detailed notes for this topic and updates the same saved note instead of creating a duplicate."
+          : "Writes detailed, syllabus-grounded notes for this topic. Labelled AI-generated and saved for later."}
       </p>
       <button type="button" className="tp-btn tp-btn-soft tp-btn-sm tp-btn-block" onClick={generateNotes} disabled={notesPending}>
-        {notesPending ? "Generating…" : "Generate notes"} {notesPending ? null : <Icon name="spark" size={14} />}
+        {notesPending ? "Generating…" : hasAiNotes ? "Regenerate notes" : "Generate notes"} {notesPending ? null : <Icon name="spark" size={14} />}
       </button>
 
       {message ? <div className="tp-success tp-mt-16" role="status">{message}</div> : null}

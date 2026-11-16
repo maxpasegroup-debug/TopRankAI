@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Icon } from "@/components/platform/Icon";
+import { StudyNotes } from "@/components/platform/StudyNotes";
 import { TopicActions } from "@/components/platform/app/TopicActions";
+import { TopicVisitTracker } from "@/components/platform/app/TopicVisitTracker";
 import { prisma } from "@/server/db";
 import { requireAuth } from "@/server/auth/session";
 import { getTopicView } from "@/server/platform/insights";
 import { getOfficialSyllabusExcerpt } from "@/server/platform/syllabus-sources";
+import { getOfficialStudyResources } from "@/server/platform/study-resources";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Topic" };
@@ -37,9 +40,29 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
     topic.title,
     topic.description,
   );
+  const resources = getOfficialStudyResources(topic.chapter.unit.subject.code);
+  const aiNotes = topic.materials.filter(
+    (material) => material.type === "NOTES" && /^AI[-\s]/i.test(material.title),
+  );
+  const otherMaterials = topic.materials.filter(
+    (material) => !aiNotes.some((note) => note.id === material.id),
+  );
+  const [previousTopic, nextTopic] = await Promise.all([
+    prisma.syllabusTopic.findFirst({
+      where: { chapterId: topic.chapterId, order: { lt: topic.order }, active: true },
+      orderBy: { order: "desc" },
+      select: { id: true, title: true },
+    }),
+    prisma.syllabusTopic.findFirst({
+      where: { chapterId: topic.chapterId, order: { gt: topic.order }, active: true },
+      orderBy: { order: "asc" },
+      select: { id: true, title: true },
+    }),
+  ]);
 
   return (
     <>
+      <TopicVisitTracker topicId={topic.id} />
       <div className="tp-row tp-gap-8 tp-small tp-muted tp-wrap" style={{ marginBottom: 16 }}>
         <Link className="tp-link" href="/app/learn">Learning centre</Link>
         <Icon name="chevron-right" size={14} />
@@ -110,34 +133,84 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
           </section>
 
           <section className="tp-card tp-card-pad">
-            <h2 style={{ fontSize: 19, marginBottom: 12 }}>Study notes</h2>
-            {topic.content ? (
-              <div className="tp-topic-body">{topic.content}</div>
-            ) : (
-              <p className="tp-small tp-muted">
-                Curated notes for this topic are not written yet. Use the AI notes panel to generate a starting
-                summary, and cross-check it against the official syllabus.
-              </p>
-            )}
+            <div className="tp-row-between tp-wrap tp-gap-8" style={{ marginBottom: 12 }}>
+              <h2 style={{ fontSize: 19 }}>Study notes</h2>
+              {aiNotes.length ? <span className="tp-pill tp-pill-brand"><Icon name="spark" size={13} /> AI-generated</span> : null}
+            </div>
+            {topic.content ? <StudyNotes content={topic.content} /> : null}
+            {aiNotes.map((material) => (
+              <div key={material.id} style={{ marginTop: topic.content ? 24 : 0 }}>
+                <div className="tp-row-between tp-gap-8 tp-wrap" style={{ marginBottom: 8 }}>
+                  <h3 style={{ fontSize: 15 }}>{
+                    (() => {
+                      const label = material.title.replace(/^AI-generated\s*/i, "").trim() || "Detailed notes";
+                      return label.charAt(0).toUpperCase() + label.slice(1);
+                    })()
+                  }</h3>
+                  <span className="tp-xs tp-faint">Written from the official syllabus · review critically</span>
+                </div>
+                {material.content ? <StudyNotes content={material.content} /> : null}
+              </div>
+            ))}
+            {!topic.content && !aiNotes.length ? (
+              <div className="tp-stack tp-gap-10">
+                <p className="tp-small tp-muted" style={{ margin: 0 }}>
+                  Detailed notes for this topic have not been added yet. Use the official syllabus passage above and
+                  the official resources below, or generate AI notes from the panel. AI notes are labelled and are
+                  not an official publication.
+                </p>
+                <div className="tp-note">
+                  <strong>Start here.</strong>
+                  <ol className="tp-notes-list" style={{ marginTop: 8 }}>
+                    <li>Read the official syllabus boundary above so you know what is examinable.</li>
+                    <li>Open the matching NCERT / DIKSHA / NPTEL resource and read that section.</li>
+                    <li>Attempt the {topic._count.questions} related question{topic._count.questions === 1 ? "" : "s"} in this topic and review every mistake.</li>
+                  </ol>
+                </div>
+              </div>
+            ) : null}
             {topic.formulas ? (
               <>
-                <h3 style={{ fontSize: 15, margin: "20px 0 8px" }}>Formulas</h3>
+                <h3 style={{ fontSize: 15, margin: "22px 0 8px" }}>Formulas</h3>
                 <div className="tp-formula">{topic.formulas}</div>
               </>
             ) : null}
             {topic.examples ? (
               <>
-                <h3 style={{ fontSize: 15, margin: "20px 0 8px" }}>Worked examples</h3>
-                <div className="tp-topic-body">{topic.examples}</div>
+                <h3 style={{ fontSize: 15, margin: "22px 0 8px" }}>Worked examples</h3>
+                <StudyNotes content={topic.examples} />
               </>
             ) : null}
           </section>
 
-          {topic.materials.length ? (
+          {resources.length ? (
             <section className="tp-card tp-card-pad">
-              <h2 style={{ fontSize: 19, marginBottom: 12 }}>Materials</h2>
+              <div className="tp-row-between tp-wrap tp-gap-8" style={{ marginBottom: 12 }}>
+                <h2 style={{ fontSize: 19 }}>Official study resources</h2>
+                <span className="tp-pill">External · opens on publisher site</span>
+              </div>
+              <div className="tp-stack tp-gap-12">
+                {resources.map((resource) => (
+                  <div className="tp-chapter" key={resource.url} style={{ borderTop: 0, padding: 0 }}>
+                    <div className="tp-row-between tp-gap-8 tp-wrap" style={{ marginBottom: 4 }}>
+                      <a className="tp-link" href={resource.url} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 650 }}>
+                        {resource.title} <Icon name="arrow-right" size={13} />
+                      </a>
+                      <span className="tp-pill">{resource.kind}</span>
+                    </div>
+                    <div className="tp-xs tp-muted">{resource.publisher}</div>
+                    <div className="tp-xs tp-faint" style={{ marginTop: 3, lineHeight: 1.5 }}>{resource.note}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {otherMaterials.length ? (
+            <section className="tp-card tp-card-pad">
+              <h2 style={{ fontSize: 19, marginBottom: 12 }}>More materials</h2>
               <div className="tp-stack tp-gap-16">
-                {topic.materials.map((material) => (
+                {otherMaterials.map((material) => (
                   <div className="tp-chapter" key={material.id} style={{ borderTop: 0, padding: 0 }}>
                     <div className="tp-row-between" style={{ marginBottom: 6 }}>
                       <div className="tp-row tp-gap-8">
@@ -162,10 +235,25 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
             <strong>Study honestly.</strong> Reading is not the same as practising. After this topic, attempt the daily
             paper or mark it as needing revision so it returns in your revision queue.
           </div>
+
+          <nav className="tp-row-between tp-gap-12 tp-wrap" aria-label="Topic navigation">
+            {previousTopic ? (
+              <Link className="tp-btn tp-btn-ghost tp-btn-sm" href={`/app/learn/${previousTopic.id}`}>
+                <Icon name="arrow-left" size={14} /> {previousTopic.title}
+              </Link>
+            ) : (
+              <span />
+            )}
+            {nextTopic ? (
+              <Link className="tp-btn tp-btn-soft tp-btn-sm" href={`/app/learn/${nextTopic.id}`}>
+                {nextTopic.title} <Icon name="arrow-right" size={14} />
+              </Link>
+            ) : null}
+          </nav>
         </div>
 
         <aside className="tp-stack tp-gap-20">
-          <TopicActions topicId={topic.id} status={status} bookmarked={progress?.bookmarked ?? false} />
+          <TopicActions topicId={topic.id} status={status} bookmarked={progress?.bookmarked ?? false} hasAiNotes={aiNotes.length > 0} />
 
           <section className="tp-card tp-card-pad">
             <h3 style={{ fontSize: 16, marginBottom: 12 }}>Topic facts</h3>
