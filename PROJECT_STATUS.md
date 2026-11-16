@@ -168,6 +168,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 - `/about`, `/how-it-works`, `/faq`, `/contact`, `/terms`, `/privacy`.
 - Shared responsive navbar and footer, one top-right theme cycle button, GSAP reveal motion. Public pages render the public navbar for administrators too, including immediately after admin sign-out. Signed-out visitors no longer see a "My workspace" link, and the public footer no longer exposes the administrator sign-in link.
 - Route-level loading skeletons lazy-load the daily, result, learning, topic and planner views. Long review items/chapters use `content-visibility: auto` so off-screen content is painted lazily, and study-note images use native `loading="lazy"`.
+- Responsive layout: public pages, dashboard, daily schedule, exam player, result review, learning centre, topic reader, planner and auth pages are checked at 320, 375, 768 and 1024 px with no horizontal overflow. The mobile top bar hides the redundant page title, schedule rows stack their controls, the question pager compacts, and the palette becomes six columns on narrow screens.
 
 ### Accounts
 
@@ -253,6 +254,7 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Planner revision link checked in the browser: a revision item resolved to `/app/learn/<topicId>` with the label "Revise topic"; the old exam-result link and its `Review answer` label are gone.
 - Start-time scheduling checked by unit test: a 10:00 IST start resolves to `04:30Z`, and a paper is not available before that time. The daily schedule card is now a single per-exam list (papers/day + start time), not a separate active-exam form plus a duplicate list.
 - Public/auth surfaces checked in the browser after candidate sign-out: the public header showed only Sign in / Start preparing, with no "My workspace" and no administrator link; the administrator page no longer shows "Candidate? Use the candidate login", and the candidate login no longer claims administrators use the same form.
+- Responsive checks used same-origin iframes at 320, 375, 768 and 1024 px for `/`, `/exams`, `/register`, `/login`, `/login/admin`, `/app`, `/app/daily`, `/app/learn`, `/app/learn/[topicId]`, the result review, `/app/planner`, `/app/exams`, `/app/analytics`, `/app/profile`, `/app/notifications`, `/app/calendar` and `/app/achievements`. No page exceeded its viewport; the 320 px admin login overflow was fixed with `min-width: 0` and input caps.
 - Date rollover checked on 16 Nov: the candidate's 15 Nov CAT result stayed in history, the dashboard correctly showed that today's paper was not prepared, and preparing created a new “CAT full mock · 16 Nov” paper while `/app/daily` listed both days.
 - Result review renders correct and selected answers, section pills, `paperMeta` mode/official count, and syllabus links; seeded unlinked questions resolve to a closest topic and are labelled as inferred.
 - Result review pagination was verified with a 48-question submitted fixture: page 2 showed questions 11–20, ten review items, and Previous/1/2/3/4/5/Next controls pointing at the right pages. The fixture was removed after the check.

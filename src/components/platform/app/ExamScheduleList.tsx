@@ -67,7 +67,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
           {row.monthlyUntil ? ` · extra papers until ${row.monthlyUntil}` : ""}
         </div>
       </div>
-      <div className="tp-stack tp-gap-6" style={{ minWidth: 290 }}>
+      <div className="tp-stack tp-gap-6 tp-schedule-controls">
         <div className="tp-row tp-gap-8 tp-wrap">
           <label className="tp-xs tp-muted" htmlFor={`papers-${row.targetId}`}>Papers</label>
           <select
