@@ -83,6 +83,7 @@ Examples from the current bank (verified by direct engine calls):
 | NEET (UG) | 180 Q / 180 min / 720 marks | Full mock, 180 Q / 180 min / 720 marks (45 Physics + 45 Chemistry + 90 Biology) |
 | JEE Main Paper 1 | 75 Q / 180 min / 300 marks | Full mock, 75 Q / 180 min / 300 marks |
 | JEE Advanced Paper 1 | 48 Q / 180 min / 180 marks | Full mock, 48 Q / 180 min |
+| JEE Advanced Paper 2 | 54 Q / 180 min / 180 marks | Full mock, 54 Q / 180 min |
 | KEAM | 150 Q / 180 min / 600 marks | Full mock, 150 Q / 180 min |
 | CLAT | 120 Q / 120 min / 120 marks | Full mock, 120 Q / 120 min |
 | CUET (UG) Language | 50 Q / 60 min / 250 marks | Full mock, 50 Q / 60 min |
@@ -92,12 +93,15 @@ Examples from the current bank (verified by direct engine calls):
 | IBPS PO Prelims | 100 Q / 60 min / 100 marks | Full mock, 100 Q / 60 min |
 | UPSC CSE Prelims GS | 100 Q / 120 min / 200 marks | Full mock, 100 Q / 120 min |
 | NDA Paper 1 (Mathematics) | 120 Q / 150 min / 300 marks | Full mock, 120 Q / 150 min |
+| NDA Paper 2 (GAT) | 150 Q / 150 min / 600 marks | Full mock, 150 Q / 150 min |
 | NIFT Entrance (GAT) | 101 Q / 120 min / 200 marks | Full mock, 101 Q / 120 min |
 | NATA | 53 Q / 180 min / 200 marks | Full mock, 53 Q / 180 min |
 | UCEED | 59 Q / 180 min / 300 marks | Full mock, 59 Q / 180 min |
 | UGC NET | 150 Q / 180 min / 300 marks | **Practice set**, Paper 1 only; Paper 2 needs a subject choice |
 
 The exam catalogue, exam detail page, registration wizard, plan editor, planner, dashboard and daily pages all advertise the official paper size rather than the old 8-question daily count. "Practice set floor" is labelled as an administrator-configured minimum, not the advertised paper.
+
+Multi-paper coverage: JEE Main Paper 1, JEE Advanced Paper 1 and Paper 2, and NDA Paper 1 and Paper 2 are full mocks. JEE Main Paper 2A (B.Arch) and Paper 2B (B.Planning) are **not** full: their Aptitude/Planning sections have no topic map in the current syllabus catalogue, so those sections stay empty and the paper is labelled a practice set rather than filled with unrelated Mathematics questions.
 
 ## AI setup and boundaries
 
@@ -213,7 +217,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 | Exam categories | 10 |
 | Active subjects | 13 |
 | Syllabus topics | 1,456 |
-| Active questions | 1,240 (1,137 AI-authored from official syllabus, 103 curated legacy) |
+| Active questions | 1,377 (1,274 AI-authored from official syllabus, 103 curated legacy) |
 | Duplicate question stems | 0 across the whole bank |
 | Achievements | 14 |
 | Exam parts / patterns | 16 exams with at least one paper pattern |
@@ -250,9 +254,9 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 
 ## Known limitations and pending work
 
-- **Full mocks now cover 15 of 16 exams.** NEET, JEE Main, JEE Advanced, KEAM, CLAT, CUET, CAT, GATE CS, SSC CGL, IBPS PO, UPSC CSE, NDA Paper 1, NIFT, NATA and UCEED build their complete objective paper with exact section quotas. UGC NET remains a practice set because Paper 2 is subject-specific and no subject is selected in the plan; the bulletin does not supply per-subject syllabi.
+- **Full mocks now cover 15 of 16 exams, and every paper of the defence and JEE Advanced pathways.** NEET, JEE Main Paper 1, JEE Advanced Paper 1 + Paper 2, KEAM, CLAT, CUET, CAT, GATE CS, SSC CGL, IBPS PO, UPSC CSE, NDA Paper 1 + Paper 2, NIFT, NATA and UCEED build their complete objective paper with exact section quotas. UGC NET remains a practice set because Paper 2 is subject-specific and no subject is selected in the plan. JEE Main Paper 2A/2B remain practice sets because their Aptitude and Planning sections have no topic map yet; filling them with Mathematics would misrepresent the paper.
 - **Subjective design sections are excluded from objective mocks.** NATA A1–A3, UCEED Part B and NIFT Creative Ability cannot be scored from a stored key. The paper engine now omits them and records "subjective — not auto-scored" in section coverage, so a drawing slot is never filled with an unrelated MCQ. NATA therefore runs 50 objective questions, UCEED 57 and NIFT 100.
-- **AI-authored keys are mechanically checked, not guaranteed.** Every batch passes structural validation, a reasoning-leak filter, exact and near-duplicate checks, and `npm run questions:audit`, which compares the key with the last value proved by the explanation. That audit found one genuinely contradictory key in 1,137 questions (a polygon-angle item) and it was corrected. Remaining heuristic flags are intermediate values in correct explanations. A human spot-check is still required before treating an AI bank as publication-grade.
+- **AI-authored keys are mechanically checked, not guaranteed.** Every batch passes structural validation, a reasoning-leak filter, exact and near-duplicate checks, and `npm run questions:audit`, which compares the key with the last value proved by the explanation. That audit found one genuinely contradictory key in 1,274 questions (a polygon-angle item) and it was corrected. Remaining heuristic flags are intermediate values in correct explanations. A human spot-check is still required before treating an AI bank as publication-grade.
 - **Generation is resumable, not automatic.** Flash Lite served the authoring run, but transient `503` "high demand" responses interrupted several batches and quota limits how much can be authored in one day. Re-run `npm run generate:questions -- --exam=...` to fill any shortfall; the script never duplicates a stem.
 - **GATE CS learning topics and generated questions use different sources.** GATE questions are authored directly from the official GATE CS syllabus PDF (`--official` mode) and link to that document, but the curated learning-centre topic list for GATE still uses the shared Computer Awareness topics. The result review therefore relies on the closest-topic resolver for GATE, labelled as inferred, until the GATE topic catalogue is rewritten from the official sections.
 - **CAT and IBPS PO have no official topic list.** Their questions are authored from the curated topic map and labelled `CURATED_TOPICS`; the product does not claim an official topic-wise syllabus for them.
@@ -264,7 +268,7 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - **Profile pictures are URLs, not uploads.** There is no file storage or image moderation.
 - **No paid plans or checkout.** Every new account receives a `FREE` subscription record; payment integration is not implemented.
 - **Calendar coverage is empty by design.** Real dates must be added by an administrator or imported from a verified source. No date is guessed.
-- **Syllabus and question coverage are curated, not exhaustive.** 1,240 questions and 1,456 topics exercise the loop; they do not claim complete exam readiness. More AI-authored items improve variety across days, and the 1,456-topic catalogue still needs exam-specific rewrites in places (notably GATE CS and UGC NET Paper 2).
+- **Syllabus and question coverage are curated, not exhaustive.** 1,377 questions and 1,456 topics exercise the loop; they do not claim complete exam readiness. More AI-authored items improve variety across days, and the 1,456-topic catalogue still needs exam-specific rewrites in places (notably GATE CS, JEE Main Paper 2 aptitude/planning, and UGC NET Paper 2).
 - **Admin editing is intentionally narrow.** Admins can add categories/exam shells, edit exam configuration, generate patterns with AI, add syllabus topics, import bundles, inspect official sources, add/import calendar events, approve/archive questions and suspend candidates. Deleting or renaming categories, editing individual syllabus topics, editing calendar events and deleting candidates are not exposed.
 - **Legacy routes and screens remain.** Some older `/workspace`, `/practice/*`, `/learn/*`, `/progress-method` and `/admin/*` pages still exist for compatibility but are not linked from the new navigation. They may use the old design.
 - **Remote Neon latency is high in local development.** Page loads and submit actions can take seconds because each query is a network round trip. This is an environment characteristic, not a scoring shortcut; a local PostgreSQL instance would be faster for development.

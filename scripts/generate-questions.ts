@@ -77,9 +77,24 @@ if (!part) {
   process.exit(1);
 }
 
-const officialTotal = Math.max(1, part.totalQuestions || part.sections.reduce((sum, section) => sum + section.questionCount, 0));
+const officialTotal = Math.max(
+  1,
+  part.sections
+    .filter((section) => !/subjective|drawing|sketch/i.test(section.note ?? ""))
+    .filter(
+      (section) =>
+        !(section.marksPerQuestion === 0 && section.questionCount <= 1 && !section.mcqCount && !section.numericalCount),
+    )
+    .reduce((sum, section) => sum + section.questionCount, 0) || part.totalQuestions,
+);
 const target = Math.min(officialTotal, num("target", officialTotal));
-const sections = part.sections.filter((section) => section.subjectCode && section.questionCount > 0);
+const sections = part.sections.filter(
+  (section) =>
+    section.subjectCode &&
+    section.questionCount > 0 &&
+    !/subjective|drawing|sketch/i.test(section.note ?? "") &&
+    !(section.marksPerQuestion === 0 && section.questionCount <= 1 && !section.mcqCount && !section.numericalCount),
+);
 if (!sections.length) {
   console.error(`${exam.code} ${part.code} has no sections with a subject code, so questions cannot be mapped.`);
   process.exit(1);

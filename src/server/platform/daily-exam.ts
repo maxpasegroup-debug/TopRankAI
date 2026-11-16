@@ -357,9 +357,21 @@ async function buildDailyPaper(input: {
     return hashValue(`${seed}:${left.questionId}`) - hashValue(`${seed}:${right.questionId}`) || left.questionId.localeCompare(right.questionId);
   });
 
-  const { picks, coverage } = selectPaperQuestions(ordered, part, target);
-  const mode: PaperMode = isFullMock ? "FULL_MOCK" : "PRACTICE_SET";
-  const durationMinutes = isFullMock
+  const initial = selectPaperQuestions(ordered, part, target);
+  const coverageComplete = initial.coverage.every((section) => section.selected >= section.required);
+  let picks = initial.picks;
+  let coverage = initial.coverage;
+  if (isFullMock && !coverageComplete) {
+    // The bank can be large enough overall but empty in one official section.
+    // Falling back to a practice set keeps the label honest and records which
+    // section is short instead of calling a skewed paper a full mock.
+    const practiceTarget = Math.min(pool.length, practiceSize(officialTotal, exam.dailyTestQuestions));
+    const retry = selectPaperQuestions(ordered, part, practiceTarget);
+    picks = retry.picks;
+    coverage = retry.coverage;
+  }
+  const mode: PaperMode = isFullMock && coverageComplete ? "FULL_MOCK" : "PRACTICE_SET";
+  const durationMinutes = mode === "FULL_MOCK"
     ? officialDuration
     : Math.max(10, Math.min(90, Math.round((officialDuration * picks.length) / officialTotal)));
   const marksTotal = picks.reduce((sum, item) => sum + item.marks, 0);
