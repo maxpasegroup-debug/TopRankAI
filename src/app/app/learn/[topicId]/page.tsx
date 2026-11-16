@@ -5,6 +5,7 @@ import { TopicActions } from "@/components/platform/app/TopicActions";
 import { prisma } from "@/server/db";
 import { requireAuth } from "@/server/auth/session";
 import { getTopicView } from "@/server/platform/insights";
+import { getOfficialSyllabusExcerpt } from "@/server/platform/syllabus-sources";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Topic" };
@@ -30,6 +31,12 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
 
   const { topic, progress, exam } = view;
   const status = (progress?.status ?? "NOT_STARTED") as "NOT_STARTED" | "LEARNING" | "COMPLETED" | "NEEDS_REVISION";
+  const official = await getOfficialSyllabusExcerpt(
+    topic.chapter.unit.examId,
+    topic.chapter.unit.subject.id,
+    topic.title,
+    topic.description,
+  );
 
   return (
     <>
@@ -68,6 +75,40 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
 
       <div className="tp-dash">
         <div className="tp-stack tp-gap-20">
+          <section className="tp-card tp-card-pad">
+            <div className="tp-row-between tp-wrap tp-gap-8" style={{ marginBottom: 12 }}>
+              <h2 style={{ fontSize: 19 }}>In the official syllabus</h2>
+              {official ? <span className="tp-pill tp-pill-brand"><Icon name="book" size={13} /> Official document</span> : null}
+            </div>
+            {official ? (
+              <>
+                <div className="tp-topic-body" style={{ fontSize: 14 }}>
+                  {official.text}
+                </div>
+                <div className="tp-stack tp-gap-6" style={{ marginTop: 14 }}>
+                  <div className="tp-xs tp-faint">Quoted from:</div>
+                  {official.sources.map((source) => (
+                    <a
+                      className="tp-link tp-small"
+                      key={source.url}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {source.label} <Icon name="arrow-right" size={12} />
+                    </a>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="tp-small tp-muted" style={{ margin: 0 }}>
+                The official document for this exam does not contain a passage that matches this topic closely
+                enough to quote, so the notes below are curated rather than copied. Check the syllabus document
+                itself before relying on a topic boundary.
+              </p>
+            )}
+          </section>
+
           <section className="tp-card tp-card-pad">
             <h2 style={{ fontSize: 19, marginBottom: 12 }}>Study notes</h2>
             {topic.content ? (

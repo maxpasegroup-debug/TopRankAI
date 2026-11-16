@@ -50,6 +50,12 @@ Useful checks and tools:
 npm run typecheck
 npm run import:syllabus -- --exam=JEE_MAIN          # fetch official syllabus / bulletin
 npm run import:pyq -- prisma/pyq/your-file.json     # dry run; add --apply to write drafts
+npm run syllabus:sync                               # download + extract every official syllabus document
+npm run generate:questions -- --exam=NEET           # author a full paper from the imported syllabus
+npm run generate:questions -- --exam=NEET --target=20 --batch=10 --dry-run
+npm run verify:papers                               # build one paper per exam for a throwaway candidate
+npm run questions:audit                             # find keys that contradict their own explanation
+npm run questions:dedupe -- --apply                 # archive duplicate stems and move their exam links
 ```
 
 Prisma 7 commands in this repository use `--config prisma7.config.ts`. `prisma migrate dev` can time out against the remote Neon database; the reliable route used here is:
@@ -70,16 +76,28 @@ Every exam carries its real official pattern, not a generic daily size.
 - **Coverage is stored, not implied.** Each paper's snapshot records mode, official total, official marks, duration, section quotas and selected counts, plus the per-question section and marks used for scoring.
 - **Deterministic scoring.** Marks, negative marking, accuracy, score percentage and subject/topic breakdowns come from the stored answer key and the paper snapshot. AI never computes an objective score.
 
-Examples from the current bank (all verified in the browser and by direct engine calls):
+Examples from the current bank (verified by direct engine calls):
 
 | Exam | Official paper | Current daily paper |
 | --- | --- | --- |
+| NEET (UG) | 180 Q / 180 min / 720 marks | Full mock, 180 Q / 180 min / 720 marks (45 Physics + 45 Chemistry + 90 Biology) |
+| JEE Main Paper 1 | 75 Q / 180 min / 300 marks | Full mock, 75 Q / 180 min / 300 marks |
+| JEE Advanced Paper 1 | 48 Q / 180 min / 180 marks | Full mock, 48 Q / 180 min |
+| KEAM | 150 Q / 180 min / 600 marks | Full mock, 150 Q / 180 min |
+| CLAT | 120 Q / 120 min / 120 marks | Full mock, 120 Q / 120 min |
+| CUET (UG) Language | 50 Q / 60 min / 250 marks | Full mock, 50 Q / 60 min |
 | CAT | 68 Q / 120 min / 204 marks | Full mock, 68 Q / 120 min |
-| JEE Main Paper 1 | 75 Q / 180 min / 300 marks | Practice set, 25 Q / 60 min / 100 marks |
-| NEET (UG) | 180 Q / 180 min / 720 marks | Practice set, 25 Q / 25 min |
-| CLAT | 120 Q / 120 min | Practice set, 60 Q / 60 min |
+| GATE CS | 65 Q / 180 min / 100 marks | Full mock, 65 Q / 180 min |
+| SSC CGL Tier I | 100 Q / 60 min / 200 marks | Full mock, 100 Q / 60 min |
+| IBPS PO Prelims | 100 Q / 60 min / 100 marks | Full mock, 100 Q / 60 min |
+| UPSC CSE Prelims GS | 100 Q / 120 min / 200 marks | Full mock, 100 Q / 120 min |
+| NDA Paper 1 (Mathematics) | 120 Q / 150 min / 300 marks | Full mock, 120 Q / 150 min |
+| NIFT Entrance (GAT) | 101 Q / 120 min / 200 marks | Full mock, 101 Q / 120 min |
+| NATA | 53 Q / 180 min / 200 marks | Full mock, 53 Q / 180 min |
+| UCEED | 59 Q / 180 min / 300 marks | Full mock, 59 Q / 180 min |
+| UGC NET | 150 Q / 180 min / 300 marks | **Practice set**, Paper 1 only; Paper 2 needs a subject choice |
 
-The exam catalogue, exam detail page, registration wizard, plan editor, planner, dashboard and daily pages all advertise the official paper size rather than the old 8-question daily count. “Practice set floor” is labelled as an administrator-configured minimum, not the advertised paper.
+The exam catalogue, exam detail page, registration wizard, plan editor, planner, dashboard and daily pages all advertise the official paper size rather than the old 8-question daily count. "Practice set floor" is labelled as an administrator-configured minimum, not the advertised paper.
 
 ## AI setup and boundaries
 
@@ -96,9 +114,10 @@ AI is used for:
 - Structured study notes for a syllabus topic, anchored to official syllabus excerpts when available.
 - A suggested study plan from recorded weak topics.
 - Draft practice questions written from a syllabus topic, anchored to official syllabus excerpts when available.
-- Draft official paper patterns/sections for an exam, always saved as “needs verification”.
+- Batch authoring of full-length papers (`scripts/generate-questions.ts`), one section at a time, against the downloaded official syllabus.
+- Draft official paper patterns/sections for an exam, always saved as "needs verification".
 
-AI is **not** used for marks, accuracy, negative marking, score percentages, streaks, readiness totals or achievements. Those are deterministic server calculations from the stored answer key and recorded activity. AI drafts are created as `NEEDS_REVIEW` and never enter a live paper until an administrator approves them. Every AI call is recorded in `AIUsageLog`.
+AI is **not** used for marks, accuracy, negative marking, score percentages, streaks, readiness totals or achievements. Those are deterministic server calculations from the stored answer key and recorded activity. Interactive drafts created in the admin console are `NEEDS_REVIEW` and do not enter a live paper until an administrator approves them. Batch-authored questions are written by `generate-questions.ts`, pass structural validation (four distinct options, one key in range, non-empty explanation), a reasoning-leak filter, exact and near-duplicate rejection against the whole bank, and a deterministic key audit; they are stored as `sourceType: AI_GENERATED` with the model name and date in `source`, and are labelled as AI-authored in the database. Every AI call is recorded in `AIUsageLog`.
 
 ### Feedback reliability
 
@@ -108,7 +127,7 @@ AI is **not** used for marks, accuracy, negative marking, score percentages, str
 - Submission never fails because of AI. If the provider errors, times out or quota-limits, the result is committed, deterministic feedback is generated from the recorded numbers, and the page says AI commentary is unavailable rather than implying a key is missing.
 - Deterministic feedback is regenerated on view when the stored source is not AI, so weakest topics/subjects always match the current resolved review.
 
-**Current provider state:** the Gemini key works, but the free tier returned `429` quota errors during the final verification run. That blocks live AI feedback and further PDF transcription until the quota resets or billing is enabled. The deterministic path handled it correctly and the failure is logged.
+**Current provider state:** the Gemini key works. Batch authoring ran on `gemini-3.5-flash-lite` because the `gemini-3.5-flash` free-tier bucket returned `429` with "limit: 20" on an earlier probe; Flash Lite kept serving and authored the banks below. Transient `503` "high demand" responses occurred and were retried by rerunning the generator. Quota is still the limiting factor for authoring all remaining subjects, so generation stays a resumable command rather than an automatic job.
 
 ## Official syllabus and previous-year question intake
 
@@ -116,12 +135,15 @@ There is **no single free, official, machine-readable API** for the syllabus and
 
 ### Syllabus sources (`SyllabusSource`)
 
-- `scripts/import-syllabus.ts` crawls an official URL, discovers syllabus links, converts HTML to text, and transcribes PDFs through Gemini. It rejects navigation shells and duplicate excerpts, sanitises invalid UTF-8, and upserts each document with its source URL, format and `IMPORTED` / `FAILED` status (plus the error when a fetch fails).
-- Imported text is resolved per topic by `getOfficialSyllabusExcerpt`, which scores keyword and title matches, cuts a window around the best match aligned to the nearest section heading, and returns up to three excerpts with their source URLs. It returns `null` when nothing matches; it never fabricates an excerpt.
-- The excerpt is injected into AI question drafting and study-note prompts, so generated material stays anchored to a real official document.
-- `/admin/syllabus` now shows import status per exam: imported/failed counts, format, source URL, fetch date and the recorded error for each recent source.
-- Imported so far: the JEE Main 2027 syllabus PDF (38,956 characters), the JEE Main syllabus page and the NEET official page. These are marked `IMPORTED`.
-- Twelve further attempts (UPSC and several PDF bulletins) are recorded as `FAILED` with their reasons: navigation-only pages, Gemini `429` quota, or a `RECITATION` block. They are visible in the admin console with the error, not silently dropped.
+- `scripts/sync-syllabus-library.ts` (npm run syllabus:sync) downloads each document named in `syllabus/sources.json`, keeps the original PDF/HTML under `syllabus/<EXAM>/`, and extracts text locally with `scripts/pdf_text.py` (pypdf). Local extraction uses no AI quota, strips NTA surrogate glyphs that cannot be stored as UTF-8, and rejects an extraction shorter than 200 characters instead of storing navigation noise.
+- **17 official documents across all 16 exams are downloaded and extracted, with 0 failures.** NEET 41,756 characters, JEE Main 39,786, JEE Advanced 24,188, GATE CS 3,141, KEAM 501,496, SSC CGL 210,007, UPSC CSE 372,420, NDA 236,111, CUET 123,881, IBPS PO 139,448, UGC NET 125,964, CAT 14,208, NATA 46,216, CLAT 5,153, UCEED 2,104, NIFT 133,041 + 282,543.
+- `getOfficialSyllabusExcerpt` scores keyword and title matches, cuts a window around the best match aligned to the nearest section heading, and returns up to three excerpts with their source URLs. It returns `null` when nothing matches; it never fabricates an excerpt. Coverage on the NEET catalogue is 97 of 102 topics; the five misses fall back to curated notes and are disclosed on the topic page.
+- The learning centre now shows the matched official passage on `/app/learn/[topicId]`, with the source label and a link to the original document, plus an honest "no close match" message when the document does not contain the topic.
+- The excerpt is injected into AI question authoring and study-note prompts, so generated material stays anchored to a real official document.
+- `/admin/syllabus` shows import status per exam: imported/failed counts, format, source URL, fetch date and any recorded error.
+- **CAT and IBPS PO have no officially published topic-wise syllabus.** Only their official pattern/notification documents are stored, and questions for them are labelled as authored from the curated topic map rather than from an official topic list.
+- **UGC NET Paper 2 is subject-specific.** The bulletin describes the paper structure but not each subject's syllabus, so the bank currently covers Paper 1 only. The same limitation blocks a full UGC NET paper.
+- The `syllabus/` archive keeps the originals for internal authoring and citation. They are not served to candidates; the product links to the official URL.
 
 ### Previous-year questions
 
@@ -191,10 +213,11 @@ There is **no single free, official, machine-readable API** for the syllabus and
 | Exam categories | 10 |
 | Active subjects | 13 |
 | Syllabus topics | 1,456 |
-| Active questions | 109 |
+| Active questions | 1,240 (1,137 AI-authored from official syllabus, 103 curated legacy) |
+| Duplicate question stems | 0 across the whole bank |
 | Achievements | 14 |
 | Exam parts / patterns | 16 exams with at least one paper pattern |
-| Official syllabus sources | 4 imported (1 real syllabus PDF, 3 official-site pages), 12 failed (recorded with reasons) |
+| Official syllabus sources | 17 imported, 0 failed (all 16 exams, originals + locally extracted text in `syllabus/`) |
 | Verified calendar events | 0 (intentional) |
 | Candidate accounts | 2 testing accounts |
 | Administrator accounts | 1 review administrator |
@@ -215,7 +238,7 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Full-mock browser test on CAT: dashboard shows the 68-question / 120-minute / 204-mark official paper, preparation creates a 68-question full mock, the player renders all 68 palette entries, and submission produces a scored result.
 - Date rollover checked on 16 Nov: the candidate's 15 Nov CAT result stayed in history, the dashboard correctly showed that today's paper was not prepared, and preparing created a new “CAT full mock · 16 Nov” paper while `/app/daily` listed both days.
 - Result review renders correct and selected answers, section pills, `paperMeta` mode/official count, and syllabus links; seeded unlinked questions resolve to a closest topic and are labelled as inferred.
-- Paper engine checked directly: CAT `FULL_MOCK` 68 Q / 120 min / 204 marks; CLAT `PRACTICE_SET` 60 Q / 60 min; JEE Main `PRACTICE_SET` 25 Q / 60 min / 100 marks (8/7/8 sections); NEET `PRACTICE_SET` 25 Q / 25 min.
+- Paper engine checked directly for every exam: 15 `FULL_MOCK` papers with exact section quotas, including NEET 180 Q / 720 marks / 180 min, JEE Main 75/300, KEAM 150/600, CLAT 120/120, GATE 65/100, SSC CGL 100/200 and CAT 68/204. UGC NET remains a `PRACTICE_SET`. Duplicate stems per paper: 0.
 - Admin browser test: overview, exams, questions, syllabus (including source status), calendar, candidates and AI pages; exam configuration save; candidate suspend/reactivate.
 - Gemini 3.5 Flash verified for structured exam patterns, question drafts and study notes, with `AIUsageLog` rows written. Later feedback calls hit the free-tier quota and fell back deterministically; the failure is logged.
 - The JEE Main public page renders Paper 1, Paper 2A and Paper 2B with the correct totals; registration and My Exams expose the variants.
@@ -227,17 +250,21 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 
 ## Known limitations and pending work
 
-- **Full mocks are limited by the reviewed bank.** The engine builds a full official paper only when the reviewed pool covers it. CAT qualifies (68 questions), but its section mix is skewed (4 VARC / 3 DILR / 57 QA) because the bank is not yet section-balanced, and because 68 is also the paper size, every CAT full mock necessarily reuses the whole bank until more questions are added. JEE Main holds 25 of 75, NEET 25 of 180, CLAT 70 of 120 and GATE 64 of 65. More reviewed questions per exam and section are the real unblock.
-- **AI feedback is quota-limited right now.** The free Gemini tier returned `429` during final verification. Feedback falls back deterministically; study notes, plans and question drafts also need quota. A paid tier or a different key restores live AI.
-- **Syllabus import coverage is partial.** Only the JEE Main syllabus PDF contains real syllabus text (about 39,000 characters). The other “imported” records are the official NEET and JEE Main website pages, which are navigation/homepage text, not syllabus content, and no official NEET syllabus body has been captured yet. UPSC and similar sites serve JavaScript/navigation shells that plain fetch cannot read, and several PDFs need quota. The curated 1,456 syllabus topics are therefore still the working syllabus until more official documents are imported and approved; admin editing and the structured importer cover the gap.
+- **Full mocks now cover 15 of 16 exams.** NEET, JEE Main, JEE Advanced, KEAM, CLAT, CUET, CAT, GATE CS, SSC CGL, IBPS PO, UPSC CSE, NDA Paper 1, NIFT, NATA and UCEED build their complete objective paper with exact section quotas. UGC NET remains a practice set because Paper 2 is subject-specific and no subject is selected in the plan; the bulletin does not supply per-subject syllabi.
+- **Subjective design sections are excluded from objective mocks.** NATA A1–A3, UCEED Part B and NIFT Creative Ability cannot be scored from a stored key. The paper engine now omits them and records "subjective — not auto-scored" in section coverage, so a drawing slot is never filled with an unrelated MCQ. NATA therefore runs 50 objective questions, UCEED 57 and NIFT 100.
+- **AI-authored keys are mechanically checked, not guaranteed.** Every batch passes structural validation, a reasoning-leak filter, exact and near-duplicate checks, and `npm run questions:audit`, which compares the key with the last value proved by the explanation. That audit found one genuinely contradictory key in 1,137 questions (a polygon-angle item) and it was corrected. Remaining heuristic flags are intermediate values in correct explanations. A human spot-check is still required before treating an AI bank as publication-grade.
+- **Generation is resumable, not automatic.** Flash Lite served the authoring run, but transient `503` "high demand" responses interrupted several batches and quota limits how much can be authored in one day. Re-run `npm run generate:questions -- --exam=...` to fill any shortfall; the script never duplicates a stem.
+- **GATE CS learning topics and generated questions use different sources.** GATE questions are authored directly from the official GATE CS syllabus PDF (`--official` mode) and link to that document, but the curated learning-centre topic list for GATE still uses the shared Computer Awareness topics. The result review therefore relies on the closest-topic resolver for GATE, labelled as inferred, until the GATE topic catalogue is rewritten from the official sections.
+- **CAT and IBPS PO have no official topic list.** Their questions are authored from the curated topic map and labelled `CURATED_TOPICS`; the product does not claim an official topic-wise syllabus for them.
+- **Syllabus import coverage is complete but uneven in depth.** All 16 exams have at least one official document, 17 sources imported and 0 failed. Some documents are full syllabi (NEET, JEE, GATE), while CAT and IBPS PO contain pattern/marking only, and UGC NET describes Paper 2 without subject syllabi.
 - **PYQ import needs human-transcribed JSON.** There is no safe automatic PDF question extractor. The importer validates and stages structured files; it does not invent questions.
-- **Some result-page topic links are inferred.** Seeded questions are not all linked to a syllabus topic. The closest-topic resolver labels inferred matches honestly and falls back to a subject-level label rather than inventing a mapping.
+- **Some result-page topic links are inferred.** Seeded questions are not all linked to a syllabus topic, and GATE official-mode questions have no curated topic ID. The closest-topic resolver labels inferred matches honestly and falls back to a subject-level label rather than inventing a mapping.
 - **Email verification and OTP delivery are not active.** Accounts work, but email ownership is not proven. Do not treat the email field as verified.
 - **Self-registration is 18+ only.** Guardian-consent onboarding exists in the legacy schema but is not enabled for this product flow.
 - **Profile pictures are URLs, not uploads.** There is no file storage or image moderation.
 - **No paid plans or checkout.** Every new account receives a `FREE` subscription record; payment integration is not implemented.
 - **Calendar coverage is empty by design.** Real dates must be added by an administrator or imported from a verified source. No date is guessed.
-- **Syllabus and question coverage are curated, not exhaustive.** 109 questions and 1,456 topics exercise the loop; they do not claim complete exam readiness.
+- **Syllabus and question coverage are curated, not exhaustive.** 1,240 questions and 1,456 topics exercise the loop; they do not claim complete exam readiness. More AI-authored items improve variety across days, and the 1,456-topic catalogue still needs exam-specific rewrites in places (notably GATE CS and UGC NET Paper 2).
 - **Admin editing is intentionally narrow.** Admins can add categories/exam shells, edit exam configuration, generate patterns with AI, add syllabus topics, import bundles, inspect official sources, add/import calendar events, approve/archive questions and suspend candidates. Deleting or renaming categories, editing individual syllabus topics, editing calendar events and deleting candidates are not exposed.
 - **Legacy routes and screens remain.** Some older `/workspace`, `/practice/*`, `/learn/*`, `/progress-method` and `/admin/*` pages still exist for compatibility but are not linked from the new navigation. They may use the old design.
 - **Remote Neon latency is high in local development.** Page loads and submit actions can take seconds because each query is a network round trip. This is an environment characteristic, not a scoring shortcut; a local PostgreSQL instance would be faster for development.

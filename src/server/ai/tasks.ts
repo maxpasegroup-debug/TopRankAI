@@ -14,6 +14,120 @@ export const generatedQuestionSchema = z.object({
 });
 export type GeneratedQuestion = z.infer<typeof generatedQuestionSchema>["questions"][number];
 
+/**
+ * Batch-authoring contract for full-length papers. Unlike the interactive
+ * draft task this asks for a fixed four-option MCQ with an explicit zero-based
+ * correct index, which is what a paper needs to score deterministically.
+ */
+export const paperQuestionSchema = z.object({
+  questions: z.array(z.object({
+    topic: z.string().min(2).max(160),
+    text: z.string().min(15).max(4000),
+    difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
+    options: z.array(z.string().min(1).max(600)).length(4),
+    correctIndex: z.number().int().min(0).max(3),
+    explanation: z.string().min(20).max(4000),
+  })).min(1).max(20),
+});
+export type PaperQuestion = z.infer<typeof paperQuestionSchema>["questions"][number];
+
+const paperQuestionsResponseSchema: GeminiResponseSchema = {
+  type: "object",
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          topic: { type: "string" },
+          text: { type: "string" },
+          difficulty: { type: "string", enum: ["EASY", "MEDIUM", "HARD"] },
+          options: { type: "array", items: { type: "string" } },
+          correctIndex: { type: "integer" },
+          explanation: { type: "string" },
+        },
+        required: ["topic", "text", "difficulty", "options", "correctIndex", "explanation"],
+      },
+    },
+  },
+  required: ["questions"],
+};
+
+export type PaperQuestionInput = {
+  examName: string;
+  sectionName: string;
+  subjectName: string;
+  /** Topic titles with their curated descriptions, one per line. */
+  topics: string;
+  /** Quoted official syllabus passages that anchor the batch. */
+  syllabusText: string;
+  count: number;
+  examId: string;
+  userId?: string | null;
+  sourceReferences?: string[];
+  /** Stems already in the bank, so the model does not reproduce them. */
+  avoidStems?: string[];
+  model?: string;
+};
+
+/**
+ * Writes a batch of paper questions grounded in the official syllabus text.
+ * Structural validation happens in the caller; this only guarantees the shape.
+ */
+export function generatePaperQuestions(
+  input: PaperQuestionInput,
+): Promise<AiResult<PaperQuestion[]>> {
+  const syllabus = input.syllabusText.trim().slice(0, 6_000);
+  const avoid = (input.avoidStems ?? []).slice(0, 12).map((stem) => `- ${stem.slice(0, 140)}`);
+  return generateStructured({
+    operation: "generate_paper_questions",
+    userId: input.userId ?? null,
+    examId: input.examId,
+    model: input.model,
+    temperature: 0.72,
+    maxOutputTokens: 8_192,
+    timeoutMs: 120_000,
+    attempts: 1,
+    schema: paperQuestionSchema,
+    responseSchema: paperQuestionsResponseSchema,
+    system: `${SAFETY_RULE} You are a subject examiner writing an original mock paper for an Indian competitive exam. Questions must be answerable from the stated official syllabus, must have exactly one unambiguously correct option, and must not copy an existing question paper. ${JSON_RULE}`,
+    prompt: [
+      `Exam: ${input.examName}`,
+      `Section: ${input.sectionName}`,
+      `Subject: ${input.subjectName}`,
+      `Topics allowed in this batch:\n${input.topics}`,
+      syllabus ? `Official syllabus passages:\n${syllabus}` : "",
+      input.sourceReferences?.length ? `Official source(s): ${input.sourceReferences.join("; ")}` : "",
+      avoid.length ? `Do not repeat or lightly reword any of these existing questions:\n${avoid.join("\n")}` : "",
+      `Write ${input.count} single-correct multiple-choice questions. Spread them across the allowed topics and vary the difficulty.`,
+      "Rules: exactly four options; exactly one correct option; no \"all of the above\"/\"none of the above\"; numeric questions must still offer four concrete options; the explanation must justify the key and briefly say why the distractors are wrong.",
+      "Write the explanation as finished teacher-facing prose. Never include working notes, self-correction, option indexes, or phrases such as \"Wait\", \"Let me check\" or \"the correct index\".",
+      "Each question must be self-contained, use unambiguous wording and SI units. Do not mention the exam, the syllabus or the AI.",
+      "Set topic to one of the allowed topic titles exactly as written above.",
+      "Format: {\"questions\":[{\"topic\":\"...\",\"text\":\"...\",\"difficulty\":\"MEDIUM\",\"options\":[\"...\",\"...\",\"...\",\"...\"],\"correctIndex\":1,\"explanation\":\"...\"}]}",
+    ].filter(Boolean).join("\n"),
+  }).then((result) => {
+    if (!result.ok) return result;
+    const reasoningLeak = /\b(wait|let'?s check|let me|i need to|correct index|option index|index \d)\b/i;
+    const valid = result.data.questions.filter((question) => {
+      const options = question.options.map((option) => option.trim()).filter(Boolean);
+      if (options.length !== 4) return false;
+      if (new Set(options.map((option) => option.toLowerCase())).size !== 4) return false;
+      if (!Number.isInteger(question.correctIndex) || question.correctIndex < 0 || question.correctIndex > 3) return false;
+      if (reasoningLeak.test(question.explanation)) return false;
+      return question.explanation.trim().length >= 20;
+    });
+    if (!valid.length) {
+      return {
+        ok: false as const,
+        code: "INVALID_RESPONSE" as const,
+        message: "The AI returned questions that failed structural validation. Please try again.",
+      };
+    }
+    return { ...result, data: valid };
+  });
+}
+
 export const feedbackSchema = z.object({
   headline: z.string().min(3).max(140),
   summary: z.string().min(20).max(900),

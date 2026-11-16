@@ -5,7 +5,7 @@ import { generateExamFeedback, fallbackFeedback, type ExamFeedback } from "@/ser
 import { evaluateAchievements } from "./achievements";
 import type { CandidateExam } from "./candidate";
 import { notify } from "./notifications";
-import { findExamPart, readExamPattern, type PatternPart } from "./patterns";
+import { findExamPart, readExamPattern, type PatternPart, type PatternSection } from "./patterns";
 import { addDays, formatDate, percent, todayDate, toNumber } from "./utils";
 
 const answerSchema = z.array(z.object({
@@ -29,7 +29,13 @@ export type PaperMeta = {
 
 type PaperPlanQuestion = { questionId: string; section: string | null; marks: number; negativeMarks: number };
 
-type PoolItem = { questionId: string; subjectCode: string | null; marks: number; negativeMarks: number };
+type PoolItem = {
+  questionId: string;
+  subjectCode: string | null;
+  marks: number;
+  negativeMarks: number;
+  text: string;
+};
 
 type TopicRow = {
   id: string;
@@ -203,6 +209,36 @@ function readPaperQuestions(snapshot: unknown): PaperPlanQuestion[] {
 }
 
 /**
+ * Drawing/design sections are evaluated by human examiners and cannot be
+ * scored from a stored answer key. They stay in the official pattern for
+ * display, but an objective mock excludes them instead of quietly filling a
+ * sketching slot with an MCQ.
+ */
+function isSubjectiveSection(section: PatternSection) {
+  if (/subjective|drawing|sketch/i.test(section.note ?? "")) return true;
+  return section.marksPerQuestion === 0 && section.questionCount <= 1 && !section.mcqCount && !section.numericalCount;
+}
+
+function objectiveSections(part: PatternPart | null) {
+  return (part?.sections ?? []).filter((section) => !isSubjectiveSection(section));
+}
+
+function objectiveTotal(part: PatternPart | null, fallback: number) {
+  if (!part) return fallback;
+  const total = objectiveSections(part).reduce((sum, section) => sum + section.questionCount, 0);
+  return total > 0 ? total : Math.max(1, part.totalQuestions);
+}
+
+function objectiveMarks(part: PatternPart | null, fallback: number) {
+  if (!part) return fallback;
+  const total = objectiveSections(part).reduce(
+    (sum, section) => sum + (section.totalMarks ?? section.questionCount * section.marksPerQuestion),
+    0,
+  );
+  return total > 0 ? total : fallback;
+}
+
+/**
  * Practice papers stay substantial even when the reviewed bank cannot cover the
  * official count: half of the real paper (and never fewer than the configured
  * daily size), capped by what the bank actually holds.
@@ -212,36 +248,66 @@ function practiceSize(officialTotal: number, dailyTestQuestions: number) {
 }
 
 /**
+ * Two rows can hold the same question text under different IDs (imports and
+ * authoring runs both create rows). The paper must never show one stem twice,
+ * so the selector de-duplicates on normalized content as well as on ID.
+ */
+function contentFingerprint(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, " ").replace(/[^\p{L}\p{N} ]+/gu, "");
+}
+
+/**
  * Picks questions section by section. Section quotas are honoured while the
  * reviewed bank has matching subject questions; any shortfall is filled from
  * the remaining pool so the paper still reaches its target length. The returned
  * coverage is stored with the paper so the UI can state exactly how faithful
- * the paper is to the official blueprint.
+ * the paper is to the official blueprint. Subjective sections are reported but
+ * never filled with objective questions.
  */
 function selectPaperQuestions(pool: PoolItem[], part: PatternPart | null, target: number) {
   const used = new Set<string>();
+  const usedContent = new Set<string>();
   const picks: PaperPlanQuestion[] = [];
   const coverage: PaperMeta["sectionCoverage"] = [];
-  const officialTotal = part ? Math.max(1, part.totalQuestions) : target;
+  const sections = objectiveSections(part);
+  const officialTotal = part ? objectiveTotal(part, target) : target;
   const scale = Math.min(1, target / officialTotal);
 
-  if (part?.sections.length) {
-    for (const section of part.sections) {
+  const isNew = (item: PoolItem) => {
+    if (used.has(item.questionId)) return false;
+    const fingerprint = contentFingerprint(item.text);
+    return fingerprint.length > 0 && !usedContent.has(fingerprint);
+  };
+  const take = (item: PoolItem, sectionName: string | null, section?: PatternSection) => {
+    const marks = section
+      ? section.marksPerQuestion > 0
+        ? section.marksPerQuestion
+        : section.totalMarks && section.questionCount > 0
+          ? section.totalMarks / section.questionCount
+          : item.marks
+      : item.marks;
+    const negativeMarks = section ? section.negativeMarks : item.negativeMarks;
+    used.add(item.questionId);
+    usedContent.add(contentFingerprint(item.text));
+    picks.push({
+      questionId: item.questionId,
+      section: sectionName,
+      marks,
+      negativeMarks,
+    });
+  };
+
+  if (sections.length) {
+    for (const section of sections) {
       if (picks.length >= target) break;
       const sectionTarget = scale >= 1 ? section.questionCount : Math.max(1, Math.round(section.questionCount * scale));
       const desired = Math.max(0, Math.min(sectionTarget, section.questionCount, target - picks.length));
       let taken = 0;
       for (const item of pool) {
         if (taken >= desired) break;
-        if (used.has(item.questionId)) continue;
+        if (!isNew(item)) continue;
         if (section.subjectCode && item.subjectCode !== section.subjectCode) continue;
-        used.add(item.questionId);
-        picks.push({
-          questionId: item.questionId,
-          section: section.name,
-          marks: section.marksPerQuestion > 0 ? section.marksPerQuestion : item.marks,
-          negativeMarks: section.marksPerQuestion > 0 ? section.negativeMarks : item.negativeMarks,
-        });
+        take(item, section.name, section);
         taken += 1;
       }
       coverage.push({ name: section.name, required: section.questionCount, selected: taken });
@@ -250,9 +316,15 @@ function selectPaperQuestions(pool: PoolItem[], part: PatternPart | null, target
 
   for (const item of pool) {
     if (picks.length >= target) break;
-    if (used.has(item.questionId)) continue;
-    used.add(item.questionId);
-    picks.push({ questionId: item.questionId, section: null, marks: item.marks, negativeMarks: item.negativeMarks });
+    if (!isNew(item)) continue;
+    take(item, null);
+  }
+
+  if (part) {
+    for (const section of part.sections) {
+      if (!isSubjectiveSection(section)) continue;
+      coverage.push({ name: `${section.name} (subjective — not auto-scored)`, required: 0, selected: 0 });
+    }
   }
 
   return { picks, coverage };
@@ -266,8 +338,9 @@ async function buildDailyPaper(input: {
   today: Date;
 }) {
   const { userId, exam, part, pool, today } = input;
-  const officialTotal = Math.max(1, part?.totalQuestions ?? exam.totalQuestions);
+  const officialTotal = part ? objectiveTotal(part, exam.totalQuestions) : Math.max(1, exam.totalQuestions);
   const officialDuration = Math.max(10, part?.durationMinutes ?? exam.durationMinutes);
+  const officialMarksTotal = part ? objectiveMarks(part, part.totalMarks) : exam.totalQuestions * exam.positiveMarks;
   const isFullMock = pool.length >= officialTotal;
   const target = isFullMock ? officialTotal : Math.min(pool.length, practiceSize(officialTotal, exam.dailyTestQuestions));
 
@@ -302,7 +375,7 @@ async function buildDailyPaper(input: {
     meta: {
       mode,
       officialTotal,
-      officialMarks: part?.totalMarks ?? marksTotal,
+      officialMarks: Math.round(officialMarksTotal * 100) / 100,
       officialDurationMinutes: officialDuration,
       sectionCoverage: coverage,
     } satisfies PaperMeta,
@@ -379,7 +452,7 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam) {
       questionId: true,
       marks: true,
       negativeMarks: true,
-      question: { select: { subject: { select: { code: true } } } },
+      question: { select: { text: true, subject: { select: { code: true } } } },
     },
   });
 
@@ -396,6 +469,7 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam) {
       subjectCode: item.question.subject.code,
       marks: toNumber(item.marks),
       negativeMarks: toNumber(item.negativeMarks),
+      text: item.question.text,
     })),
     today,
   });

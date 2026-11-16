@@ -2,7 +2,7 @@ import { prisma } from "@/server/db";
 import { getEnv } from "@/server/env";
 import { logger } from "@/server/logger";
 
-export type AiFailureCode = "NOT_CONFIGURED" | "FAILED" | "INVALID_RESPONSE";
+export type AiFailureCode = "NOT_CONFIGURED" | "FAILED" | "INVALID_RESPONSE" | "QUOTA";
 
 export type AiResult<T> =
   | { ok: true; data: T; provider: string; model: string; latencyMs: number }
@@ -23,6 +23,8 @@ type StructuredRequest<T> = {
   responseSchema?: GeminiResponseSchema;
   userId?: string | null;
   examId?: string | null;
+  /** Overrides GEMINI_MODEL for this request (used by batch authoring tools). */
+  model?: string;
   temperature?: number;
   maxOutputTokens?: number;
   timeoutMs?: number;
@@ -79,7 +81,7 @@ async function callGemini(apiKey: string, model: string, request: StructuredRequ
 export async function generateStructured<T>(request: StructuredRequest<T>): Promise<AiResult<T>> {
   const env = getEnv();
   const apiKey = env.GEMINI_API_KEY;
-  const model = env.GEMINI_MODEL;
+  const model = request.model?.trim() || env.GEMINI_MODEL;
   if (!apiKey) {
     return { ok: false, code: "NOT_CONFIGURED", message: "AI is not configured. Add GEMINI_API_KEY to enable it." };
   }
@@ -111,7 +113,14 @@ export async function generateStructured<T>(request: StructuredRequest<T>): Prom
   const latencyMs = Date.now() - startedAt;
   await logUsage({ request, model, success: false, latencyMs, promptChars: request.prompt.length, responseChars: 0, error: lastError });
   logger.warn({ operation: request.operation, error: lastError }, "AI request failed");
-  return { ok: false, code: "FAILED", message: "The AI service did not respond correctly. Please try again." };
+  const quotaBlocked = /\b429\b|RESOURCE_EXHAUSTED|quota/i.test(lastError);
+  return {
+    ok: false,
+    code: quotaBlocked ? "QUOTA" : "FAILED",
+    message: quotaBlocked
+      ? `The Gemini quota for ${model} is exhausted. ${lastError.slice(0, 260)}`
+      : "The AI service did not respond correctly. Please try again.",
+  };
 }
 
 async function logUsage(input: {

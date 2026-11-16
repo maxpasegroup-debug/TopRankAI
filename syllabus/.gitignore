@@ -1,0 +1,5 @@
+# Original documents are downloaded by `npm run syllabus:sync` and stay local.
+# They are large (about 50 MB together) and belong to the exam authorities, so
+# the repository keeps only the URL manifest and the extracted text.
+*.pdf
+*.html

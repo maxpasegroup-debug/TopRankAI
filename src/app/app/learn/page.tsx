@@ -1,6 +1,7 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { requireAuth } from "@/server/auth/session";
+import { prisma } from "@/server/db";
 import { getActiveExam } from "@/server/platform/active";
 import { getSyllabusCompletion } from "@/server/platform/candidate";
 import { getSyllabusView } from "@/server/platform/insights";
@@ -31,6 +32,11 @@ export default async function LearnPage() {
   }
 
   const [view, completion] = await Promise.all([getSyllabusView(user.id, exam), getSyllabusCompletion(user.id, exam.examId)]);
+  const officialSources = await prisma.syllabusSource.findMany({
+    where: { examId: exam.examId, status: "IMPORTED" },
+    orderBy: { fetchedAt: "desc" },
+    select: { id: true, label: true, url: true },
+  });
   const statusCounts = view.subjects.reduce(
     (acc, subject) => {
       for (const unit of subject.units) {
@@ -50,7 +56,7 @@ export default async function LearnPage() {
     <>
       <div className="tp-page-head">
         <div>
-          <div className="tp-eyebrow">{exam.category ?? "Syllabus"} · {exam.shortName ?? exam.name}</div>
+          <div className="tp-eyebrow">{exam.category ?? "Syllabus"} Â· {exam.shortName ?? exam.name}</div>
           <h1>Learning centre</h1>
           <p>Every unit, chapter and topic mapped to your exam. Mark topics as you study them.</p>
         </div>
@@ -143,10 +149,22 @@ export default async function LearnPage() {
       )}
 
       <div className="tp-note tp-mt-32">
-        <strong>Where this comes from.</strong> The syllabus library is curated from publicly published official
-        syllabi. There is no single free official API for every Indian exam, so an administrator maintains this
-        data and links the official website on each exam page.
+        <strong>Where this comes from.</strong> Each topic page quotes the matching passage from the exam
+        authority&apos;s own syllabus document. The document is kept locally so the wording can be checked; the
+        link below opens the original.
+        {officialSources.length ? (
+          <div className="tp-stack tp-gap-6" style={{ marginTop: 10 }}>
+            {officialSources.map((source) => (
+              <a className="tp-link" key={source.id} href={source.url} target="_blank" rel="noopener noreferrer">
+                {source.label} <Icon name="arrow-right" size={12} />
+              </a>
+            ))}
+          </div>
+        ) : (
+          <span> No official document has been imported for this exam yet.</span>
+        )}
       </div>
     </>
   );
 }
+

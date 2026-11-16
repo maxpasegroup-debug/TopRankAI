@@ -1,0 +1,2534 @@
+Information
+December-2026
+Bulletin
+UGC-NET
+University Grants Commission (UGC)
+ugcnet.nta.nic.in
+
+National Testing Agency
+
+Vision
+The right candidates joining best institutions will give India her
+demographic dividend.
+
+Mission
+To improve equity and quality in education by administering
+research based valid, reliable, efficient, transparent, fair and
+international level assessments. The best subject matter experts,
+psychometricians and IT delivery and security professionals will
+ensure that the current gap in existing assessment systems are
+properly identified and bridged.
+
+Core Values
+NTA will create a system which will promote teaching (by
+teachers), learning (by students) and assessment (by parents and
+institutions). NTA strongly believes in quality, efficiency,
+effectiveness, equity and security of assessments. To practice
+these values, NTA will constantly engage with its stakeholders,
+viz. students, parents, teachers, experts and partner institutions.
+
+Information Bulletin UGC-NET December 2026 Examination
+2 | P a g e
+TABLE OF CONTENTS
+S. No. Description Page No.
+A Important Information, Dates at a Glance, Fee Structure & Application Procedure 4
+Chapter – 1. Introduction 8-10
+1.1 About National Testing Agency (NTA) 9
+1.2 About University Grants Commission (UGC) 9
+1.3 University Grants Commission-National Eligibility Test (UGC-NET) 9
+Chapter – 2. Eligibility and Qualification 11-15
+2.1 Qualifying Examination 12
+2.2 Instructions 13
+2.3 Exemption (Eligibility for Assistant Professor) 14
+2.4 Age Limit and Relaxation 14
+Chapter – 3. Examination Scheme 16-18
+3.1 Mode of Examination 17
+3.2 Pattern of Examination 17
+3.3 Subject and Syllabus of Test 17
+3.4 Medium of Question Paper 17
+3.5 Marking Scheme 17
+Chapter – 4. Reservations 19-22
+4.1 Reservation Policy of the Government of India is applicable to UGC- NET 20
+4.2 Provisions relating to Persons with Disability (PwD)/ Persons with Benchmark Disability (PwBD) 20
+Chapter – 5. Choice of Examination Cities 23-24
+Chapter – 6. e-Admit Card 25-26
+Chapter – 7. Schedule of Examination 27-28
+Chapter – 8. Important Instructions for the Candidates 29-31
+Chapter – 9. Unfair Means Practices and Breach of Examination Rules 32-34
+9.1 Unfair Means Practices and Breach of Examination Rules 33
+9.2 Punishment for using unfair means practices 33
+9.3 Cancellation of result 34
+Chapter – 10. Barred Items and Dress Code 35-36
+10.1 Barred Items 36
+10.2 Dress Code 36
+Chapter – 11. Key Challenges and Result 37-39
+11.1 Display of Provisional Answer Key(s) for Challenges 38
+11.2 Display of Recorded Responses 38
+11.3 Procedure and Criteria for declaration of result 38
+Chapter – 12. Miscellaneous 40-41
+12.1 Grievance / Correspondence with NTA 41
+12.2 NTA Weeding Out Rules 41
+12.3 Legal Jurisdiction 41
+
+Information Bulletin UGC-NET December 2026 Examination
+3 | P a g e
+Annexure
+Annexure – I Payment of Exam Fee – Procedure/Mode/Service Provider (s), Services Charges and Helpdesk 43
+Annexure – II List of UGC- NET Subjects and their Codes and Syllabus 45
+Annexure – III List of Exam Cities for Centres of UGC-NET December 2026 48
+Annexure – IV List of Subjects at Post Graduation level and their codes 55
+Annexure – V List of Post-Graduation Courses and their Codes 56
+Annexure – VI Certificate regarding Physical Limitation to write in an examination 57
+Annexure – VII Letter of Undertaking for Using Own Scribe 58
+Annexure – VIII
+Certificate for person with specified disability covered under the
+definition of Section 2 (s) of the RPwD Act, 2016 but not covered under
+the definition of Section 2 (r) of the said Act, i.e. persons having less
+than 40% disability and having difficulty in writing.
+59
+Annexure – IX Procedure for Appearing in Computer Based Test (CBT) 60
+Annexure – X Computation of Percentile Score for Subjects Conducted in a Single Shift 62
+Annexure – XI Normalisation of Marks for Subjects Conducted in More than One Shift (Equi-percentile Method) 64
+Annexure – XII Gazette Notification for PwD/PwBD Candidate 69
+Annexure – XIII Registration Form Replica 72
+
+Information Bulletin UGC-NET December 2026 Examination
+4 | P a g e
+IMPORTANT INFORMATION AND DATES AT A GLANCE
+Dates, Fee Details and Application Procedure
+EVENTS DATES
+Online registration and submission of Application
+Form (complete in all respects) through NTA
+Website: https://ugcnet.nta.nic.in/
+08 October 2026 to 28 October 2026
+(up to 11:50 P.M.)
+Last date for successful transaction of Examination
+fee (through Credit Card/ Debit Card/Net
+Banking/UPI Payment Modes 28 October 2026 (up to 11:50 P.M.)
+Late Submission of online application Form with Late Fee Rs. 500/-*
+Late Submission of online application Form 29 October 2026 to 31 October 2026 (up to 11:50 P.M.)
+Last Date of Successful Transaction with Late Fee
+through Credit/ Debit Cards/Net-Banking/UPI 31 October 2026 (up to 11:50 P.M.)
+Correction in the Particulars of Application Form
+online only
+02 November 2026 to 04 November
+2026 (up to 11:50 P.M.)
+Intimation of Cities of exam centres 23 November 2026
+Downloading of Admit Card by the Candidate from
+NTA Website 07 December 2026
+Dates of Examination 14 December 2026 to 18 December 2026 and 21 December 2026
+Duration of Examination 180 minutes (03 hours) No break between Paper 1 & Paper 2
+Timing of Examination To be Intimated later
+Exam Centre, Date and Shift As indicated on the Admit Card
+Display of Recorded Responses and Provisional
+Answer Keys on the Website for inviting
+challenge(s) from Interested candidates. To be announced later
+Declaration of Result on NTA website To be announced later
+Website(s)
+https://nta.ac.in/
+https://ugcnet.nta.nic.in/
+* Rs. 500 is an additional late fee over and above the applicable category-wise examination fee,
+and it applies uniformly.
+Fee Payable for UGC-NET December 2026
+(Pay fee using the Payment Gateway(s) integrated to the Online Application through
+Net Banking Debit Card / Credit Card / UPI)
+General/Unreserved Rs. 1150/-
+Gen-EWS*/ OBC-NCL** Rs. 600/-
+Scheduled Caste (SC) / Scheduled Tribes (ST) / Third Gender Rs. 325/-
+Person with Disability (PwD) / Persons with Benchmark Disability (PwBD) Rs. 325/-
+Applicable service/processing charges & GST over and above the Examination Fee, are to be
+Paid by the candidate to the concerned Bank/ Payment Gateway Integrator. For details,
+Annexure – I, may be referred to.
+*As per the OM No. 20013/01/2018-BC-II dated January 17, 2019, issued by the Ministry of Social Justice
+and Empowerment and the OM No. 12-4/2019-U1 dated 17.01.2019 as well as the Letters No 35-2/2019-
+dated 21.01.2019, 01.02.2019, 04.02.2019 and 15.02.2019 of MHRD Department of Higher Education regarding
+implementation of reservation for Economically Weaker Sections (EWSs) for admission in Central
+Educational Institutions.
+**OBC (Other Backward Classes)-NCL (Non-Creamy Layer) as per the central list of Other Backward
+Classes available on National Commission for Backward Classes (NCBC- Government of India website
+www.ncbc.nic.in).
+
+Information Bulletin UGC-NET December 2026 Examination
+5 | P a g e
+
+The candidates falling in this list may mention OBC in the Category Column.
+State list OBC Candidates who are not in OBC-NCL (Central List) must choose General / Unreserved.
+a. Candidate must read carefully the Instructions (including how to fill up Application Form online)
+given in the Information Bulletin available on the NTA Website. Candidates not complying with
+the Instructions shall be summarily disqualified.
+
+b. Candidate can apply for UGC-NET December 2026 through “Online” mode only. The
+Application Form in any other mode will not be accepted.
+
+c. Instructions for filling Online Application Form:
+
+❖ Download Information Bulletin and Replica of Application Form. Read these carefully to
+ensure your eligibility.
+
+❖ Meri Pehchaan-National Single Sign-On (NSSO) Platform
+The Ministry of Electronics and Information Technology (MeitY), Government of India, has
+developed a National Single Sign-On (NSSO) platform titled "Meri Pehchaan" in collaboration
+with the National Informatics Centre (NIC), Centre for Development of Advanced Computing
+(C-DAC), and National e-Governance Division (NeGD). The platform was launched on 4th July
+2022 to facilitate seamless access to multiple Government services through a single set of login
+credentials.
+Meri Pehchaan enables users to authenticate themselves once and securely access various
+integrated applications without the need for repeated sign-ins. The platform integrates multiple
+identity providers such as Jan Parichay, Digi Locker, and e-Pramaan, thereby ensuring
+interoperability and a unified user experience.
+Users can register on the platform using basic details such as name, date of birth, and mobile
+number, and may complete verification through eKYC using Aadhaar, PAN, Driving Licence
+or APAAR. The platform supports advanced features such as multi-factor authentication,
+password-less login, and the ability to manage multiple accounts linked to a single mobile
+number.
+The NSSO framework significantly reduces the burden of maintaining multiple credentials,
+enhances data security, and provides a standardized authentication mechanism for
+Government services. It also benefits service providers by reducing the cost and complexity of
+developing independent authentication systems.
+Meri Pehchaan thus serves as a secure, scalable, and citizen-centric digital identity solution,
+contributing to the vision of Digital India by improving ease of access to Government-to-Citizen
+(G2C) services.
+Application form registration has been enabled through the Single Sign-On (SSO) service-Meri
+Pehchan of Ministry of Electronics and Information Technology, for the convenience of the
+applicants.
+
+❖ Follow the steps given below to Apply Online:
+Step-1: Apply for Online Registration using own Email Id and Mobile No.
+Step-2: Fill in the Online Application Form and note down the system generated Application
+Number. The candidate will have to upload his/her live photograph at the time of filling of the
+application form and will also have to upload scanned images of: (i) a recent photograph (file
+size 10kb-200kb) either in colour or black & white with 80% face (without mask) visible
+including ears against white background; (ii) candidate’s signature (file size: 10kb-50kb); (iii)
+Scanned copy of Disability/UDID certificate should be a pdf between (50 kb to 300 kb) (clearly
+legible).
+Note: -
+NTA reserves the right for verification of the candidate’s details and photographs. Candidates
+are advised to update their details on Aadhaar Card with their recent Photograph, Name, Date
+of Birth, Gender, Address etc. (for updation in Aadhaar, please follow UIDAI Guidelines).
+
+Information Bulletin UGC-NET December 2026 Examination
+6 | P a g e
+
+For capturing Live Photograph, candidates should switch on their camera or connect their
+webcam to the device used for filling the Application Form. If your device does not support a
+webcam, QR code on the right can be scanned by the candidate using a mobile device/tablet
+etc. Candidates should ensure there is a light-colored background with proper lighting, and
+80% face visibility (including ears, without a mask).
+For PwD/PwBD candidates, the details of the UDID Card as uploaded will be verified from
+UDID portal of the Department of Empowerment of Persons with Disabilities (DePwD). Those
+who do not have UDID Card should upload Disability Certificate in the proper format and the
+same may be verified by NTA from the issuing authority. Any mismatch or validation issue
+occurred during verification through UDID portal will only be corrected through correction
+window as and when notified by NTA during Application Procedure. After the correction
+window closes, no claims of PwD/PwBD shall be entertained.
+The Candidate has to upload his/ her own photograph, signature, and certificate(s) as
+mentioned above (and not of anybody else) in a correct/proper manner. In case, it is found at
+any time in the future that the Candidate has used/uploaded the photograph, signature, and
+certificate(s) of someone else in his/her Application Form/admit card, or he/she has tampered
+his/her Admit Card/Result/Scorecard, these acts of the candidate shall be treated as Unfair
+Means (UFM) Practices and treated with the suitable actions as contemplated under the
+provisions of the Information Bulletin relating to Unfair Means Practices.
+Step-3: Pay fee using SBI/CANARA/UBI / Debit Card/Credit Card/UPI and keep proof of fee
+paid.
+
+❖ Download, save and print a copy of Confirmation Page of the Application Form (which would
+be downloadable only after successful remittance of fee) for future reference.
+
+❖ All the three Steps can be done together or at separate timings. The submission of Application
+of a candidate could be considered as successful, and his/her candidature would be confirmed
+only on the successful transaction/receipt of the prescribed application fee from him/her.
+
+d. The Confirmation Page of the online Application Form will be generated only after successful
+payment by the Candidate.
+➢ In case the Confirmation Page is not generated after payment of fee, then the candidate should
+approach the concerned Bank/Payment Gateway (in the helpline no. and email given in
+Annexure – I of the Information Bulletin) for ensuring the successful payment or for obtaining
+the refund of duplicate / multiple payments.
+➢ However, if in spite of above action payment has not been successfully made it means that the
+transaction has not been completed, and the amount not reflected in the NTA account. Such
+amount will be refunded to concerned Credit/Debit Card/UPI on reconciliation after the
+declaration of result by the concerned bank. Therefore, such candidates have to pay the fee once
+again and ensure the fee status as successful.
+e. Candidates shall ensure that the information entered by them in their respective online
+Application Form is correct.
+
+f. Information such as his/her name, contact details/address, category, PwD/PwBD status,
+educational qualification details, date of birth, choice of exam cities, provided by the candidate in
+the online application form will be treated as final. Any request for change in such particulars after
+the closure of correction period will not be considered by NTA.
+
+g. Following the completion of examination process, corrections in the details specified in the
+certificate may be considered only under special circumstances. This is contingent upon the
+submission of the necessary documentation and approval by the competent authority.
+
+h. NTA does not edit /modify/alter any information entered by the candidates under any
+circumstances. Any request for change in information after submission of Application Form will
+
+Information Bulletin UGC-NET December 2026 Examination
+7 | P a g e
+
+not be entertained after the closure of correction window subject to NTA's permitted fields.
+Therefore, candidates are advised to exercise utmost caution for filling up correct details in the
+Application Form.
+
+i. NTA disclaims any liability that may arise to a candidate(s) due to incorrect information provided
+by him/her in his/her online Application Form.
+
+j. Candidates must ensure that their email address and mobile number to be registered in their online
+Application Form are their own, as relevant/important information/ communication will be sent
+by NTA through e-mail on the registered e-mail address and / or through SMS on registered mobile
+number only. NTA shall not be responsible for any non-communication / miscommunication with
+a candidate in the email address or mobile number given by him/her other than his/her own.
+Candidates are advised to visit the NTA Website and check their e-mails regularly for latest
+updates.
+k. Candidates shall appear at their own cost at the Examination Centre on the Date, Shift and time
+indicated on their Admit Cards issued by the NTA in due course through its Website.
+
+Notes:
+i. The final submission of Online Application Form will remain incomplete if Step-2 and step-3 are
+not completed. Such forms will stand rejected and no correspondence on this account will be
+entertained.
+ii. No request for refund of fee once remitted by the candidate will be entertained by NTA under
+any circumstances. This condition applies to a successfully completed single application-fee
+payment. Failed or duplicate transactions shall be dealt with under the verified refund procedure.
+iii. NTA intends to provide an additional facility through the UMANG and DigiLocker platforms to
+enable candidates to download examination-related documents such as the Score Card and other
+relevant records. Detailed instructions regarding this facility will be issued in subsequent phases.
+Candidates are advised to visit the NTA website and check their registered e-mails regularly for
+updates.
+iv. The entire application process for UGC-NET December 2026 is online, including uploading of
+live photographs and scanned images, payment of fees, and printing of confirmation page, admit
+card, etc. Therefore, candidates are not required to send/submit any document(s) including
+confirmation page to NTA through Post/ Fax/WhatsApp/Email/by Hand.
+v. Usage of Data and Information: NTA/Government of India can use the data provided by the End
+Users (test taker in this case) for internal purpose(s), including training, research and
+development, analysis, and other permissible purpose(s). This data can be shared by the
+UGC/NTA with Higher Educational Institutions (HEIs) for admission to Ph.D. programmes and
+with Public Sector Undertakings (PSUs) & other organizations for their recruitment processes.
+Notes:
+1. In case it is found at any time in future that the Candidate has used / uploaded the photograph
+and signature of someone else in his/ her Application Form / Admit Card or he/she has
+tampered his/her Admit Card / result, these acts of the candidate shall be treated as Unfair
+Means (UFM) Practices on his/her part and he/she shall be proceeded with the actions as
+contemplated under the provisions of the Unfair Means Practices given in Information Bulletin.
+2. For capturing Live Photograph, candidates should switch on their camera or connect their
+webcam to the device used for filling the Application Form. If your device does not support a
+webcam, QR code on the right can be scanned by the candidate using a mobile device/tablet etc.
+Candidates should ensure there is a light-colored background with proper lighting, and 80% face
+visibility (including ears, without a mask).
+
+Information Bulletin UGC-NET December 2026 Examination
+8 | P a g e
+
+Chapter – 1
+
+[INTRODUCTION]
+
+Information Bulletin UGC-NET December 2026 Examination
+9 | P a g e
+
+1.1 About National Testing Agency (NTA)
+The Ministry of Education (MoE), Government of India (GOI) has established the National Testing
+Agency (NTA) as an independent, autonomous, and self-sustained premier testing organization
+under the Societies Registration Act (1860) for conducting efficient, transparent and international
+standards tests in order to assess the competency of candidates for admissions to premier higher
+education institutions.
+
+The NTA has been entrusted by the University Grants Commission (UGC) with the task of
+conducting UGC-NET which is a test to determine the eligibility of Indian nationals for ‘award of
+Junior Research Fellowship and appointment as Assistant Professor’, ‘appointment as Assistant
+Professor and admission to Ph.D.’ and ‘admission to Ph.D. only’ in Indian universities and
+colleges.
+
+1.2 About University Grants Commission (UGC)
+The University Grants Commission (UGC) is a Statutory Body of Government of India, Ministry of
+Education, Department of Higher Education, constituted under the University Grants Commission
+Act, 1956 (3 of 1956), vested with two responsibilities: that of providing funds and that of
+coordination, determination and maintenance of standards in institutions of higher education. The
+UGC`s mandate includes:
+➢ Promoting and coordinating university education.
+➢ Determining and maintaining standards of teaching, examination and research in universities.
+➢ Framing regulations on minimum standards of education.
+➢ Monitoring developments in the field of collegiate and university education; disbursing
+grants to the universities and colleges.
+➢ Serving as a vital link between the Union and State governments and institutions of higher
+learning.
+➢ Advising the Central and State governments on the measures necessary for improvement of
+university education.
+
+1.3 University Grants Commission – National Eligibility Test (UGC-NET)
+(a) UGC-NET is a test to determine the eligibility of Indian nationals for ‘award of Junior Research
+Fellowship and appointment as Assistant Professor’, ‘appointment as Assistant Professor and
+admission to Ph.D.’ and ‘admission to Ph.D. only’ in Indian universities and colleges.
+
+➢ The candidates qualifying under the ‘appointment as Assistant Professor and admission to
+Ph.D.’ category will be eligible for appointment as Assistant Professor and admission to
+Ph.D. but not for the award of JRF.
+➢ The candidates qualifying under the ‘admission to Ph.D. only’ category will be eligible
+for admission to Ph.D. only but not for the award of JRF and/or appointment as Assistant
+Professor.
+➢ The eligibility will be determined in the following manner:
+Qualified for Eligible for JRF Assistant Professor Ph.D. admission
+Category-1: Award of JRF and
+appointment as Assistant Professor Yes Yes Yes
+Category-2: Appointment as Assistant
+Professor and admission to Ph.D. No Yes Yes
+Category-3: Admission to Ph.D. only No No Yes
+➢ The JRF-qualified candidates are admitted into the Ph.D. programme based on an
+
+Information Bulletin UGC-NET December 2026 Examination
+10 | P a g e
+
+interview as per the UGC (Minimum Standards and Procedures for Award of Ph.D.
+Degree) Regulations, 2022.
+➢ UGC-NET under category-2 & category-3 can be used as an entrance test for Ph.D.
+admission in place of entrance tests conducted by the different universities/HEIs for
+admission to Ph.D.
+➢ For candidates qualified under the category-2 and category-3, the marks obtained in
+the NET will have 70% weightage and 30% weightage will be based on the performance
+in the interview/viva voce conducted by the University/HEI concerned. The Ph.D.
+admission will be based on the combined merit of NET marks and the marks obtained in
+the interview/viva voce.
+➢ For admission to Ph.D., the marks obtained in the NET by the candidates in category-2
+and category-3 will be valid for a period of one year from the date of declaration of the
+result of UGC-NET.
+➢ The number of candidates who will be qualified for ‘admission to the Ph.D. only’ will be
+decided by the results committee.
+➢ The result of NET will be declared in marks, along with the Percentile Score, so that the
+marks can be used for admission to Ph.D. Each subject is planned to be conducted in a
+single shift, and the Percentile Score will be computed as per Annexure X on the aggregate
+marks of Paper I and Paper II. In case the test for a subject is conducted in two or more
+shifts, the marks of that subject will be normalised using the Equi-percentile method as
+per Annexure XI, and the result for that subject will be declared in normalised marks
+along with the Percentile Score.
+(b) The selection of candidates for the following Fellowships will be made through the Ministry of
+Social Justice and Empowerment:
+• National Fellowship for Scheduled Caste Students (NFSC)
+• National Fellowship for Other Backward Classes (NFOBC)
+• National Fellowship for Persons with Disabilities (NFPwD)
+(c) The data of UGC-NET candidates can be shared by the UGC/NTA with Higher Educational
+Institutions (HEIs) for admission to Ph.D. programmes and with Public Sector Undertakings
+(PSUs) & other organizations for their recruitment processes.
+
+Information Bulletin UGC-NET December 2026 Examination
+11 | P a g e
+
+Chapter – 2
+[Eligibility and Qualification]
+
+Information Bulletin UGC-NET December 2026 Examination
+12 | P a g e
+
+2. Eligibility Criteria for UGC-NET December 2026
+2.1 Qualifying Examination:
+(a) General/Unreserved/General-EWS candidates who have secured at least 55% marks
+(without rounding off) in Master’s Degree or equivalent examination from
+universities/institutions recognized by UGC (available on the website: www.ugc.ac.in in
+Humanities and Social Science (including languages), Computer Science and Applications,
+Electronic Science etc. are eligible for this Test. List of subjects at Post Graduation level is
+attached as Annexure – IV. The Other Backward Classes (OBC) belonging to Non-Creamy
+Layer/Scheduled Caste (SC)/Scheduled Tribe (ST)/Persons with Disability (PwD) /
+Persons with Benchmark Disability (PwBD)/Third gender category candidates who have
+secured at least 50% marks (without rounding off) in Master’s degree or equivalent
+examination are eligible for this Test.
+(b) Candidates who are pursuing their Master’s degree or equivalent course or candidates who
+have appeared for their qualifying Master’s degree (final year) examination and whose
+result is still awaited or candidates whose qualifying examinations have been delayed may
+also apply for this test. However, such candidates will be admitted provisionally and shall
+be considered eligible for award of JRF/eligibility for Assistant Professor only after they
+have passed their Master’s Degree or equivalent examination with at least 55% marks (50%
+marks in case of OBC-NCL/ SC / ST / PwD/PwBD / Third gender category candidates).
+Such candidates must complete their Master’s degree or equivalent examination within two
+years from the date of NET result with required percentage of marks, failing which they
+shall be treated as disqualified.
+However, those candidates who qualify for ‘Admission to Ph.D. Only’ must complete their
+Master’s degree or equivalent examination within one year from the date of NET result with
+required percentage of marks, failing which they shall be treated as disqualified.
+(c) Candidates belonging to the Third gender category are eligible to draw the same relaxation
+in fee, age and Eligibility Criteria for NET (i.e. JRF and Assistant Professor) as are available
+to SC/ST/PwD/PwBD categories. The subject-wise qualifying cut-offs for this category
+would be the lowest among those for SC / ST / PwD/PwBD / OBC–NCL / General-EWS
+categories in the corresponding subject.
+(d) The Ph.D. degree holders whose Master’s level examination have been completed by 19
+September 1991 (irrespective of date of declaration of result) shall be eligible for a relaxation
+of 5% in aggregate marks (i.e. from 55% to 50%) for appearing in NET. The list of Post-
+Graduation courses and their codes is given at Annexure – V.
+(e) Candidates are advised to appear in the subject of their Post-Graduation only. The
+candidates whose Post Graduation subject is not covered in the list of NET subjects attached
+as Annexure – II, may appear in a related subject.
+(f) The candidates having passed a 4-year/8-semester bachelor’s degree programme should
+have a minimum of 75% marks in aggregate or its equivalent grade on a point scale
+wherever the grading system is followed. A relaxation of 5% marks or its equivalent grade
+may be allowed for those belonging to SC/ST/OBC (non-creamy layer)/Differently-Abled,
+Economically Weaker Section (EWS) and other categories of candidates as per the decision
+
+Information Bulletin UGC-NET December 2026 Examination
+13 | P a g e
+
+of the Commission from time to time (refer to University Grants Commission (Minimum
+Standards and Procedures for Award of Ph.D. Degree) Regulations, 2022
+https://www.ugc.gov.in/pdfnews/0909572_Minimum-Standards-and-Procedure-for-Award-of-
+PhD-Degree.pdf)
+The candidates qualifying in the NET, based on a four-year undergraduate degree, will be
+eligible for the award of the Junior Research Fellowship (JRF) and for admission to the Ph.D.
+The candidates qualifying in the NET, based on a four-year undergraduate degree, will not
+be eligible for appointment as Assistant Professor.
+The candidates who are pursuing Four Year/8 Semester Bachelor’s Degree Programme and
+are in their last semester/year may also apply for the test. However, such candidates will
+be admitted provisionally and shall be considered eligible for the award of JRF/admission
+to Ph.D. only after fulfilling the requirements contained in the University Grants
+Commission (Minimum Standards and Procedures for Award of Ph.D. Degree)
+Regulations, 2022 within two years (if qualified for award of JRF)/within one year (if
+qualified for admission to Ph.D. only) from the date of declaration of the NET result, failing
+which they shall be treated as disqualified.
+(g) The candidates with a Four-Year Bachelor’s Degree Programme are allowed to appear in a
+subject (the List of Subjects and their Codes for UGC-NET December 2026 are given at
+Annexure-II) in which they want to pursue a Ph.D. irrespective of the discipline in which
+they have obtained the four-year bachelor’s degree.
+(h) Candidates are neither required to send any certificates/documents in support of their
+eligibility nor printout of their Application Form or Confirmation Page to NTA. However,
+the candidates, in their own interest, must ensure themselves about their eligibility for the
+test. In the event of any ineligibility being detected by the UGC/NTA at any stage, their
+candidature will be cancelled, and they shall be liable for legal action. NTA does not verify
+the information provided by the candidates during online registration and hence
+candidature will be purely provisional subject to the fulfillment of eligibility criteria.
+Candidates holding a foreign qualification are advised, in their own interest, to obtain
+equivalence of their qualification from the University Grants Commission (UGC).
+Attention is invited to the University Grants Commission (Recognition and Grant of
+Equivalence to Qualifications Obtained from Foreign Educational Institutions) Regulations,
+2025 published in the Gazette of India on 04th April, 2025. For more clarification candidates
+are requested to contact NET Bureau.
+The Candidates with Post-Graduate diploma awarded by an Indian Institute should in their
+own interest, ascertain the equivalence of their diploma with Master’s degree of recognized
+Indian Universities from Association of Indian Universities (AIU).
+2.2 Instructions
+(i) The eligibility in NET will depend on the performance of the candidate in both the sections
+of UGC-NET in aggregate. However, the candidates qualifying exclusively for ‘Assistant
+Professor and admission to Ph.D.’ or for ‘admission to Ph.D. only’ will not be considered
+for the award of JRF. Candidates appearing in UGC-NET should Application form
+registration has been enabled thoughtfully select the various options available in the
+Application Form.
+Candidates who qualify the Test for eligibility for Assistant Professor will be governed by
+the rules and regulations for recruitment of Assistant Professor of the concerned
+
+Information Bulletin UGC-NET December 2026 Examination
+14 | P a g e
+
+Universities / Colleges/ State governments, as the case may be.
+(ii) The candidates who qualify for the award of JRF are eligible to pursue research in the subject
+of their post-graduation or in a related subject and are also eligible for Assistant Professor.
+The universities, institutions, IITs and other national organizations may select the JRF
+awardees for full time research work in accordance with the procedure prescribed by them.
+
+(iii) Junior Research Fellowship: Candidates qualifying for the award of JRF will be eligible to
+receive fellowship of UGC under various schemes, subject to their finding placement in
+universities/IITs/Institutions. The validity period of the offer will be three years w.e.f. the
+date of issue of JRF Award Letter. However, for those candidates who have already joined
+Ph.D., the date of commencement of Fellowship shall be from the date of declaration of NET
+result or date of their joining, whichever is later.
+
+(iv) The National Fellowship for Scheduled Caste Students (NFSC) and National Fellowship for
+Other Backward Classes (NFOBC) shall be governed by the guidelines available on the
+official websites of the concerned Ministries.
+2.3 Exemption (Eligibility for Assistant Professor)
+(i) NET/SET/SLET shall remain the minimum eligibility condition for recruitment and
+appointment of Assistant Professors in Universities/Colleges/ Institutions. In this
+regard, exemption from NET/SET/SLET will be governed by UGC regulations and
+amendments notified in the Gazette of India from time to time.
+
+(ii) The candidates who have passed the UGC/CSIR/ JRF examination prior to 1989 are also
+exempted from appearing in NET.
+
+(iii) For SET Candidates: The candidates who have cleared the States Eligibility Test (SET)
+accredited by UGC for Assistant Professor held prior to 01st December 2002, are exempted
+from appearing in NET, and are eligible to apply for Assistant Professor anywhere in India.
+For SET held from 1st December 2002 onwards, the qualified candidates are eligible to apply
+for the post of Assistant Professor only in the universities/colleges situated in the State from
+where they have cleared their SET.
+2.4 Age Limit and Relaxation
+(i) JRF: Not more than 30 years as on 01st day of the month in which the examination is
+concluded i.e. 01.12.2026.
+a) A relaxation of up to 5 years is provided to the candidates belonging to OBC-NCL (as
+per the Central list of OBC available on website: www.ncbc.nic.in)
+/SC/ST/PwD/PwBD/Third gender categories and to women applicants.
+
+b) Relaxation will also be provided to the candidates with research experience, limited
+to the period spent on research in the relevant / related subject of post-graduation
+degree, subject to a maximum of 5 years, on production of a certificate from
+appropriate authority, which should be a recognized Indian university / Institute of
+National Importance / foreign university which is duly approved / recognized /
+accredited in its own Country / Public Sector Undertaking of Government of India /
+State Government in India. The research should not have been carried out towards
+completion of graduation or post-graduation degree(s).
+
+c) Three years’ relaxation in age will be permissible to the candidates with L.L.M. degree.
+
+Information Bulletin UGC-NET December 2026 Examination
+15 | P a g e
+
+A relaxation of up to 5 years is provided to the candidates who have served in the
+armed forces subject to the length of service in the armed forces up to the first day of
+the month in which the concerned UGC-NET is, conducted, i.e., 01.12.2026. Total age
+relaxation on the above ground(s) shall not exceed five years under any circumstances.
+(ii) Assistant Professor: There is no upper age limit in applying for UGC-NET for Assistant
+Professor.
+(iii) Admission to PhD: There is no upper age limit in applying for UGC-NET for Admission
+to PhD.
+
+Information Bulletin UGC-NET December 2026 Examination
+16 | P a g e
+
+Chapter – 3
+[Examination Scheme]
+
+Information Bulletin UGC-NET December 2026 Examination
+17 | P a g e
+
+3. UGC-NET December 2026
+The UGC-NET December 2026 will be conducted in Computer Based Test (CBT) mode as per the
+time schedule specified in the Information at a glance, in the Subjects given at (refer to Annexure
+– II) in selected Cities spread across the Country (refer to Annexure – III).
+
+3.1 Mode of Examination
+The Examination shall be conducted in Computer Based Test (CBT) mode only.
+3.2 Pattern of Examination
+The Test paper will consist of two sections, both the sections will consist of objective type,
+multiple-choice questions. There will be no break between the papers.
+Part Marks Number of Questions MCQ Total duration
+The questions in Part – I intends to assess the
+
+03 hours (180
+minutes)
+without any
+break.
+All the questions
+are compulsory.
+teaching/ research aptitude of the candidate.
+I 100 50 It will primarily be designed to test reasoning ability, readin g comprehension, divergent
+thinking a n d g e n e r a l a w a r e n e s s of
+t h e
+Candidate.
+II 200 100 This is based on the subject selected by the candidate and will assess domain knowledge.
+
+3.3 Subject and Syllabus of Test
+The List of Subjects and their Codes for UGC-NET December 2026 are given at Annexure – II.
+Syllabus for all NET Subjects can be downloaded from the UGC website:
+https://www.ugcnetonline.in/syllabus-new.php. The National Testing Agency will not
+provide the copy of syllabus to any candidate.
+
+3.4 Medium of Question Paper
+(i) The medium of Question Paper shall be in English & Hindi only, except language papers.
+(ii) Option for medium of Question Paper should be carefully chosen by the Candidate,
+while filling the Application Form online. UGC net papers are Bilingual and are available
+in both English and Hindi except for the language papers where the questions are in the
+concerned language.
+(iii) Candidates are required to answer in the medium as per option exercised in the
+Application Form.
+(iv) In case of any ambiguity in translation/construction of a question in the exam, its
+English version shall be treated as final and the decision of NTA shall be final in this
+regard.
+
+3.5 Marking Scheme
+
+1. To answer a question, the candidate needs to choose one option as the correct option.
+2. Each question carries 02 (two) marks.
+3. For each correct response, the candidate will get 02 (two) marks.
+4. There is no negative marking for incorrect response.
+5. Questions answered/attempted shall be evaluated irrespective of whether they are
+marked for review. Questions unanswered/unattempted shall not be evaluated,
+
+Information Bulletin UGC-NET December 2026 Examination
+18 | P a g e
+
+irrespective of whether they are marked for review.
+6. While every effort will be made to ensure that each question has one unique answer,
+in case, it is found that a question has more than one option, it will be dealt with in
+following manner:
+a) If more than one option is found to be correct, then Two marks (+2) will be awarded to
+only those who have marked any of the correct options.
+b) If all options are found to be correct, then Two marks (+2) will be awarded to all those
+who have attempted the question.
+c) If none of the options is found correct or a Question is found to be wrong or a Question
+is dropped, then two marks (+2) will be awarded to only those candidates who have
+attempted the question. The reason could be due to human error or technical error.
+Since there is no negative marking, candidate needs to choose one most appropriate
+option as correct answer.
+
+Information Bulletin UGC-NET December 2026 Examination
+19 | P a g e
+
+Chapter – 4
+[Reservations]
+
+Information Bulletin UGC-NET December 2026 Examination
+20 | P a g e
+
+Notes:
+1. The benefit of reservation for admission to Central Educational Institutions (CEIs) shall be given
+only to those classes/castes/tribes which
+are in the respective Central List published by the Government of India from time to time.
+2. Other Backward Classes - Non-Creamy Layer (OBC–NCL) are as per the Central list of Other Backward
+Classes available on National Commission for Backward Classes(NCBC), Government of India
+website www.ncbc.nic.in. Thus, the candidates falling in this list may mention
+OBC in the Category Column. State list OBC Candidates who are not in OBC-NCL (Central List) must
+not choose OBC-NCL.
+3. Economically Weaker Section (EWS) -This provision would be regulated as per the OM No.
+20013/01/2018-BC-II dated January 17, 2019 issued by the Ministry of Social Justice and Empowerment
+and the OM No. 12-4/2019-U1 dated 17.01.2019 as well as the Letters No 35-2/2019-T.S.I dated 21.01.2019,
+01.02.2019, 04.02.2019 and 15.02.2019 of MHRD Department of Higher Education regarding
+implementation of reservation for Economically Weaker Section (EWS) for admission in Central
+Educational Institutions (CEIs).
+4. Reservations
+4.1 Reservation Policy of the Government of India is applicable to UGC-NET According to this,
+in the Central Universities and Institutions which are deemed to be Universities, the
+reservation of seats shall be as follows:
+i. 15% of the seats for Scheduled Caste (SC) candidates.
+ii. 7.5% of seats Scheduled Tribe (ST) candidates.
+iii. 27% of the seats for Other Backward Classes (OBC) Non-Creamy Layer (NCL) candidates
+as per the Central List*
+iv. 10% of the seats for General-Economically Weaker Sections (General- EWS) candidates.
+v. 05% of the seats in the above-mentioned categories for Persons with Benchmark
+Disability (PwBD) with 40% or more disability.
+
+4.2 Provisions relating to Persons with Disability (PwD)/ Persons with Benchmark Disability
+(PwBD):
+4.2.1 The Rights of Persons with Disabilities Act, 2016:
+The Gazette of India, Extraordinary Part-II Section 1, Ministry of Law and Justice
+(Legislative Department) New Delhi dated 28 December 2016 on “The Rights of Persons
+with Disabilities Act, 2016. The relevant paragraphs of the above Gazette Notification
+from chapter 1 for consideration are as under:
+Para 2 (r) “person with benchmark disability” means a person with not less than forty
+percent of a specified disability where specified disability has not been defined in
+measurable terms and includes a person with disability where specified disability has
+been defined in measurable terms, as certified by the certifying authority;
+Para 2 (s) “person with disability” means a person with long term physical, mental,
+intellectual or sensory impairment which, in interaction with barriers, hinders his full and
+effective participation in society equally with others;
+Para 2 (zc) “specified disability” means the disabilities as specified in the Schedule;
+(Annexure – XII)
+(https://cdnbbsr.s3waas.gov.in/s3e58aea67b01fa747687f038dfde066f6/uploads/2023/10
+/202310161053958942.pdf)
+
+Information Bulletin UGC-NET December 2026 Examination
+21 | P a g e
+4.2.2 Office Memorandum dated 29 August 2018:
+Ministry of Social Justice & Empowerment, Govt. of India, Office Memorandum No. F.
+No. 34-02/2015-DD-III dated 29 August 2018 for conducting written examination for
+persons with specified disabilities covered under the definition of Section 2(r) of the
+RPwD Act, 2016. The relevant paragraphs of the above Office Memorandum for
+consideration are as under: -
+Para IV. The facility of Scribe/Reader/Lab Assistant should be allowed to any person
+with benchmark disability as defined under section 2(r) of the RPwD Act, 2016 and has
+limitation in writing including that of speed if so desired by him/her.
+In case of persons with benchmark disabilities in the category of blindness, locomotor
+disability (both arms affected-BA) and cerebral palsy, the facility of scribe/reader/lab
+assistant shall be given, if so desired by the person.
+In case of other category of persons with benchmark disabilities, the provision of
+scribe/reader/lab assistant can be allowed on production of a certificate to the effect that
+person concerned has physical limitation to write, and scribe is essential to write
+examination on his behalf, from the Chief Medical Officer/Civil Surgeon/Medical
+Superintendent of a Government health care institution as per proforma at Annexure -VI.
+In case the candidate is allowed to bring his own scribe, the qualification of the scribe
+should be one step below the qualification of the candidate taking examination. The
+person opting for own scribe should submit details of the own scribe as per proforma at
+Annexure – VII.
+4.2.3 Office Memorandum dated 10 August 2022:
+Ministry of Social Justice & Empowerment, Govt. of India, Office Memorandum No F. No.
+29- 6/2019-DD-III dated 10 August 2022 for conducting written examination for persons
+with specified disabilities covered under the definition of Section 2(s) of the RPwD Act,
+2016 but not covered under the definition of Section 2(r) of the said Act, i.e. person
+having less than 40% disability and having difficulty in writing. The relevant
+paragraphs of the above Office Memorandum for consideration are as under: - Para 3
+(b). The facility of scribe and/or compensatory time shall be granted solely to those
+having difficulty in writing subject to production of a certificate to the effect that
+person concerned has limitation to write and that scribe is essential to write examination
+on his/her behalf from the competent medical authority of a Government healthcare
+institution as per proforma at Annexure – VIII.
+Para 3 (c). The medical authority for the purpose of certification as mentioned above
+should be a multi-member authority comprising the following: -
+i. Chief Medical officer/Civil Surgeon /Chief District Medical Officer, Chairperson
+ii. Orthopaedic/PMR specialist
+iii. Neurologist, if available*
+iv. Clinical Psychologist/Rehabilitation Psychologist/ Psychiatrist/Special Educator
+v. Occupational therapist, if available*
+vi. Any other expert based on the condition of the candidate as may be
+nominated by the Chairperson.
+(* the Chief Medical Officer/Civil Surgeon/Chief District Medical Officer may make full
+efforts for inclusion of neurologists, occupational therapist from the nearest District or the
+Medical College/Institute, if the same is not available in the District)”
+
+Information Bulletin UGC-NET December 2026 Examination
+22 | P a g e
+
+The candidate should fill up the details of scribe as per undertaking proforma at
+Annexure – VII.
+4.2.4 Scribe and Compensatory Time
+1. The candidate should have the discretion of opting for his own scribe / reader / lab
+assistant or request the Examination Body for the same. The examining body may also
+identify the scribe / reader / lab assistant to make panels at the District / Division /
+State level as per the requirements of the examination. In such instances the candidates
+should be allowed to meet the scribe two days before the examinations so that the
+candidates get a chance to check and verify whether the scribe is suitable or not.
+2. Compensatory time should not be less than 20 minutes per hour of examination for
+persons who are allowed use of scribe / reader / lab assistant. All the candidates with
+benchmark disabilities who are eligible for availing the facility of scribe in terms of
+guidelines vide para IV of Para 4.2.2 above may be allowed additional time of
+minimum of one hour for examination of 3 hours duration whether they use the
+facility of scribe or not. In case the duration of the examination is less than an hour,
+then the duration of additional time should be allowed on pro-rata basis. Additional
+time should not be less than 5 minutes and should be in the multiple of 5”.
+Note-Both the guidelines i.e. dated 29 August 2018 (for PwBDs) and dated 10 August
+2022 (for PwDs) have other important aspects such as allowing use of assistive devices,
+proper seating arrangement, accessibility of examination centres etc. which will be
+followed.
+The scribe will help the Candidate in reading the questions and / or keying in the
+answers as per the directions of the Candidate. A scribe will NEITHER explain the
+questions NOR suggest any solution to the Candidate.
+It is to be noted that the Scribe will be provided by the National Testing Agency
+(NTA), if requested by the Candidate.
+If it is found at any stage that a candidate has availed the services of a scribe and/or
+availed the compensatory time but does not possess the extent of disability that
+warrants the use of a scribe and/or grant of compensatory time, the candidate will be
+excluded from the process of evaluation, ranking.
+Note-1: The NTA does not guarantee any change in the category or sub-category
+(PwD/PwBD status) after the submission of the Online Application Form, and in any
+case, no change will be entertained by NTA after the declaration of NTA Result for
+UGC-NET December 2026. Therefore, the candidates are advised to fill in the
+category/sub-category column very carefully.
+Note-2: The extent of “specified disability” in a person shall be assessed in accordance
+with the “Guidelines for the purpose of assessing the extent of specified disability in
+a person included under the Rights of Persons with Disabilities Act, 2016.
+Note-3: Candidates must note that the benefit of reservation will be given to them
+subject to verification of documents. If it is discovered at any stage that a candidate
+has used a false/fake/incorrect document or has furnished false, incorrect or
+incomplete information, in order to avail the benefit of reservation, then such a
+candidate shall be excluded from all examination process.
+
+Information Bulletin UGC-NET December 2026 Examination
+23 | P a g e
+
+Chapter – 5
+[Choice of Examination Cities]
+
+Information Bulletin UGC-NET December 2026 Examination
+24 | P a g e
+
+Choice of Examination Cities
+➢ The Cities where the UGC-NET December 2026 will be conducted are given in Annexure-III. While
+applying, candidates have to select any four cities of their choice. Efforts will be made to allot the
+city of examination to the candidates in order of choice opted by them in their online Application
+Form. However, due to administrative/logistic reasons, a different city can be allotted.
+
+➢ In case there are very few candidates from a City, the NTA reserves the right to merge one, two, or
+more cities.
+
+➢ The decision of the NTA regarding the allotment of the City/Centre shall be final. No further
+correspondence or request shall be entertained in such a case.
+
+➢ While filling in the Online Application Form, candidates should select four Convenient Cities from
+Annexure-III as their Choice of Cities for the exam Centre in order of priority. Choice of Centre
+Cities will be limited to the State of Permanent Address or State of Present Address only.
+However, where fewer than four examination cities are available in the candidate’s may select from
+the available cities displayed to the candidates. Eligible candidates may revise their preferences
+during the correction window.
+
+➢ For convenience, the candidates may select their own city or neighboring cities in their State of
+Residence or permanent address only. NTA will not be responsible for any inconvenience due to
+the incorrect selection of cities by the candidates.
+
+➢ Though every effort will be made to allot a Centre in one of the cities selected by the candidate, the
+NTA reserves the right to allot a Centre in a city other than the candidate’s choice.
+
+Note:
+➢ All efforts will be made by NTA to consider the comfort and convenience of candidates, including
+PwD/PwBD Candidates while allotting Centres.
+
+Information Bulletin UGC-NET December 2026 Examination
+25 | P a g e
+
+Chapter – 6
+[e-Admit Card]
+
+Information Bulletin UGC-NET December 2026 Examination
+26 | P a g e
+
+6.1 The e-Admit Card would be issued provisionally to the candidates through the NTA website:
+https://ugcnet.nta.nic.in/ subject to the fulfillment of the eligibility conditions and receipt of
+the prescribed application fee by NTA.
+
+6.2 The candidate has to download the e-Admit Card from the NTA website. The candidate will
+appear in the examination at the given Centre on the date and shift/timing as indicated in
+his/her Admit Card.
+
+6.3 No candidate will be allowed to appear at the Examination Centre, on Date and timing other
+than that allotted him/her in his/her e-Admit Card.
+
+6.4 In case a candidate is unable to download his/ her e-Admit Card from the website, he/ she
+should approach the NTA Help Line Number: 011-40759000 / 69227700 between 10.00 A.M. to
+05.00 P.M. or write to NTA at ugcnet@nta.ac.in
+
+6.5 The candidates are advised to read the instructions on the Admit Card carefully and strictly
+follow them during the conduct of the Examination.
+
+6.6 In case of any discrepancy in the particulars of the candidate or his / her photograph and
+signatures shown in the Admit Card and Confirmation Page, the candidate may immediately
+approach the Helpline between 10:00 AM and 5:00 PM. In such cases, candidates would appear
+in the Examination with the already downloaded Admit Card. However, NTA will take
+necessary action to make corrections in the record later.
+
+6.7 The date of downloading the Admit Card for the exam will be announced on the NTA
+website https://ugcnet.nta.nic.in/
+
+6.8 The candidates are advised to read the instructions on the e-Admit Card carefully and strictly
+follow them during the examination.
+
+Note:
+
+i. Gates of the examination centers will be closed 30 minutes before the commencement of the examination.
+Any candidate reporting at the center after the gate closing time will not be permitted to appear for the
+Examination and any act of forceful entry or any representation/argument with the exam functionaries will
+lead to consideration of the act by the candidate as UFM.
+ii. The Candidates may please note that Admit Cards will not be sent by post.
+iii. In no case, the duplicate Admit Card for UGC-NET December 2026 be issued at the Examination
+Centres.
+iv. The candidates must not mutilate the Admit Card or change any entry made therein. Any intentional act
+to bring in any change or tampering of Admit Card if noticed, will be considered as UFM.
+v. Candidates are advised to preserve their Admit Cards in good condition for future reference.
+vi. No Admit Card shall be issued to the candidates whose applications are found to be incomplete for any
+reasons (including indistinct/ doubtful photographs/unsigned Applications) or who do not fulfill the
+eligibility criteria for the examination.
+vii. Issue of Admit Cards, however, shall not necessarily mean acceptance of eligibility which shall be further
+scrutinized at subsequent stages of the admission process by the University/Institution.
+viii. The candidates are advised to check their registered Email ID’s regularly and reply to any clarification
+sought by NTA during the entire cycle of Examination.
+
+Information Bulletin UGC-NET December 2026 Examination
+27 | P a g e
+
+Chapter – 7
+[Schedule of Examination]
+
+Information Bulletin UGC-NET December 2026 Examination
+28 | P a g e
+
+The schedule for the University Grants Commission (UGC)-National Eligibility Test (NET), conducted
+in Computer Based Test (CBT) mode to determine the eligibility of Indian nationals for (i) award of
+Junior Research Fellowship (JRF) and appointment as Assistant Professor, (ii) appointment as Assistant
+Professor and admission to Ph.D., and (iii) admission to Ph.D. only in Indian universities and colleges,
+is as follows:
+
+S. No. Name of Examination Proposed Date(s) Duration
+1. UGC-NET December 2026 14 December 2026 to 18 December 2026 and 21 December 2026 6 Days
+
+Information Bulletin UGC-NET December 2026 Examination
+29 | P a g e
+
+Chapter – 8
+[Important Instructions for the
+Candidates]
+
+Information Bulletin UGC-NET December 2026 Examination
+30 | P a g e
+
+8.1 Candidates are advised to report at the Examination Center well in time i.e. 02 hours before the
+commencement of the examination.
+8.2 Candidates should take their seats immediately after the opening of the Examination Hall. If the
+candidates do not report in time due to any reason i.e. traffic jam, train/bus delay, etc, they are
+likely to miss some of the important instructions to be announced in the Examination
+Rooms/Halls. The NTA shall not be responsible for any delay.
+8.3 The candidate must show, on-demand, the Admit Card downloaded/printed from the NTA
+website for admission in the examination room/hall. The Test Centre Staff on duty is authorized
+to verify the identity of candidates and may take steps to verify and confirm the identity
+credentials. A candidate who does not possess a valid Admit Card and authorized Photo ID shall
+not be permitted to take the examination under any circumstances by the Centre Superintendent.
+8.4 A dedicated Computer node will be allotted randomly to each candidate at the registration
+window inside the examination hall on the day of the examination. Candidates must occupy
+only the seat allotted to them. Any candidate who attempts to change their allotted seat or fails
+to sit at the assigned computer node may face cancellation of their candidature. No request or
+plea in this regard will be entertained.
+8.5 The candidate should ensure that the Question Paper available on the computer is as per his/her
+opted subject indicated in the Admit Card. In case, the subject of the Question Paper is other than
+his/her opted subject, the same may be brought to the notice of the Invigilator concerned
+immediately.
+8.6 The candidates may approach the Centre Superintendent/Invigilator in the room for any
+technical assistance, first aid emergency, or any other information during the course of the
+examination. For any queries or issues regarding the Test, the candidates may contact on
+Helpline Numbers available on the NTA website.
+8.7 For any queries or issues regarding the Computer Based Test, the candidates may contact on
+Helpline Numbers available on the website https://ugcnet.nta.nic.in/.
+8.8 In case a candidate, by furnishing false information, appears in more than one shift/date, his /
+her candidature will be cancelled and his / her result will not be declared.
+8.9 For those who are unable to appear on the scheduled date of the test for any reason, a re-test shall
+not be held by the NTA under any circumstances.
+8.10 All Candidates shall ensure that the information (like his/her name, mother’s name, father’s
+name, gender, date of birth, category, PwD/PwBD status, mobile number, e-mail address,
+photograph, and signature, choice of cities for examination Centre, etc.) provided by them in
+their online Application Form is correct. Candidates are advised to exercise the utmost care in
+filling up the correct details in the Online Application Form. Any request for change in the
+particulars and uploaded scanned images, after the closure of the correction window will not be
+considered by NTA. NTA will not entertain the corrections sent by the candidate through
+Post/Fax/WhatsApp/E- mail/by Hand.
+8.11 Candidates are NOT allowed to carry Instruments, Geometry or Pencil box, Handbag, Purse,
+any kind of Paper/ Stationery/ Textual material (printed or written material), Eatables , Mobile
+Phone/ Earphone/ Microphone/ Pager, Calculator, DocuPen, Slide Rules, Log Tables, Camera,
+Tape Recorder, Watches and any metallic item or electronic gadgets/ devices in the Examination
+Hall/Room.
+8.12 Candidates are requested to retain 02-05 copies of the Confirmation Page, Admit Card, and
+Scorecard of the UGC-NET December 2026.
+
+Information Bulletin UGC-NET December 2026 Examination
+31 | P a g e
+
+Note:
+Candidates MUST carry the following documents on the day of examination at the test centre.
+In the absence of these documents, candidates will not be allowed to sit for the examination.
+i) Print copy of Admit Card along with Self Declaration (Undertaking) downloaded from the
+NTA Website (a clear printout on A4 size paper) duly filled in.
+ii) One passport size photograph (same as uploaded on the Online Application Form) for
+pasting on the specific space in the Attendance Sheet at Centre during the examination.
+iii) Any one of the authorized photo IDs (must be original, valid, and non-expired) – College
+Identity Card/ PAN card/ Passport/ Aadhaar Card (With photograph)/E-Aadhaar with
+photograph/ Bank Passbook with Photograph.
+iv) For persons with disability in categories of blindness, locomotor disability (both arms
+affected-BA) and cerebral palsy, UDID certificate/Disability Certificate as per the provisions
+of of OM No. F.No. 34-02/2015-DD-III dated 29 August 2018 Issued by Ministry of Social
+Justice & Empowerment, Government of India needs to be submitted.For persons with
+benchmark disability (40% or more), and having limitation in writing, the applicable
+certificate reference shall be Annexure VI as per the provisions of OM No. F.No. 34-02/2015-
+DD-III dated 29 August 2018 Issued by Ministry of Social Justice & Empowerment,
+Government of India.
+For persons with disability below 40%, and having limitation in writing, the applicable
+certificate reference shall be Annexure VIII as per F.No. 29-6/2019-DD-III dated 10 August
+2022 Issued by Ministry of Social Justice & Empowerment, Government of India.
+Only such candidates who have submitted these certificates will be entitled for scribe and/or
+compensatory time @ 20 minutes per hour.
+v) If the name has been changed due to events such as marriage, candidate must show the
+relevant document at the time of exam. Marriage Certificate / Divorce / Decree / Legal
+Name Change Document.
+
+Rough work and handing over of the rough sheets
+
+i. All calculations/writing work is to be done only in the Rough Sheet provided at the Test
+Centre in the Examination Room/Hall and on completion of the test, candidates must hand
+over the Rough Sheets to the Invigilator on duty in the Room/Hall.
+ii. Candidate must write their Names and Application Number on the top of each Rough Sheet
+provided to him/her during the Examination. In case candidates are found swapping the
+rough sheets, they will be considered as UFM and appropriate action will be taken as per
+relevant clauses of UFM.
+iii. The rough sheets provided to the candidate will be collected by the invigilator and
+destroyed by shredding after the conduct of Examination.
+
+Note:
+Candidates shall appear at their own cost at the Centre on the Date, Shift and Time as indicated
+in their Admit Card issued by the NTA. Under no circumstances the choice of cities for the Centre
+and shift provided in the Admit Card shall be changed.
+
+Candidates are advised to update their details on Aadhaar Card with their recent Photograph, Name,
+Date of Birth, Gender, Address etc. (for updation in Aadhaar, please follow UIDAI Guidelines) for
+verification at the Examination Centre.
+
+Information Bulletin UGC-NET December 2026 Examination
+32 | P a g e
+
+Chapter – 9
+[Unfair Means Practices]
+
+Information Bulletin UGC-NET December 2026 Examination
+33 | P a g e
+9.1 Unfair Means Practices and Breach of Examination Rules Definition
+Definition: Unfair Means practices refer to any activity or action that gives a candidate an unfair
+advantage over others during an examination. As per the Public Examination (Prevention of
+Unfair Means Act, 2024), the following actions are considered Unfair Means practices:
+a) Possession of Prohibited Items: Being in possession of any prohibited item or article that can
+be used for unfair practices. This includes, but is not limited to, stationery items,
+communication devices, accessories, eatables, ornaments, or any material (whether relevant or
+not) related to the examination.
+b) Impersonation: Engaging someone to write the examination on the candidate's behalf (either
+physical or virtual impersonation) or preparing material to aid copying during the
+examination.
+c) Wrong Examination Centre: Attempting to write the examination at a centre other than the
+one allotted to the candidate.
+d) Violation of Examination Rules: Disregarding any examination rules or directives issued
+by NTA/UGC in relation to the UGC-NET December 2026 Examination.
+e) Assisting Malpractices: Helping other candidates to engage in malpractices, or
+giving/receiving assistance in any form, directly or indirectly, or attempting to do so.
+f) Unauthorized Communication: Attempting to contact or communicate with any person other
+than examination staff during the examination, whether physically or through any electronic
+means.
+g) Threatening Officials or Candidates: Threatening any examination official or other
+candidates connected with the conduct of the examination.
+h) Use of Undesirable Methods: Using or attempting to use any unauthorized or illegal methods
+to influence the examination.
+i) Manipulation of Examination Documents: Fabricating or manipulating any official
+documents related to the examination, such as Confirmation Page, Application Form, Admit
+Cards, Score Card, Rank Letters, Self-Declaration forms, etc.
+j) Forceful Entry or Exit: Forcibly entering or exiting the examination centre or hall.
+k) Use of Electronic Devices: Using or attempting to use any electronic device after entering the
+examination centre, which is prohibited under examination guidelines.
+l) Affixing Morphed Documents: Affixing or uploading false, altered, or morphed photographs
+or signatures on the application form, admit card, or any related documents.
+m) Disrupting Examination Process: Creating obstacles or disturbances that interfere with the
+smooth and fair conduct of the examination.
+n) Misuse of Scribe or Compensatory Time: Availing of a scribe and/or compensatory time
+without fulfilling the required criteria and proper documentation justifying such a request.
+o) Other Malpractices: Engaging in any other malpractices, whether explicitly listed here or
+determined by NTA, that fall under Unfair Means as per the Public Examination (Prevention
+of Unfair Means Act, 2024).
+9.2 Punishment for Unfair Means Practices
+As per the Public Examination (Prevention of Unfair Means Act, 2024), if a candidate is found to
+have engaged in any of the above-mentioned practices during, before, or after the examination, they
+shall be treated as having committed an Unfair Means (UFM) offense and will be subject to the
+following penalties:
+➢ Debarment: The candidate shall be debarred from appearing in future public examinations for
+a period of up to 3 years.
+
+Information Bulletin UGC-NET December 2026 Examination
+34 | P a g e
+
+➢ Criminal Action: The candidate shall be liable for criminal action in accordance with the
+provisions of the law.
+➢ Other Disciplinary Actions: Any additional action deemed appropriate by the examination
+authorities, in line with the severity of the offense, may also be taken, including cancellation of
+examination results or other administrative actions.
+These provisions aim to ensure the integrity and transparency of the examination process and
+provide a fair environment for all candidates, as per the regulations outlined in the Public
+Examination (Prevention of Unfair Means Act, 2024)
+
+9.3 Cancellation of Result
+The result UGC-NET December 2026 of the candidate(s) who indulge in Unfair means Practices
+will be cancelled and will not be declared. Similarly, the result of those candidates who appear from
+the Centre other than the one allotted to them or allow another candidate/person to write the
+examination on his/her behalf will be cancelled. No plea will be entertained in this regard.
+
+Disclaimer: The decision of NTA shall be final and binding for declaration of any person
+/ candidate guilty of foregoing or such offence as shall be classified as Unfair Means Case
+(UMC).
+
+Information Bulletin UGC-NET December 2026 Examination
+35 | P a g e
+
+Chapter – 10
+[Barred Items and Dress Code]
+
+Information Bulletin UGC-NET December 2026 Examination
+36 | P a g e
+10.1 Barred Items
+10.1.1 The candidates will be subjected to extensive and compulsory frisking before entering
+the Examination Centre with the help of highly sensitive metal detectors. The candidates
+are not allowed to carry the following items inside the Examination Centre under any
+circumstances.
+i. Any item like textual material (printed or written), bits of paper, Geometry/Pencil
+Box, Plastic Pouch, Pen, Scale, Writing Pad, Pen Drives, Eraser, Calculator, Log
+Table, Docu Pen, Slide Rules, Electronic Pen/Scanner, etc.
+ii. Any communication device like Mobile Phone, Bluetooth, Earphones,
+Microphone, Pager, Health Band, etc.
+iii. Other items like Wallet, Goggles, Handbags, Belt, Cap, etc.
+iv. Any Watch/Wristwatch, Bracelet, Camera, etc.
+v. Any ornaments/metallic items.
+vi. Any food items opened or packed, water bottles, etc.
+vii. Any other item that could be used for unfair means, communication devices like a
+microchip, camera, Bluetooth device, etc.
+Note:
+i) Sugar tablets/ whole fruits and unpacked (like Banana/ Apple/Orange), in case
+the candidate is diabetic are allowed.
+ii) Water in transparent bottles is allowed to all candidates.
+10.1.2 No arrangement will be made at the Centres for keeping any articles/items belonging
+to the candidates. NTA will not be responsible for any belongings stolen or lost at the
+premises.
+10.1.3 The Candidates wearing objects of faith, customary or cultural dress shall report at the
+examination centre at least two hours before the commencement of the examination so
+that frisking and any required examination of articles of faith can be completed without
+inconvenience to the candidate or to other examinees; while maintaining the sanctity of
+the examination. If upon screening, it is discovered that any candidate is actually
+carrying a suspected device within such an item of faith, he/ she may be asked not to
+take it into the examination hall.
+10.2 Dress Code
+10.2.1 The candidates are instructed to follow the following dress code while appearing for
+UGC-NET December 2026 Examination:
+a) Candidates should wear simple and comfortable clothes suitable for the prevailing
+weather conditions, whether summer or winter. Heavy clothes, multiple layers,
+oversized garments, or clothes with large pockets may be subject to additional
+frisking for security reasons.
+b) Candidates coming in cultural/customary dress should report at the Examination
+Centre at least two hours before the last reporting time to allow sufficient time for
+frisking without any inconvenience, while maintaining the sanctity of the
+examination.
+c) Normal Shoes, Slippers and sandals with low heels are permitted. Long Boots are
+not permitted.
+d) In case of any unavoidable medical or weather-related requirement requiring
+deviation from the prescribed dress code, prior approval of NTA must be obtained
+before the issuance of the Admit Cards.
+10.2.2 It is desired that the candidates shall strictly follow instructions issued by the NTA to
+ensure fair conduct of the examination.
+Note:
+The NTA believes in the sanctity and fairness of conducting the examination, however, it also believes in the sensitivity
+involved in frisking (girl) candidates and will issue comprehensive instructions accordingly to the staff and other officials at
+the Examination Centres. The frisking of the female candidates will be done inside a closed enclosure by female staff only.
+
+Information Bulletin UGC-NET December 2026 Examination
+37 | P a g e
+
+Chapter – 11
+[Key Challenges and Result]
+
+Information Bulletin UGC-NET December 2026 Examination
+38 | P a g e
+
+11.1 Display of Provisional Answer Key(s) for Challenges
+➢ NTA will display Provisional Answer Key(s) & Question Paper attempted by the candidates
+on the NTA's website https://ugcnet.nta.nic.in/. Exact date shall be displayed on the
+NTA’s website for the same after the commencement of the examination. The Provisional
+Answer Key(s) are likely to be displayed for two to three days.
+➢ The Candidates will be required to pay online an amount of Rs. 200/- (Rupees Two
+Hundred Only) per question challenged, as non-refundable processing fee.
+➢ Only paid challenges made during the stipulated time through the key challenge link will
+be considered. Challenges without justification/evidence/after stipulated time period and
+those filed on any other medium other than the prescribed link will not be considered.
+➢ The NTA decision on the challenges shall be final and no further communication will be
+entertained. NTA will not inform the Candidates individually about the outcome of the
+challenges made.
+➢ The subject experts will examine all the challenges received and then a final answer key will
+be displayed and declared.
+➢ The result will be compiled based on the final answer key declared. No grievance with
+regard to answer key(s) after the declaration of result of UGC-NET December 2026 will
+be entertained.
+
+11.2 Display of Recorded Responses
+➢ The NTA will display the Question Paper and attempted recorded responses by the
+candidates on the NTA website ugcnet.nta.nic.in prior to declaration of result. The Question
+paper attempted and recorded responses are likely to be displayed for two to three days.
+Candidates are advised to download the response sheet for the future. No copy of the
+response sheet will be provided by NTA after the declaration of results under the RTI Act.
+
+11.3 Procedure and Criteria for declaration of result
+1) The following steps will be followed for the preparation of Result
+Step I: The number of candidates to be qualified for eligibility for Assistant Professor shall
+be equal to 6% of the candidates appeared in NET (in both the papers) on the basis of their
+Master’s Degree or equivalent examination.
+Step II: The total slots shall be allocated to different categories as per the reservation policy
+of Government of India.
+Step III: In order to be considered, the candidate must have appeared in both the papers
+and secured at least 40% aggregate marks in both the papers taken together for General
+(Unreserved) / General-EWS category candidates and at least 35% aggregate marks in both
+the papers taken together for all candidates belonging to the reserved categories (viz., SC,
+ST, OBC (belonging to Non- Creamy Layer), PwD/PwBD and Third gender). For a subject
+conducted in more than one shift, the aggregate marks referred to in this Step and in Step
+IV shall be the normalised marks computed as per Annexure XI.
+Step IV: The number of candidates to be declared qualified in any subject for a particular
+category is derived as per the methodology illustrated below:
+
+Information Bulletin UGC-NET December 2026 Examination
+39 | P a g e
+
+Example:
+Number of candidates to be
+declared qualified for Eligibility
+for Assistant Professor in the
+subject ‘Economics’ for the
+Scheduled Caste (SC) category
+Number of candidates* belonging to SC category who
+secure at least 35% aggregate marks in both the papers
+taken together in ‘Economics’ (x) Total slots derived
+for SC category as per Step II (÷) Total number of
+candidates* belonging to SC category over all subjects
+who secure at least 35% aggregate marks
+in both the papers taken together.
+
+The aggregate percentage of the two papers corresponding to the number of slots arrived at,
+shall determine the qualifying cut-off for Eligibility for Assistant Professor ‘in ‘Economics’ for
+the SC category. Similar yardstick shall be employed for deriving the subject-wise qualifying
+cut- offs for all categories.
+Step V: The total number of slots available for awarding JRF is allocated among different
+categories as per the reservation policy of Government of India.
+It may be noted that, notwithstanding the above, the qualifying criteria as decided by UGC
+is final and binding. Result of the examination shall be hosted on NTA website;
+https://ugcnet.nta.nic.in/. The candidates will not be individually intimated about their
+result.
+*Appearing on the basis of their master’s degree or equivalent examination.
+
+2) Percentile Score and Normalisation:
+a) Qualification and qualifying cut-offs are determined on aggregate marks of Paper I and
+Paper II as per Para 11.3(1).
+b) For a subject conducted in a single shift, the Percentile Score of each candidate will be
+computed as per Annexure X. The Percentile Score is reported on the score card and is
+not used to determine qualification or cut-offs.
+c) For a subject conducted in more than one shift, the marks will be normalised as per
+Annexure XI, and the minimum aggregate marks and qualifying cut-offs will be applied
+to the normalised marks.
+
+3) Re-Evaluation/Re-Checking of result
+➢ There shall be no re-evaluation/re-checking of the result. No correspondence in this
+regard shall be entertained.
+
+Information Bulletin UGC-NET December 2026 Examination
+40 | P a g e
+Chapter – 12
+[Miscellaneous]
+
+Information Bulletin UGC-NET December 2026 Examination
+41 | P a g e
+
+12.1 Grievance / Correspondence with NTA
+➢ All grievances or correspondence related to the examination should be addressed to
+ugcnet@nta.ac.in The communication should not be anonymous and must contain the name,
+Registration/Application Number, postal address, and valid contact number of the sender.
+The grievance or correspondence should strictly pertain to matters related to the examination
+or the examination centre. Communication shall not be entertained from individuals claiming
+to be representatives, associates, or officials of the applicant/candidate.
+The following information shall not be revealed by phone or email:
+
+i. Internal documentation or status.
+ii. Internal decision-making process of NTA, including any claim or counterclaim thereof.
+iii. Dates and venue of internal meetings, or the names of staff/officers dealing with the
+matter.
+iv. Any other information which, in the opinion of NTA, cannot be disclosed.
+
+12.2 NTA Weeding Out Rules
+➢ The record of UGC-NET December 2026 will be preserved up to 90 days from the date of
+declaration of result.
+
+12.3 Legal Jurisdiction
+➢ All disputes pertaining to the conduct of UGC-NET December 2026. Examinations including
+Results shall fall within the jurisdiction of Delhi/New Delhi only. Further, any legal issues
+arising out of the Examination shall be entertained only when raised within 30 days from the
+declaration of result.
+➢ The Director (Administration) of the NTA shall be the official by whose designation the NTA
+may sue or be sued.
+
+12.4 RTI (Right to Information)
+➢ Information uploaded on the website shall not be provided to the candidate or any other
+person under the R.T.I. Act, 2005. The information uploaded on the website shall remain for
+a specific period only. Therefore, the candidates are advised to download the uploaded
+information and keep with them for future. In the course of examination or in midway of
+process, neither any application under the Right to Information Act, 2005 shall be entertained
+nor information will be provided.
+
+Information Bulletin UGC-NET December 2026 Examination
+42 | P a g e
+
+Annexure
+
+Information Bulletin UGC-NET December 2026 Examination
+43 | P a g e
+
+Annexure – I
+
+PAYMENT OF EXAM FEE - PROCEDURE/ MODE / SERVICE PROVIDER(S), SERVICE
+CHARGES AND HELPDESK
+1. Processing Charges and Goods and Service Taxes (GST) and Procedure for Payment of Fee
+Mode of Payment of Fee/ Service Provider and Service/Processing charges & GST
+S.
+No
+Mode of
+Payment STATE BANK OF INDIA CANARA BANK UBI
+1 Net Banking SBI Rs.5.00+GST
+Other Banks
+(Including Canara
+Bank)
+Rs.13 + GST HDFC, ICICI, SBI, AXIS NIL
+Other Banks Rs 5.00+GST HDFC, ICICI, SBI, AXIS Rs.17 + GST Rest All Banks NIL
+2 Debit Cards Nil Visa/Master
+Transaction up to
+Rs.2000/- 0.40% +
+GST Visa/Master
+NIL
+Transaction above
+Rs.2000/- 0.85% +
+GST
+NIL
+Rupay NIL Charge Rupay NIL
+3 Credit Cards
+Domestic
+0.80% + GST
+(Minimum
+Rs 11/-)
+Domestic 1.10% + GST Domestic NIL
+International
+3.50% of
+Fee+ GST
+(Minimum
+Rs 11/-)
+4
+Unified
+Payment
+Interface
+(UPI)
+NIL Charge NIL Charge NIL
+
+Prescribed Examination Fee (please see the Information at a Glance) can be paid through any
+Bank/Payment Gateway in any Payment Mode [service/processing charges per transaction &
+GST applicable are to be paid by the candidate.
+
+2. Helplines:
+(a) If Paying through State Bank of India (SBI):
+Level Name Email ID Contact Number
+1 Helpdesk3 sbi.00727@sbi.co.in 011-26391804
+2 Customer Care agmcustomer.Ihodel@sbi.co.in 1800112211
+3 Through SMS UNHAPPY (add text) 8008202020
+
+(b) If paying through Canara Bank:
+Level Name Email ID
+1 HelpDesk pgsupport@billdesk.com; dssrosdel@canarabank.com; tmscodel@canarabank.com; cb0268@canarabank.com;
+2
+Complaint
+Management
+Services
+pgsupport@billdesk.com dssrosdel@canarabank.com;
+tmscodel@canarabank.com; cb0268@canarabank.com
+3 Customer Care pgsupport@billdesk.com dssrosdel@canarabank.com; tmscodel@canarabank.com; cb0268@canarabank.com
+4 Through SMS ---
+
+(c) If paying through Union Bank of India:
+
+Information Bulletin UGC-NET December 2026 Examination
+44 | P a g e
+Level Name Email ID
+1
+Customer Care
+pgsupport@billdesk.com
+2 nodal@billdesk.com
+(d) NTA Helpdesk Contact details (in case the payment related issues are not resolved through
+the above-mentioned Helplines of the concerned Bank/Payment Gateway Integrator)
+Email: ugcnet@nta.ac.in.
+Phone No.: 011-40759000
+3. Procedure to raise payment related Grievance:
+After (successful completion of all the Steps, Confirmation Page of the Application Form, should
+be downloaded and a printout of the same may be retained for future reference. The
+Confirmation Page of the online Application Form could be generated only after successful
+payment by the Candidate.
+In case the Confirmation Page is not generated after payment of prescribed Fee, then the candidate
+should approach the concerned Bank/Payment Gateway integrator (in the helpline number and
+email given in Annexure – I of the Information Bulletin), for ensuring the successful payment.
+Inspite of above, if successful transaction is not reflected on the Portal, the candidate may contact
+NTA Helpline. If the payment issue is still not resolved, the candidate may pay second time.
+However, any duplicate payment received from the candidate by NTA in course of said
+transactions will be refunded through the same payment mode through which the duplicate
+payment is received, after fee reconciliation by NTA.
+4. Information to be provided by the Candidate while raising any payment related query/grievance
+through QRS/email/Helplines: -
+a. Name of the Bank and /or payment Gateway.
+b. Date and time of the transaction
+c. Transaction Number
+d. Bank Reference Number
+e. Proof of transaction
+f. Screenshot from the payment portal (in case of payment failure)
+
+Information Bulletin UGC-NET December 2026 Examination
+45 | P a g e
+
+Annexure – II
+List of UGC- NET Subjects and their Codes
+
+Note: Syllabi for all NET Subjects can be downloaded from the UGC website:
+https://www.ugcnetonline.in/syllabus-new.php National Testing Agency will not send the syllabus
+to individual candidates.
+S. No. Subject Subject Code
+1 Adult Education/ Continuing Education/ Andragogy/ Non-Formal Education. 46
+2 Anthropology 07
+3 Arab Culture and Islamic Studies 49
+4 Arabic 29
+5 Archaeology 67
+6 Assamese 36
+7 Bengali 19
+8 Bodo 94
+9 Buddhist, Jaina, Gandhian and Peace Studies 60
+10 Chinese 32
+11 Commerce 08
+12 Comparative Literature 72
+13 Comparative Study of Religions 62
+14 Computer Science and Applications 87
+15 Criminology 68
+16 Defence and Strategic Studies 11
+17 Dogri 33
+
+18
+Economics / Rural Economics /Co-operation / Demography /
+Development
+Planning/Development Studies / Econometrics/ Applied Economics /
+Development Economics /Business Economics
+
+01
+19 Education 09
+20 Electronic Science 88
+21 English 30
+22 Environmental Sciences 89
+23 Folk Literature 71
+24 Forensic Science 82
+25 French (French Version) 39
+26 Geography 80
+27 German 44
+28 Gujarati 37
+29 Hindi 20
+30 Hindu Studies 102
+31 History 06
+
+Information Bulletin UGC-NET December 2026 Examination
+46 | P a g e
+
+S. No. Subject Subject Code
+32 Home Science 12
+33 Human Rights and Duties 92
+34 Indian Culture 50
+35 Indian Knowledge System 103
+36 Japanese 45
+37 Kannada 21
+38 Kashmiri 84
+39 Konkani 85
+40 Labour Welfare / Personnel Management / Industrial Relations/ Labour and Social Welfare / Human Resource Management 55
+41 Law 58
+42 Library and Information Science 59
+43 Linguistics 31
+
+44 Maithili 18
+45 Malayalam 22
+
+46
+Management (including Business Admn. Mgt./Marketing / Marketing
+Mgt./ Industrial Relations and Personnel Mgt./ Personnel Mgt./Financial
+Mgt. /Co- operative Management)
+
+17
+47 Manipuri 35
+48 Marathi 38
+49 Mass Communication and Journalism 63
+50 Museology & Conservation 66
+51 Music 16
+52 Nepali 34
+53 Oriya 23
+54 Pali 83
+55 Performing Art - Dance/Drama/Theatre 65
+56 Persian 42
+57 Philosophy 03
+
+58 Physical Education 47
+59 Political Science 02
+
+60
+Politics including International Relations/International Studies including
+Defence / Strategic Studies, West Asian Studies, Southeast Asian Studies,
+African Studies, South Asian Studies, Soviet Studies, American Studies.
+
+90
+61 Population Studies 15
+62 Prakrit 91
+63 Psychology 04
+64 Public Administration 14
+
+Information Bulletin UGC-NET December 2026 Examination
+47 | P a g e
+
+S. No. Subject Subject Code
+65 Punjabi 24
+66 Rajasthani 43
+
+67 Russian 41
+68 Sanskrit 25
+
+69
+Sanskrit traditional subjects (including Jyotisha/Sidhanta Jyotish/ Navya
+Vyakarna/ Vyakarna/ Mimansa/ Navya Nyaya/ Sankhya Yoga/ Tulanatmaka
+Darsan/ Shukla Yajurveda/ Madhav Vedant/ Dharmasasta/ Sahitya/
+Puranotihasa /Agama).
+
+73
+70 Santali 95
+71 Sindhi 101
+72 Social Medicine & Community Health 81
+73 Social Work 10
+74 Sociology 05
+75 Spanish 40
+76 Tamil 26
+77 Telugu 27
+78 Tourism Administration and Management. 93
+79 Tribal and Regional Language/Literature 70
+80 Urdu 28
+81 Visual Art (including Drawing & Painting/Sculpture Graphics/Applied Art/History of
+Art)
+79
+82 Women Studies 74
+83 Yoga 100
+84 Disaster Management 104
+85 Ayurveda Biology 105
+86 Forestry 106
+87 Statistics 107
+
+The candidates with Master’s Degree in Geography (with specialization in Population Studies)
+or Mathematics/ Statistics are also eligible to appear in the subject “Population Studies” (Code 015).
+
+‘**’The candidates with Master’s Degree in Humanities (including languages) and Social Sciences are
+eligible to appear in subject “Women Studies” (Code 074).
+
+Note: General Paper on Teaching and Research Aptitude (Paper-I) is compulsory for all.
+
+Information Bulletin UGC-NET December 2026 Examination
+48 | P a g e
+
+Annexure – III
+List of Exam Cities for Centres of UGC-NET December 2026
+Examination will be held at the following cities, provided there are sufficient numbers of candidates in the
+city:
+S. No. State Code State City Code City
+1. 11 Andaman & Nicobar Islands (UT) AN01 Port Blair
+2. 12 Andhra Pradesh AP01 Anantapur
+3. 12 Andhra Pradesh AP06 Eluru
+4. 12 Andhra Pradesh AP07 Guntur
+5. 12 Andhra Pradesh AP08 Kadapa (YSR Kadapa)
+6. 12 Andhra Pradesh AP09 Kakinada
+7. 12 Andhra Pradesh AP10 Kurnool
+8. 12 Andhra Pradesh AP11 Nellore
+9. 12 Andhra Pradesh AP12 Ongole
+10. 12 Andhra Pradesh AP13 Rajahmundry
+11. 12 Andhra Pradesh AP14 Srikakulam
+12. 12 Andhra Pradesh AP16 Tirupathi
+13. 12 Andhra Pradesh AP17 Vijayawada
+14. 12 Andhra Pradesh AP18 Visakhapatnam
+15. 12 Andhra Pradesh AP19 Vizianagaram
+16. 12 Andhra Pradesh AP20 Narasaraopet
+17. 12 Andhra Pradesh AP29 Nandyal
+18. 13 Arunachal Pradesh AL01 Itanagar/Naharlagun/Papum Pare
+19. 14 Assam AM02 Guwahati
+20. 14 Assam AM03 Jorhat
+21. 14 Assam AM04 Silchar
+22. 14 Assam AM05 Tezpur
+23. 14 Assam AM01 Dibrugarh
+24. 15 Bihar BR01 Aurangabad (Bihar)
+25. 15 Bihar BR02 Bhagalpur
+26. 15 Bihar BR04 Darbhanga
+27. 15 Bihar BR05 Gaya
+28. 15 Bihar BR06 Muzaffarpur
+29. 15 Bihar BR07 Patna
+30. 15 Bihar BR08 Purnea
+31. 15 Bihar BR09 Arrah
+32. 16 Chandigarh (UT) CH01 Chandigarh/Mohali
+33. 17 Chhattisgarh CG03 Raipur
+34. 17 Chhattisgarh CG08 Jagdalpur
+35. 17 Chhattisgarh CG01 Bhilai Nagar (Durg)
+36. 17 Chhattisgarh CG04 Ambikapur
+37. 17 Chhattisgarh CG02 Bilaspur(Chhattisgarh)
+
+Information Bulletin UGC-NET December 2026 Examination
+49 | P a g e
+
+S. No. State Code State City Code City
+38. 18 Dadra & Nagar Haveli (UT) DN01 Silvassa
+39. 19 Daman & Diu (UT) DD02 Diu
+40. 20 Delhi (NCT) DL01 Delhi/New Delhi
+41. 21 Goa GO01 Madgaon/Mapusa
+42. 22 Gujarat GJ01 Ahmedabad
+43. 22 Gujarat GJ02 Anand
+44. 22 Gujarat GJ06 Jamnagar
+45. 22 Gujarat GJ07 Junagadh
+46. 22 Gujarat GJ10 Rajkot
+47. 22 Gujarat GJ11 Surat
+48. 22 Gujarat GJ12 Vadodara
+49. 22 Gujarat GJ08 Mehsana
+50. 22 Gujarat GJ23 Gandhinagar
+51. 22 Gujarat GJ17 Bhuj
+52. 22 Gujarat GJ13 Vapi
+53. 22 Gujarat GJ35 Bardoli
+54. 22 Gujarat GJ27 Modasa
+55. 23 Haryana HR01 Ambala
+56. 23 Haryana HR04 Gurugram
+57. 23 Haryana HR03 Faridabad
+58. 23 Haryana HR07 Kurukshetra
+59. 24 Himachal Pradesh HP03 Hamirpur (Himachal Pradesh)
+60. 24 Himachal Pradesh HP06 Shimla
+61. 24 Himachal Pradesh HP08 Mandi
+62. 24 Himachal Pradesh HP09 Una
+63. 24 Himachal Pradesh HP10 Kullu
+64. 24 Himachal Pradesh HP01 Bilaspur (Himachal Pradesh)
+65. 24 Himachal Pradesh HP04 Kangra/Palampur
+66. 25 Jammu & Kashmir JK02 Jammu
+67. 25 Jammu & Kashmir JK04 Srinagar (J&K)
+68. 25 Jammu & Kashmir JK06 Pulwama
+69. 25 Jammu & Kashmir JK03 Sambha
+70. 25 Jammu & Kashmir JK01 Baramulla
+71. 25 Jammu & Kashmir JK07 Budgam
+72. 26 Jharkhand JH01 Bokaro Steel City
+73. 26 Jharkhand JH02 Dhanbad
+74. 26 Jharkhand JH03 Jamshedpur
+75. 26 Jharkhand JH04 Ranchi
+76. 26 Jharkhand JH05 Hazaribagh
+77. 26 Jharkhand JH06 Ramgarh
+78. 27 Karnataka KK02 Belagavi (Belgaum)
+
+Information Bulletin UGC-NET December 2026 Examination
+50 | P a g e
+
+S. No. State Code State City Code City
+79. 27 Karnataka KK20 Bengaluru
+80. 27 Karnataka KK06 Davanagere
+81. 27 Karnataka KK08 Kalaburagi (Gulbarga)
+82. 27 Karnataka KK09 Hassan
+83. 27 Karnataka KK10 Dharwad
+84. 27 Karnataka KK12 Mangaluru (Mangalore)
+85. 27 Karnataka KK14 Mysuru (Mysore)
+86. 27 Karnataka KK15 Shivamogga (Shimoga)
+87. 27 Karnataka KK23 Chikkamagaluru
+88. 27 Karnataka KK27 Hubballi (Hubli)
+89. 27 Karnataka KK17 Udupi/Manipal
+90. 27 Karnataka KK16 Tumakuru
+91. 28 Kerala KL07 Kannur
+92. 28 Kerala KL09 Kollam
+93. 28 Kerala KL11 Kottayam
+94. 28 Kerala KL12 Kozhikode
+95. 28 Kerala KL13 Malappuram
+96. 28 Kerala KL15 Palakkad
+97. 28 Kerala KL16 Pathanamthitta
+98. 28 Kerala KL17 Thiruvananthapuram
+99. 28 Kerala KL18 Thrissur
+100. 28 Kerala KL19 Wayanad
+101. 28 Kerala KL01 Alappuzha/Chengannur
+102. 28 Kerala KL04 Ernakulam/Moovattupuzha
+103. 29 Lakshadweep (UT) LD01 Kavaratti
+104. 47 Leh & Ladakh (UT) LL01 Leh
+105. 47 Leh & Ladakh (UT) LL02 Kargil
+106. 30 Madhya Pradesh MP01 Balaghat
+107. 30 Madhya Pradesh MP03 Bhopal
+108. 30 Madhya Pradesh MP06 Gwalior
+109. 30 Madhya Pradesh MP07 Indore
+110. 30 Madhya Pradesh MP08 Jabalpur
+111. 30 Madhya Pradesh MP12 Sagar
+112. 30 Madhya Pradesh MP13 Satna
+113. 30 Madhya Pradesh MP15 Ujjain
+114. 31 Maharashtra MR01 Ahilyanagar/Ahmednagar
+115. 31 Maharashtra MR02 Akola
+116. 31 Maharashtra MR03 Amravati
+117. 31 Maharashtra MR04 Chhatrapati Sambhaji Nagar
+118. 31 Maharashtra MR09 Chandrapur
+119. 31 Maharashtra MR10 Dhule
+
+Information Bulletin UGC-NET December 2026 Examination
+51 | P a g e
+
+S. No. State Code State City Code City
+120. 31 Maharashtra MR13 Jalgaon
+121. 31 Maharashtra MR14 Kolhapur
+122. 31 Maharashtra MR15 Latur
+123. 31 Maharashtra MR17 Nagpur
+124. 31 Maharashtra MR18 Nanded
+125. 31 Maharashtra MR19 Nashik
+126. 31 Maharashtra MR22 Pune
+127. 31 Maharashtra MR25 Sangli
+128. 31 Maharashtra MR26 Satara
+129. 31 Maharashtra MR27 Solapur
+130. 31 Maharashtra MR28 Thane
+131. 31 Maharashtra MR29 Wardha
+132. 31 Maharashtra MR30 Beed
+133. 31 Maharashtra MR31 Bhandara
+134. 31 Maharashtra MR32 Buldhana
+135. 31 Maharashtra MR24 Ratnagiri
+136. 31 Maharashtra MR38 Parbhani
+137. 31 Maharashtra MR40 Gadchiroli
+138. 31 Maharashtra MR42 Jalna
+139. 31 Maharashtra MR47 Mumbai/Navi Mumbai
+140. 32 Manipur MN01 Imphal
+141. 32 Manipur MN03 Churachandpur
+142. 32 Manipur MN06 Thoubal
+143. 33 Meghalaya MG01 Shillong
+144. 33 Meghalaya MG04 Tura
+145. 34 Mizoram MZ01 Aizawl
+146. 35 Nagaland NL01 Dimapur
+147. 35 Nagaland NL02 Kohima
+148. 36 Odisha OR02 Balasore (Baleswar)
+149. 36 Odisha OR03 Berhampur-Ganjam
+150. 36 Odisha OR04 Bhubaneswar
+151. 36 Odisha OR05 Cuttack
+152. 36 Odisha OR06 Dhenkanal
+153. 36 Odisha OR18 Bhawanipatna/ Kalahandi
+154. 36 Odisha OR09 Sambalpur
+155. 36 Odisha OR10 Angul
+156. 36 Odisha OR11 Bhadrak
+157. 36 Odisha OR12 Baripada/ Mayurbhanj
+158. 36 Odisha OR13 Jajpur
+159. 36 Odisha OR08 Rourkela
+160. 36 Odisha OR15 Kendujhar (Keonjhar)
+
+Information Bulletin UGC-NET December 2026 Examination
+52 | P a g e
+
+S. No. State Code State City Code City
+161. 36 Odisha OR16 Puri
+162. 36 Odisha OR19 Jeypore (Odisha)
+163. 36 Odisha OR20 Balangir
+164. 36 Odisha OR21 Baragarh
+165. 36 Odisha OR32 Nayagarh
+166. 36 Odisha OR26 Rayagada
+167. 36 Odisha OR22 Jharsuguda
+168. 36 Odisha OR23 Malkangiri
+169. 36 Odisha OR27 Koraput
+170. 36 Odisha OR25 Phulbani
+171. 36 Odisha OR08A Sundergarh
+172. 37 Puducherry (UT) PO01 Puducherry
+173. 38 Punjab PB12 Chandigarh/ Sahibzada Ajit Singh Nagar
+174. 38 Punjab PB01 Amritsar
+175. 38 Punjab PB02 Bathinda
+176. 38 Punjab PB04 Jalandhar/Phagwara
+177. 38 Punjab PB05 Ludhiana
+178. 38 Punjab PB07 Pathankot
+179. 38 Punjab PB08 Patiala/Fatehgarh Sahib
+180. 38 Punjab PB20 Moga
+181. 39 Rajasthan RJ01 Ajmer
+182. 39 Rajasthan RJ02 Alwar
+183. 39 Rajasthan RJ05 Bikaner
+184. 39 Rajasthan RJ06 Jaipur
+185. 39 Rajasthan RJ07 Jodhpur
+186. 39 Rajasthan RJ08 Kota
+187. 39 Rajasthan RJ09 Sikar
+188. 39 Rajasthan RJ10 Sriganganagar
+189. 39 Rajasthan RJ11 Udaipur
+190. 39 Rajasthan RJ12 Bhilwara
+191. 39 Rajasthan RJ16 Bharatpur
+192. 39 Rajasthan RJ17 Dausa
+193. 39 Rajasthan RJ23 Hanumangarh
+194. 40 Sikkim SM01 Gangtok
+195. 41 Tamil Nadu TN01 Chennai
+196. 41 Tamil Nadu TN02 Coimbatore
+197. 41 Tamil Nadu TN03 Cuddalore
+198. 41 Tamil Nadu TN05 Kanchipuram
+199. 41 Tamil Nadu TN06 Nagercoil (Kanyakumari)
+200. 41 Tamil Nadu TN08 Madurai
+
+Information Bulletin UGC-NET December 2026 Examination
+53 | P a g e
+S. No. State Code State City Code City
+201. 41 Tamil Nadu TN10 Namakkal
+202. 41 Tamil Nadu TN11 Salem
+203. 41 Tamil Nadu TN12 Thanjavur
+204. 41 Tamil Nadu TN13 Thoothukudi
+205. 41 Tamil Nadu TN14 Tiruchirappalli
+206. 41 Tamil Nadu TN15 Tirunelveli
+207. 41 Tamil Nadu TN18 Vellore
+208. 41 Tamil Nadu TN20 Virudhunagar
+209. 41 Tamil Nadu TN21 Krishnagiri
+210. 41 Tamil Nadu TN22 Tirupur
+211. 41 Tamil Nadu TN23 Viluppuram
+212. 41 Tamil Nadu TN26 Dharmapuri
+213. 41 Tamil Nadu TN27 Dindigul
+214. 41 Tamil Nadu TN28 Erode
+215. 41 Tamil Nadu TN29 Karur
+216. 41 Tamil Nadu TN31 Pudukkottai
+217. 41 Tamil Nadu TN32 Ramanathapuram
+218. 41 Tamil Nadu TN34 Tiruvallur
+219. 41 Tamil Nadu TN35 Tiruvannamalai
+220. 42 Telangana TL02 Karimnagar
+221. 42 Telangana TL03 Khammam
+222. 42 Telangana TL04 Mahabubnagar
+223. 42 Telangana TL05 Nalgonda
+224. 42 Telangana TL07 Warangal
+225. 42 Telangana TL08 Nizamabad
+226. 42 Telangana TL11 Siddipet
+227. 42 Telangana TL17 Kothagudem
+228. 42 Telangana TL01 Hyderabad
+229. 43 Tripura TA01 Agartala
+230. 44 Uttar Pradesh UP01 Agra
+231. 44 Uttar Pradesh UP02 Aligarh
+232. 44 Uttar Pradesh UP03 Prayagraj
+233. 44 Uttar Pradesh UP04 Bareilly
+234. 44 Uttar Pradesh UP07 Ghaziabad
+235. 44 Uttar Pradesh UP08 Gorakhpur
+236. 44 Uttar Pradesh UP09 Noida/Greater Noida
+237. 44 Uttar Pradesh UP10 Jhansi
+238. 44 Uttar Pradesh UP11 Kanpur
+239. 44 Uttar Pradesh UP12 Lucknow
+240. 44 Uttar Pradesh UP13 Mathura
+241. 44 Uttar Pradesh UP14 Meerut
+
+Information Bulletin UGC-NET December 2026 Examination
+54 | P a g e
+
+S. No. State Code State City Code City
+242. 44 Uttar Pradesh UP15 Moradabad
+243. 44 Uttar Pradesh UP16 Muzaffarnagar
+244. 44 Uttar Pradesh UP18 Varanasi
+245. 44 Uttar Pradesh UP19 Azamgarh
+246. 44 Uttar Pradesh UP20 Ballia
+247. 44 Uttar Pradesh UP06 Ayodhya
+248. 44 Uttar Pradesh UP22 Firozabad
+249. 44 Uttar Pradesh UP23 Ghazipur
+250. 44 Uttar Pradesh UP29 Bulandshahr
+251. 44 Uttar Pradesh UP35 Mau
+252. 44 Uttar Pradesh UP37 Rai Bareilly
+253. 44 Uttar Pradesh UP38 Saharanpur
+254. 44 Uttar Pradesh UP41 Chandauli
+255. 44 Uttar Pradesh UP43 Pratapgarh
+256. 45 Uttarakhand UK01 Dehradun
+257. 45 Uttarakhand UK02 Haldwani
+258. 45 Uttarakhand UK06 Roorkee
+259. 45 Uttarakhand UK08 Pauri Garhwal
+260. 45 Uttarakhand UK09 Almora
+261. 46 West Bengal WB02 Burdwan (Bardhaman)
+262. 46 West Bengal WB04 Durgapur
+263. 46 West Bengal WB06 Hooghly
+264. 46 West Bengal WB07 Howrah
+265. 46 West Bengal WB08 Kalyani
+266. 46 West Bengal WB10 Kolkata
+267. 46 West Bengal WB11 Siliguri
+268. 46 West Bengal WB13 Paschim Medinipur
+269. 46 West Bengal WB14 Purba Medinipur
+270. 46 West Bengal WB16 Bankura
+271. 46 West Bengal WB22 Suri
+272. 46 West Bengal WB01 Asansol
+
+(Disclaimer: NTA has reserves the right to change the centre and city at any time, subject to
+availability.)
+
+Information Bulletin UGC-NET December 2026 Examination
+55 | P a g e
+
+Annexure – IV
+
+List of Subjects at Post Graduation level and their codes
+
+Information Bulletin UGC-NET December 2026 Examination
+56 | P a g e
+
+Annexure – V
+
+List of Post-Graduation Courses and their Codes
+
+Post Graduation Courses Code
+Master of Ayurvedacharya (Ayurvedacharya) 01
+Master of Acharya (Acharya) 02
+Master of Law (LLM) 03
+Master of Architecture (M. Arch.) 04
+Master of Commerce (M.Com) 05
+Master of Dance (M. Dance) 06
+Master of Education (M.Ed.) 07
+Master of Library Science (M. Lib. Sc.) 08
+Master of Literature (M.Litt.) 09
+Master of Music (M.Mus) 10
+Master of Pharmacy (M.Pharm.) 11
+Master of Business Administration (MBA) 12
+Master of Computer Applications (MCA) 13
+Master of Financial Management (M.F.M.) 14
+Master of Human Resource Development (M.H.R.D.) 15
+Master of International Business (M.LB) 16
+Master of Marketing Management (M. Mkt. M.) 17
+Master of Optometry (M. Optom.) 18
+Master of Hospital Administration (MHA) 19
+Master of Journalism and Mass Communication (MJMC) 20
+Master of Mass Communication (MMC) 21
+Master of Occupational Therapy (MOT) 22
+Master of Public Health (MPH) 23
+Master of Social Work (MSW) 24
+Master of Planning (M. Plan) 25
+Master of Science (M.Sc.) 26
+Master of Statistics (M. Stat.) 27
+Master of Technology (M.Tech.) 28
+Master of Veterinary Science (M.V.Sc.) 29
+Master of Arts (MA) 30
+Master of Foreign Trade (M.E.T.) 31
+Master of Physical Education (M.P.Ed.) 32
+Master of Tourism Management (MTM) 33
+Master of Physical Education and Sports Sciences (MPES) 34
+CA/CS/ ICWA 35
+Other 36
+
+Information Bulletin UGC-NET December 2026 Examination
+57 | P a g e
+
+Annexure – VI
+
+(Ministry of Social Justice & Empowerment, Govt. of India Office memorandum No F. No. 34-
+02/ 2015- DD-III dated 29 August 2018)
+
+Certificate regarding physical limitation in an Examinee to Write
+
+This to certify that, I have examined Mr./ Ms./ Mrs. (Name of the candidate
+with disability), a person with (nature and percentage of disability as mentioned in the
+certificate of disability), S/ o/ D/ o a resident of (Village/ District/ State)
+and to state that he/ she has physical limitation which hampers his/her writing capabilities owing to
+his/ her disability.
+
+Signature
+
+Chief Medical Officer/ Civil Surgeon/ Medical Superintendent of a
+Government health care institution
+
+Name & Designation.
+Name of Government Hospital/Health Care Centre with Seal
+
+Place:
+
+Date:
+
+Note: - Certificate should be given by a specialist of the relevant stream/ disability (e.g. Visual
+impairment — Ophthalmologist, Locomotor disability — Orthopedic specialist/ PMR).
+
+Information Bulletin UGC-NET December 2026 Examination
+58 | P a g e
+
+Annexure – VII
+Letter of Undertaking for Using Own Scribe
+
+I _____________________________________ , a candidate with ___________________________ (name
+of the disability) appearing for the __________________________________ (name of the examination)
+bearing Roll No. _____________________________ at ________________________ (name of the centre)
+in the District ______________________________ , ________________________ (name of the State).
+My qualification is __________________________________.
+
+I do hereby state that (name of the scribe) will provide the service
+of scribe/reader/lab assistant for the undersigned for taking the aforesaid examination.
+I do hereby undertake that his/her qualification is ________________________________. In case,
+subsequently it is found that his/her qualification is not as declared by the undersigned and is beyond
+my qualification, I shall forfeit my right to the post and claims relating thereto.
+
+(Signature of the candidate with Disability)
+Place:
+
+Date:
+
+Information Bulletin UGC-NET December 2026 Examination
+59 | P a g e
+
+Annexure - VIII
+
+(Ministry of Social Justice & Empowerment, Govt. of India F. No. 29-6/2019-DD-III dated 10
+August 2022)
+
+Certificate for person with specified disability covered under the definition of Section 2 (s) of the
+RPwD Act, 2016 but not covered under the definition of Section 2(r) of the said Act, i.e. persons
+having less than 40% disability and having difficulty in writing.
+
+1. This is to certify that, we have examined Mr/Ms/Mrs …………………………..…. (Name of the candidate),
+S/o ……………………………………, a resident of ………………………………………………………..
+(Vill/PO/ PS/ District/ State), aged ……………………..…………………………. years, a person with
+…………………………………………………………………………………….(nature of disability/condition), and
+to state that he/ she has limitation which hampers his/her writing capability owing to his/her above
+condition. He/she requires support of scribe for writing the examination.
+
+2. The above candidate uses aids and assistive device such as prosthetics & orthotics, hearing aid (name to be
+specified) which is /are essential for the candidate to appear at the examination with the assistance of scribe.
+
+3. This certificate is issued only for the purpose of appearing in written examinations conducted by recruitment
+agencies as well as academic institutions and is valid up to
+........................................................................................................................................................................................... (
+it is valid for maximum period of six months or less as may be certified by the medical authority).
+
+Signature of medical authority
+
+(Signature & Name) (Signature & Name) (Signature & Name) (Signature & Name) (Signature & Name)
+Orthopaedic / PMR
+specialist
+Clinical Psychologist/
+Rehabilitation
+Psychologist/Psychiatri
+st / Special Educator
+Neurologist (if
+available)
+Occupational
+therapist (if
+available)
+Other Expert, as
+nominated by the
+Chairperson (if any)
+
+(Signature & Name)
+
+Chief Medical Officer/Civil Surgeon/Chief District Medical Officer……………………………….…Chairperson
+
+Name of Government Hospital/Health ______________________________________________________________________
+
+Care Centre with Seal ___________________________________________________________________________________
+
+Place: _____________________
+
+Date: ______________________
+
+Information Bulletin UGC-NET December 2026 Examination
+60 | P a g e
+
+Annexure – IX
+Procedure for Appearing in Computer Based Test (CBT)
+1. Seating and login
+(a) A computer terminal (node) will be allotted to each candidate at the registration desk in the
+examination hall, as stated in Para 8.4. Candidates must sit only at the terminal allotted to them.
+A candidate found to have changed the room, hall or terminal without the permission of the
+invigilator is liable to cancellation of candidature, and no plea in this regard will be entertained.
+(b) The terminal will display a login screen showing the candidate's photograph and the subject
+opted by the candidate. The candidate must check that the photograph, name and subject are
+correct, and must inform the invigilator immediately if they are not (Para 8.5). The candidate
+will log in using the login ID and password as instructed in the examination hall.
+(c) After logging in, the candidate will see the detailed instructions for the test and should read them
+carefully. The questions will be displayed at the designated start time of the examination.
+2. The test on screen
+(a) Paper I (50 questions) and Paper II (100 questions) are displayed as two sections of a single test
+of 180 minutes. There is no separate time limit for each paper and no break between them. The
+candidate may move between the two sections, and between questions, at any time during the
+test.
+(b) All questions are multiple-choice questions. For each question, the candidate is to select one
+option as the answer (Para 3.5).
+(c) Answers are given only by clicking with the computer mouse. The keyboard, if any, will be
+disabled for the entire duration of the test. There are no questions requiring an answer to be
+typed or a number to be entered.
+3. Timer and technical problems
+(a) The clock is set at the server. The countdown timer at the top right of the screen shows the time
+remaining. When the timer reaches zero, the test will end automatically; the candidate is not
+required to submit the test. For a candidate allowed compensatory time under Para 4.2.4, the
+timer will include the additional time.
+(b) If the computer or mouse allotted to a candidate malfunctions at any time during the test, the
+candidate will be moved immediately to another terminal, and the time lost will be adjusted at
+the server so that the candidate gets the full time allowed. The responses already saved will be
+retained.
+4. Question palette and status of questions
+The Question Palette on the right of the screen shows the status of each question. The symbols and
+colours used for each status are shown in the instructions displayed after login.
+Status shown on the palette What it means Will it be evaluated?
+Not Visited The candidate has not yet opened the question. No
+Not Answered The candidate has opened the question but has not saved
+an answer.
+No
+Answered The candidate has selected an option and saved it. Yes
+Marked for Review The candidate has marked the question for review
+without saving an answer.
+No
+Answered and Marked for
+Review
+The candidate has saved an answer and also marked the
+question to look at again.
+Yes
+Only questions with a saved answer, that is, questions with the status "Answered" or "Answered
+and Marked for Review", will be evaluated.
+The candidate can collapse the Question Palette by clicking the arrow to its left, to enlarge the
+
+Information Bulletin UGC-NET December 2026 Examination
+61 | P a g e
+
+question area, and open it again by clicking the arrow on the right of the question area.
+5. Answering a question
+(a) To select an answer: click the option chosen.
+(b) To save the answer: click "Save & Next". The answer is saved and the next question is displayed.
+An answer that has been selected but not saved will not be recorded.
+(c) To change a saved answer: go back to the question, click a different option and click "Save &
+Next" again. To remove an answer altogether, click "Clear Response".
+(d) To mark a question for review: click "Mark for Review & Next". If an option has been selected
+when this button is clicked, the answer is saved and the question is shown as "Answered and
+Marked for Review"; it will be evaluated. If no option has been selected, the question is shown
+as "Marked for Review"; it will not be evaluated unless an answer is later saved.
+(e) Answers may be changed at any time until the timer reaches zero.
+
+6. Navigating
+(a) Through the palette: click a question number on the palette to go directly to that question. Note
+that this does NOT save the answer to the question currently on screen.
+(b) Using "Save & Next": this saves the current answer and moves to the next question. After the
+last question of a section, the first question of the next section is displayed.
+(c) Between sections: the two sections (Paper I and Paper II) are shown on the top bar of the screen.
+Click a section name to view its questions; the section currently being viewed is highlighted. A
+summary of each section is shown above the Question Palette.
+(d) Within a question: use the mouse to scroll up and down, or click the arrows provided to go to
+the top or bottom of the question area.
+
+7. Rough work
+(a) Blank sheets for rough work will be provided in the examination hall. The candidate must write
+his or her Name and Roll Number at the top of each sheet.
+(b) All rough work must be done only on these sheets. At the end of the test, the candidate must
+hand over all rough sheets to the invigilator.
+(c) Swapping rough sheets with another candidate will be treated as Unfair Means (Chapter 9).
+
+8. Candidates using a scribe
+Where a candidate is allowed a scribe under Para 4.2, the scribe will read the questions and click the
+answers on the computer as directed by the candidate. The scribe will neither explain the questions
+nor suggest any answer.
+
+Information Bulletin UGC-NET December 2026 Examination
+62 | P a g e
+
+Annexure – X
+
+Computation of Percentile Score for Subjects Conducted in a Single Shift
+1. Scope
+
+UGC-NET December 2026 is planned to be conducted in a single shift for each subject. In a single-shift
+subject, all candidates of that subject answer the same question paper under the same conditions, and
+their marks are therefore directly comparable. No normalisation of marks is required.
+This Annexure applies to every subject conducted in a single shift. If, due to unavoidable circumstances,
+any subject is conducted in more than one shift, the marks of that subject will be normalised using the
+Equi-percentile method set out in Annexure XI, and this Annexure will not apply to that subject.
+2. Basis of qualification
+Qualification for (i) award of JRF and appointment as Assistant Professor, (ii) appointment as Assistant
+Professor and admission to Ph.D., and (iii) admission to Ph.D. only, is determined on the aggregate
+marks obtained in Paper I and Paper II taken together, in accordance with the procedure in Chapter
+11.3. The minimum aggregate marks and the subject-wise and category-wise qualifying cut-offs are
+expressed in marks.
+The Percentile Score is reported on the score card to indicate the relative standing of a candidate among
+all candidates who appeared in the same subject. It is not used to determine whether a candidate
+qualifies, or to determine any cut-off.
+3. Candidates and marks used
+(i) The Percentile Score is computed separately for each subject.
+(ii) It is computed on the aggregate raw marks of Paper I and Paper II taken together (maximum 300
+marks). Percentile Scores are not computed separately for Paper I and Paper II, and the Percentile
+Score is not an average of any paper-wise or section-wise percentiles.
+(iii) The group used for computation consists of all candidates who appeared in that subject in UGC-
+NET December 2026, irrespective of category, the qualifying degree on the basis of which they
+appeared, or the category of qualification for which they are eligible.
+(iv) Candidates who were absent are not included.
+4. Formula
+The Percentile Score of a candidate is calculated as follows:
+Percentile Score = 100 × (m ÷ N)
+where:
+• N is the total number of candidates who appeared in the subject; and
+• m is the number of candidates who appeared in the subject and obtained aggregate marks
+EQUAL TO OR LESS THAN the aggregate marks of the candidate.
+The Percentile Score is calculated up to 7 decimal places to reduce ties.
+5. Properties of the Percentile Score
+(i) The candidate(s) with the highest aggregate marks in a subject will have a Percentile Score of
+100.
+(ii) Candidates with the same aggregate marks in a subject will have the same Percentile Score.
+(iii) A Percentile Score is not the same as the percentage of marks obtained. A Percentile Score of 70
+means that 70% of the candidates in that subject scored equal to or less than the candidate. It
+does not mean that the candidate obtained 70% of the marks.
+(iv) Percentile Scores are relative to the candidates of one subject. Percentile Scores of different
+subjects are not comparable with each other.
+
+Information Bulletin UGC-NET December 2026 Examination
+63 | P a g e
+
+6. Illustration
+Suppose that in a subject conducted in a single shift, 21,415 candidates registered and 18,642 appeared
+(2,773 were absent). The maximum aggregate marks are 300. The Percentile Scores of seven candidates
+are as follows.
+Candidate Aggregate marks
+(out of 300)
+Percentage of
+marks
+Candidates with equal or
+lower marks (m)
+Percentile Score = 100 ×
+(m ÷ 18,642)
+A 268 89.33% 18,642 100.0000000
+B 204 68.00% 17,951 96.2933162
+C 150 50.00% 13,288 71.2799056
+D 150 50.00% 13,288 71.2799056
+E 120 40.00% 9,874 52.9664199
+F 118 39.33% 9,602 51.5073490
+G 16 5.33% 1 0.0053642
+
+Reading the illustration:
+• Candidate A has the highest marks in the subject and therefore a Percentile Score of 100.
+• Candidates C and D have the same marks and therefore the same Percentile Score.
+• Candidate B has a Percentile Score of 96.2933162. This means that 96.2933162% of the candidates
+in the subject scored 204 marks or less. It does not mean that Candidate B obtained 96% marks;
+Candidate B obtained 68% marks.
+• Candidate G has the lowest marks. The Percentile Score of the lowest scorer depends on the
+number of candidates who appeared in the subject.
+• Qualification is decided on marks, not on the Percentile Score. For a General (Unreserved) or
+General-EWS candidate, the minimum aggregate under Step III of Chapter 11.3 is 40%, that is,
+120 marks out of 300. Candidate E (120 marks) meets this minimum. Candidate F (118 marks)
+does not, even though the Percentile Scores of E and F differ by less than 1.5. Whether Candidate
+E finally qualifies depends on the subject-wise and category-wise cut-off in marks determined
+under Step IV.
+7. Subjects conducted in more than one shift
+If any subject is conducted in more than one shift, the procedure in Annexure XI will apply to that
+subject. In that case, the minimum aggregate marks under Step III and the qualifying cut-offs under
+Step IV of Chapter 11.3 will be applied to the normalised marks, and the result for that subject will be
+declared in normalised marks along with the Percentile Score, as stated in Para 1.3(a).
+
+Information Bulletin UGC-NET December 2026 Examination
+64 | P a g e
+
+Annexure – XI
+Normalisation of Marks for Subjects Conducted in More than One Shift
+(Equi percentile Method)
+1. Scope
+UGC-NET December 2026 is planned to be conducted in a single shift for each subject. This Annexure
+applies only if, due to unavoidable circumstances, a subject is conducted in more than one shift. For
+subjects conducted in a single shift, Annexure X applies and no normalisation is done.
+2. Need for normalisation
+When a subject is conducted in more than one shift, candidates in different shifts answer different
+question papers. Despite every effort to keep the papers equivalent, their difficulty may not be exactly
+the same, and marks obtained in different shifts are therefore not directly comparable. Normalisation
+brings the marks of all shifts of a subject to a common scale, so that no candidate is advantaged or
+disadvantaged by the shift in which he or she appeared.
+The method was recommended by a Committee headed by a Senior Professor of the Indian Statistical
+Institute, Delhi, and comprising Senior Professors of the Indian Institute of Technology Delhi and the
+University of Delhi. It is based on "Normalization of marks in multi-session examinations", Abhay G.
+Bhatt et al., Current Science, Vol. 118, No. 1, 10 January 2020.
+3. Principle and allotment of shifts
+Under the Equi-percentile method, candidates who are at the same percentile within their own shift are
+treated as having performed equally. The normalised marks for a given percentile are the average of
+the marks that correspond to that percentile in each shift of the subject.
+This method assumes that the candidates of a subject in each shift are, taken as a group, of comparable
+ability. Where a subject is conducted in more than one shift, candidates of that subject will therefore be
+allotted to the shifts randomly, as far as administratively possible, and not on the basis of category,
+qualifying degree or any other factor related to performance.
+4. Candidates and marks used
+i) Normalisation is done separately for each subject.
+ii) It is done on the aggregate raw marks of Paper I and Paper II taken together (maximum 300
+marks).
+iii) All candidates who appeared in the subject in each shift are included. Candidates who were
+absent are not included.
+5. Procedure
+Step 1: Percentile within each shift. For each shift separately, the percentile of each candidate is
+calculated as:
+P = 100 × (m ÷ N)
+where N is the number of candidates who appeared in that shift, and m is the number of candidates
+in that shift whose aggregate marks are equal to or less than the candidate's aggregate marks. P is
+calculated up to 7 decimal places.
+Step 2: Equivalent marks in every shift. All the distinct percentile values from all shifts of the subject
+are listed together. For each percentile value P, the equivalent marks in each shift are found as
+follows:
+(a) If one or more candidates in that shift have the percentile P, the equivalent marks are their
+aggregate marks.
+(b) Otherwise, the equivalent marks X are found by linear interpolation:
+X = x1 + (P − p1) × (x2 − x1) ÷ (p2 − p1)
+where p1 is the highest percentile in that shift that is lower than P, and x1 the marks at p1; and p2
+
+Information Bulletin UGC-NET December 2026 Examination
+65 | P a g e
+
+is the lowest percentile in that shift that is higher than P, and x2 the marks at p2.
+(c) If P is lower than the lowest percentile in that shift, the equivalent marks are the lowest
+aggregate marks in that shift. (The highest percentile in every shift is 100, so P is never higher
+than the highest percentile of a shift.)
+Step 3: Normalised marks. The normalised marks Z for the percentile P are the average of the
+equivalent marks in all the shifts:
+Z = ( u1 + u2 + ... + ut ) ÷ t
+where t is the number of shifts in which the subject was conducted, and u1, u2, ... ut are the
+equivalent marks for the percentile P in shifts 1, 2, ... t. Every candidate whose percentile in his or her
+own shift is P receives the normalised marks Z. Z is calculated up to 7 decimal places.
+Step 4: Use of normalised marks in the result. For a subject conducted in more than one shift, the
+normalised marks are used in place of the aggregate raw marks for all purposes of the result under
+Chapter 11.3. In particular, the minimum aggregate under Step III (40%, that is 120 marks out of 300,
+for General (Unreserved) and General-EWS candidates; 35%, that is 105 marks, for candidates of
+reserved categories) and the qualifying cut-offs under Step IV are applied to the normalised marks.
+The normalised marks are also the NET marks to be used for admission to Ph.D. under Para 1.3(a).
+Step 5: Percentile Score reported on the score card. The Percentile Score reported for each candidate is
+calculated over all candidates who appeared in the subject, in all shifts taken together, on the
+normalised marks:
+Percentile Score = 100 × ( number of candidates in the subject with normalised marks equal to or
+less than the candidate ÷ total candidates who appeared in the subject )
+This places candidates of single-shift and multi-shift subjects on the same footing: in both cases the
+Percentile Score shows the candidate's standing among all candidates of the subject. As under
+Annexure X, the Percentile Score is not used to determine qualification or cut-offs.
+6. Properties of normalised marks
+i) Normalisation does not change the order of candidates within the same shift. A candidate with
+higher aggregate marks than another candidate in the same shift will always have normalised
+marks equal to or higher than that candidate.
+ii) Candidates in the same shift with equal aggregate marks receive equal normalised marks.
+iii) Normalised marks may be fractional. They are not rounded to whole marks.
+iv) A candidate in a shift with a more difficult paper will generally receive normalised marks higher
+than his or her raw marks, and a candidate in a shift with an easier paper will generally receive
+normalised marks lower than his or her raw marks.
+7. Illustration
+Suppose a subject is conducted in two shifts. To keep the arithmetic easy to follow, the illustration
+uses 10 candidates in Shift 1 (1A to 1J) and 8 candidates in Shift 2 (2A to 2H); in practice each shift will
+have many more candidates, but the method is the same. Marks are aggregate marks out of 300.
+Step 1: Percentile within each shift
+Shift Candidate Aggregate marks m of N Percentile (P)
+Shift 1 1A 252 10 of 10 100.0000000
+Shift 1 1B 210 9 of 10 90.0000000
+Shift 1 1C 186 8 of 10 80.0000000
+Shift 1 1D 164 7 of 10 70.0000000
+Shift 1 1E 150 6 of 10 60.0000000
+
+Information Bulletin UGC-NET December 2026 Examination
+66 | P a g e
+
+Shift Candidate Aggregate marks m of N Percentile (P)
+Shift 1 1F 150 6 of 10 60.0000000
+Shift 1 1G 128 4 of 10 40.0000000
+Shift 1 1H 112 3 of 10 30.0000000
+Shift 1 1I 96 2 of 10 20.0000000
+Shift 1 1J 60 1 of 10 10.0000000
+Shift 2 2A 276 8 of 8 100.0000000
+Shift 2 2B 240 7 of 8 87.5000000
+Shift 2 2C 214 6 of 8 75.0000000
+Shift 2 2D 190 5 of 8 62.5000000
+Shift 2 2E 172 4 of 8 50.0000000
+Shift 2 2F 146 3 of 8 37.5000000
+Shift 2 2G 130 2 of 8 25.0000000
+Shift 2 2H 88 1 of 8 12.5000000
+
+The highest scorer in each shift (1A in Shift 1 and 2A in Shift 2) has a percentile of 100. Candidates 1E
+and 1F have equal marks and therefore equal percentiles. The top score in Shift 2 (276) is higher than
+in Shift 1 (252), and the marks at every percentile are higher in Shift 2, which suggests that the Shift 2
+paper was easier.
+Steps 2 and 3: Equivalent marks and normalised marks
+Percentile (P) Candidate(s) Equivalent marks,
+Shift 1
+Equivalent marks,
+Shift 2
+Normalised marks Z =
+(Shift 1 + Shift 2) ÷ 2
+100.0000000 1A / 2A 252.00 276.00 264.00
+90.0000000 1B 210.00 247.20* 228.60
+87.5000000 2B 204.00* 240.00 222.00
+80.0000000 1C 186.00 224.40* 205.20
+75.0000000 2C 175.00* 214.00 194.50
+70.0000000 1D 164.00 204.40* 184.20
+62.5000000 2D 153.50* 190.00 171.75
+60.0000000 1E / 1F 150.00 186.40* 168.20
+50.0000000 2E 139.00* 172.00 155.50
+40.0000000 1G 128.00 151.20* 139.60
+37.5000000 2F 124.00* 146.00 135.00
+30.0000000 1H 112.00 136.40* 124.20
+25.0000000 2G 104.00* 130.00 117.00
+20.0000000 1I 96.00 113.20* 104.60
+12.5000000 2H 69.00* 88.00 78.50
+10.0000000 1J 60.00 88.00# 74.00
+
+Information Bulletin UGC-NET December 2026 Examination
+67 | P a g e
+
+Marks without a symbol are actual marks of a candidate at that percentile (Step 2(a)). * Interpolated under Step 2(b). # Lowest marks of
+the shift under Step 2(c). Values are shown to 2 decimal places for readability.
+Two of these values worked out in full:
+• Candidate 1B (Shift 1, 210 marks, P = 90). Shift 2 has no candidate at the 90th percentile. The
+nearest percentiles in Shift 2 are 87.5 (2B, 240 marks) below and 100 (2A, 276 marks) above.
+Equivalent marks in Shift 2 = 240 + (90 − 87.5) × (276 − 240) ÷ (100 − 87.5) = 240 + 2.5 × 36 ÷ 12.5
+= 247.20. Normalised marks = (210 + 247.20) ÷ 2 = 228.60.
+• Candidate 1J (Shift 1, 60 marks, P = 10). The lowest percentile in Shift 2 is 12.5, which is higher
+than 10. Under Step 2(c), the equivalent marks in Shift 2 are the lowest marks in Shift 2, that is
+88. Normalised marks = (60 + 88) ÷ 2 = 74.00.
+Steps 4 and 5: Use in the result
+Candidate Shift Raw aggregate
+marks
+Normalised
+marks
+Percentile Score in
+subject (18 candidates)
+Meets 120 marks
+(40%)?
+1A 1 252 264.00 100.0000000 Yes
+2A 2 276 264.00 100.0000000 Yes
+1B 1 210 228.60 88.8888889 Yes
+2B 2 240 222.00 83.3333333 Yes
+1C 1 186 205.20 77.7777778 Yes
+2C 2 214 194.50 72.2222222 Yes
+1D 1 164 184.20 66.6666667 Yes
+2D 2 190 171.75 61.1111111 Yes
+1E 1 150 168.20 55.5555556 Yes
+1F 1 150 168.20 55.5555556 Yes
+2E 2 172 155.50 44.4444444 Yes
+1G 1 128 139.60 38.8888889 Yes
+2F 2 146 135.00 33.3333333 Yes
+1H 1 112 124.20 27.7777778 Yes
+2G 2 130 117.00 22.2222222 No
+1I 1 96 104.60 16.6666667 No
+2H 2 88 78.50 11.1111111 No
+1J 1 60 74.00 5.5555556 No
+
+Reading the illustration:
+• Candidate 1H (Shift 1) has 112 raw marks, which is below 120. After normalisation 1H has
+124.20 marks and meets the 40% minimum, because 1H answered the harder paper.
+• Candidate 2G (Shift 2) has 130 raw marks, which is above 120. After normalisation 2G has
+117.00 marks and does not meet the 40% minimum, because 2G answered the easier paper.
+• Within each shift the order of candidates is unchanged. In Shift 1, for example, the order 1A, 1B,
+1C, 1D, 1E and 1F, 1G, 1H, 1I, 1J is the same before and after normalisation.
+• Candidates 1A and 2A, the toppers of the two shifts, both receive 264.00 normalised marks and
+a Percentile Score of 100.
+
+Information Bulletin UGC-NET December 2026 Examination
+68 | P a g e
+
+• Meeting the 40% minimum is the first condition only. Whether a candidate finally qualifies
+depends on the subject-wise and category-wise cut-off in normalised marks determined under
+Step IV of Chapter 11.3.
+
+Information Bulletin UGC-NET December 2026 Examination
+69 | P a g e
+
+Annexure – XII
+Gazette Notification for PwD Candidate
+
+Information Bulletin UGC-NET December 2026 Examination
+70 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+71 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+72 | P a g e
+
+Annexure – XIII
+REPLICA OF APPLICATION FORM
+
+Information Bulletin UGC-NET December 2026 Examination
+73 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+74 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+75 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+76 | P a g e
+
+Registration form
+
+Information Bulletin UGC-NET December 2026 Examination
+77 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+78 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+79 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+80 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+81 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+82 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+83 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+84 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+85 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+86 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+87 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+88 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+89 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+90 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+91 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+92 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+93 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+94 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+95 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+96 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+97 | P a g e
+
+Information Bulletin UGC-NET December 2026 Examination
+98 | P a g e
+
+Address for Correspondence:
+5 Floor, Government of India Press Building,th
+Minto Road, New Delhi-110002
+ugcnet@nta.ac.in
+------------------------------
+011-40759000 (Helpdesk)
+-------------------------------
+ugcnet.nta.nic.in; www.nta.ac.in
