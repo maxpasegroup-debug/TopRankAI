@@ -89,6 +89,7 @@ export default async function PlannerPage() {
             {plan.revision.length ? (
               <div>
                 {plan.revision.slice(0, 12).map((item) => {
+                  const attempt = item.question?.userAnswers[0]?.attempt;
                   const due = item.dueDate.getTime() <= Date.now();
                   return (
                     <div className="tp-list-item" key={item.id} style={{ alignItems: "flex-start" }}>
@@ -106,7 +107,11 @@ export default async function PlannerPage() {
                           {item.reason} · due {formatDate(item.dueDate, { day: "numeric", month: "short" })}
                         </div>
                       </div>
-                      <RevisionActions id={item.id} />
+                      <div className="tp-row tp-gap-8 tp-wrap">
+                        {attempt && item.question && <Link className="tp-btn tp-btn-soft tp-btn-sm"
+                          href={`/app/daily/${attempt.dailyExamId}/result?question=${item.question.id}#answer-${item.question.id}`}>Review answer</Link>}
+                        <RevisionActions id={item.id} />
+                      </div>
                     </div>
                   );
                 })}

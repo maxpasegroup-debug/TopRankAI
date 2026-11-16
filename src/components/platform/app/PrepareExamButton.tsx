@@ -7,11 +7,13 @@ import { prepareDailyExam } from "@/server/actions/platform";
 
 export function PrepareExamButton({
   code,
+  slot = 0,
   label = "Prepare today's paper",
   className = "tp-btn tp-btn-lg",
   icon = "play",
 }: {
   code: string;
+  slot?: number;
   label?: string;
   className?: string;
   icon?: "play" | "spark" | "refresh";
@@ -23,7 +25,7 @@ export function PrepareExamButton({
   function prepare() {
     setError(null);
     startTransition(async () => {
-      const result = await prepareDailyExam(code);
+      const result = await prepareDailyExam(code, slot);
       if (!result.ok) {
         setError(result.message);
         return;

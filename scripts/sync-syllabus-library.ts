@@ -229,7 +229,7 @@ async function main() {
     }
 
     writeFileSync(textFile, cleaned, "utf8");
-    const content = cleaned.length > 400_000 ? cleaned.slice(0, 400_000) : cleaned;
+    const content = cleaned;
 
     await prisma.syllabusSource.upsert({
       where: { examId_url: { examId: exam.id, url: definition.url } },

@@ -1,3 +1,4 @@
+import { dailyCapacity, includedPapers, levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
 import { cache } from "react";
 import { prisma } from "@/server/db";
 import { findExamPart, readExamPattern, type PatternPart } from "./patterns";
@@ -11,6 +12,9 @@ export type CandidateExam = {
   shortName: string | null;
   category: string | null;
   level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXTREME";
+  papersPerDay: number;
+  includedPapers: number;
+  monthlyUntil: Date | null;
   targetYear: number;
   dailyMinutes: number;
   targetExamDate: Date | null;
@@ -31,6 +35,7 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
     where: { userId, active: true, exam: { active: true } },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     include: {
+      user: { select: { subscription: { select: { plan: true, status: true, endsAt: true } } } },
       exam: {
         include: {
           configuration: true,
@@ -42,8 +47,12 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
   });
 
   return targets.map((target) => {
+    const subscription = target.user.subscription;
+    const monthly = mockMonthlyActive(subscription);
     const pattern = readExamPattern(target.exam.configuration?.sections);
     const part = findExamPart(pattern, target.examPart);
+    const duration = part?.durationMinutes ?? target.exam.configuration?.durationMinutes ?? 60;
+    const count = Math.min(dailyCapacity(duration), paperCount(target.preparationLevel, target.dailyPaperCount, monthly));
     return {
       targetId: target.id,
       examId: target.examId,
@@ -51,11 +60,14 @@ export const getCandidateExams = cache(async (userId: string): Promise<Candidate
       name: target.exam.name,
       shortName: target.exam.shortName,
       category: target.exam.examCategory?.name ?? target.exam.category,
-      level: target.preparationLevel,
+      level: levelForPapers(count),
+      papersPerDay: count,
+      includedPapers: includedPapers(target.preparationLevel),
+      monthlyUntil: monthly ? subscription!.endsAt : null,
       targetYear: target.targetYear,
       dailyMinutes: target.dailyMinutes,
       targetExamDate: target.targetExamDate,
-      durationMinutes: part?.durationMinutes ?? target.exam.configuration?.durationMinutes ?? 60,
+      durationMinutes: duration,
       dailyTestQuestions: target.exam.configuration?.dailyTestQuestions ?? 8,
       dailyTestMinutes: target.exam.configuration?.dailyTestMinutes ?? 12,
       positiveMarks: toNumber(target.exam.configuration?.positiveMarks ?? 4),

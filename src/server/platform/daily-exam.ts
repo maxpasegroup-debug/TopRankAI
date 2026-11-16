@@ -3,10 +3,12 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
 import { generateExamFeedback, fallbackFeedback, type ExamFeedback } from "@/server/ai/tasks";
 import { evaluateAchievements } from "./achievements";
-import type { CandidateExam } from "./candidate";
+import { EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
+import { checkPaperSlot } from "./paper-schedule";
+import { getCandidateExams, type CandidateExam } from "./candidate";
 import { notify } from "./notifications";
 import { findExamPart, readExamPattern, type PatternPart, type PatternSection } from "./patterns";
-import { addDays, formatDate, percent, todayDate, toNumber } from "./utils";
+import { addDays, formatDate, formatDateTime, localDateKey, percent, todayDate, toNumber } from "./utils";
 
 const answerSchema = z.array(z.object({
   questionId: z.string().min(1).max(100),
@@ -336,20 +338,23 @@ async function buildDailyPaper(input: {
   part: PatternPart | null;
   pool: PoolItem[];
   today: Date;
+  slot: number;
 }) {
   const { userId, exam, part, pool, today } = input;
   const officialTotal = part ? objectiveTotal(part, exam.totalQuestions) : Math.max(1, exam.totalQuestions);
   const officialDuration = Math.max(10, part?.durationMinutes ?? exam.durationMinutes);
   const officialMarksTotal = part ? objectiveMarks(part, part.totalMarks) : exam.totalQuestions * exam.positiveMarks;
-  const isFullMock = pool.length >= officialTotal;
-  const target = isFullMock ? officialTotal : Math.min(pool.length, practiceSize(officialTotal, exam.dailyTestQuestions));
+  const isFullMock = input.slot === 0 && pool.length >= officialTotal;
+  const practiceTarget = practiceSize(officialTotal, exam.dailyTestQuestions);
+  const followUpTarget = Math.max(1, Math.floor(officialTotal * Math.min(1, 60 / officialDuration)));
+  const target = isFullMock ? officialTotal : Math.min(pool.length, practiceTarget, input.slot ? followUpTarget : officialTotal);
 
   const recentPapers = await prisma.dailyExam.findMany({
     where: { userId, examId: exam.examId, scheduledDate: { gte: addDays(today, -10) } },
     select: { questionIds: true },
   });
   const recent = new Set(recentPapers.flatMap((paper) => paper.questionIds));
-  const seed = hashValue(`${today.toISOString().slice(0, 10)}:${userId}:${exam.code}:${part?.code ?? "default"}`);
+  const seed = hashValue(`${today.toISOString().slice(0, 10)}:${userId}:${exam.code}:${part?.code ?? "default"}:${input.slot}`);
   const ordered = [...pool].sort((left, right) => {
     const leftSeen = recent.has(left.questionId) ? 1 : 0;
     const rightSeen = recent.has(right.questionId) ? 1 : 0;
@@ -358,7 +363,7 @@ async function buildDailyPaper(input: {
   });
 
   const initial = selectPaperQuestions(ordered, part, target);
-  const coverageComplete = initial.coverage.every((section) => section.selected >= section.required);
+  const coverageComplete = initial.picks.length === officialTotal && initial.coverage.every((section) => section.selected >= section.required);
   let picks = initial.picks;
   let coverage = initial.coverage;
   if (isFullMock && !coverageComplete) {
@@ -424,8 +429,12 @@ function numericEqual(selected: string, expected: string | null) {
 
 async function ensureGoals(userId: string, exam: CandidateExam, questionCount: number, revisionDue: number) {
   const today = todayDate();
+  const papers = await prisma.dailyExam.findMany({
+    where: { userId, examId: exam.examId, scheduledDate: today }, select: { questionIds: true },
+  });
+  const assigned = papers.reduce((sum, paper) => sum + paper.questionIds.length, 0);
   const goals = [
-    { type: "QUESTIONS" as const, title: "Answer today's questions", target: Math.max(1, questionCount), order: 1 },
+    { type: "QUESTIONS" as const, title: "Answer today's questions", target: Math.max(1, questionCount, assigned), order: 1 },
     { type: "REVISION" as const, title: "Clear due revision", target: Math.max(1, revisionDue), order: 2 },
     { type: "MINUTES" as const, title: `Study for ${exam.dailyMinutes} minutes`, target: exam.dailyMinutes, order: 3 },
   ];
@@ -438,10 +447,11 @@ async function ensureGoals(userId: string, exam: CandidateExam, questionCount: n
   }
 }
 
-export async function ensureDailyExam(userId: string, exam: CandidateExam) {
+export async function ensureDailyExam(userId: string, exam: CandidateExam, slot = 0) {
   const today = todayDate();
+  await checkPaperSlot(userId, exam, slot, today);
   const existing = await prisma.dailyExam.findFirst({
-    where: { userId, examId: exam.examId, scheduledDate: today, slot: 0 },
+    where: { userId, examId: exam.examId, scheduledDate: today, slot },
     include: { attempt: true },
   });
 
@@ -483,7 +493,7 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam) {
       negativeMarks: toNumber(item.negativeMarks),
       text: item.question.text,
     })),
-    today,
+    today, slot,
   });
 
   if (!plan.picks.length) {
@@ -506,8 +516,8 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam) {
         userId,
         examId: exam.examId,
         scheduledDate: today,
-        slot: 0,
-        title: `${exam.shortName ?? exam.name} ${paperLabel} · ${formatDate(today, { day: "numeric", month: "short" })}`,
+        slot,
+        title: `${exam.shortName ?? exam.name} ${paperLabel} ${slot + 1} · ${formatDate(today, { day: "numeric", month: "short" })}`,
         status: "SCHEDULED",
         questionIds: plan.picks.map((item) => item.questionId),
         configSnapshot: {
@@ -537,7 +547,7 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam) {
   } catch {
     // Concurrent request created today's paper first.
     const fallback = await prisma.dailyExam.findFirst({
-      where: { userId, examId: exam.examId, scheduledDate: today, slot: 0 },
+      where: { userId, examId: exam.examId, scheduledDate: today, slot },
       include: { attempt: true },
     });
     if (!fallback) throw new Error("Could not prepare today's exam. Please retry.");
@@ -562,8 +572,13 @@ export async function startDailyExam(userId: string, dailyExamId: string) {
     throw new Error("This daily exam belongs to a previous day and is now closed.");
   }
 
-  const attempt = await prisma.examAttempt.create({
-    data: {
+  const exam = (await getCandidateExams(userId)).find((entry) => entry.examId === dailyExam.examId);
+  if (!exam) throw new Error("This exam is outside your active plan.");
+  await checkPaperSlot(userId, exam, dailyExam.slot, dailyExam.scheduledDate);
+  const attempt = await prisma.examAttempt.upsert({
+    where: { dailyExamId: dailyExam.id },
+    update: {},
+    create: {
       dailyExamId: dailyExam.id,
       userId,
       examId: dailyExam.examId,
@@ -571,7 +586,7 @@ export async function startDailyExam(userId: string, dailyExamId: string) {
       deadline: new Date(Date.now() + dailyExam.durationMinutes * 60_000),
     },
   });
-  await prisma.dailyExam.update({ where: { id: dailyExam.id }, data: { status: "IN_PROGRESS", startedAt: new Date() } });
+  await prisma.dailyExam.update({ where: { id: dailyExam.id }, data: { status: "IN_PROGRESS", startedAt: attempt.startedAt } });
   return attempt.id;
 }
 
@@ -730,14 +745,18 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
   ));
   const recordDate = attempt.dailyExam.scheduledDate;
 
-  await prisma.$transaction(async (tx) => {
+  const target = (await getCandidateExams(userId)).find((entry) => entry.examId === attempt.examId);
+  const submittedAt = new Date();
+  const recorded = await prisma.$transaction(async (tx) => {
+    const claimed = await tx.examAttempt.updateMany({ where: { id: attemptId, status: "IN_PROGRESS" }, data: { status: "SUBMITTED" } });
+    if (!claimed.count) return false;
     await tx.userAnswer.deleteMany({ where: { attemptId } });
     if (answerRows.length) await tx.userAnswer.createMany({ data: answerRows });
     await tx.examAttempt.update({
       where: { id: attemptId },
       data: {
         status: "SUBMITTED",
-        submittedAt: new Date(),
+        submittedAt,
         timeTakenSeconds,
         totalMarks,
         obtainedMarks,
@@ -753,8 +772,21 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
     });
     await tx.dailyExam.update({
       where: { id: attempt.dailyExamId },
-      data: { status: "SUBMITTED", submittedAt: new Date() },
+      data: { status: "SUBMITTED", submittedAt },
     });
+    if (target) {
+      const afterBreak = new Date(submittedAt.getTime() + EXAM_BREAK_MINUTES * 60_000);
+      const nextToday = attempt.dailyExam.slot + 1 < target.papersPerDay &&
+        localDateKey(afterBreak) === recordDate.toISOString().slice(0, 10);
+      // When a late paper runs past midnight, the new study day has already begun.
+      const nextDay = addDays(recordDate, 1);
+      const nextAt = nextToday ? afterBreak : new Date(nextDay.getTime() + 150 * 60_000);
+      await tx.notification.create({ data: {
+        userId, type: "DAILY_EXAM", title: nextToday ? "Your next exam" : "Your next study day",
+        body: `${target.shortName ?? target.name} · Paper ${nextToday ? attempt.dailyExam.slot + 2 : 1} at ${formatDateTime(nextAt)} IST. Review your answers and prepare well.`,
+        href: `/app/daily?exam=${encodeURIComponent(target.code)}`,
+      } });
+    }
 
     for (const item of revisionItems) {
       const existing = await tx.revisionQueue.findFirst({
@@ -829,7 +861,9 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
         data: { progress, completedAt: goal.completedAt ?? (progress >= goal.target ? new Date() : null) },
       });
     }
+    return true;
   }, { timeout: 60_000 });
+  if (!recorded) return { attemptId, alreadySubmitted: true };
 
   const weakestSubjects = Object.entries(subjectBreakdown)
     .filter(([, row]) => row.incorrect > 0)

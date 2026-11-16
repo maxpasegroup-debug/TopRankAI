@@ -7,7 +7,7 @@ import { TopicVisitTracker } from "@/components/platform/app/TopicVisitTracker";
 import { prisma } from "@/server/db";
 import { requireAuth } from "@/server/auth/session";
 import { getTopicView } from "@/server/platform/insights";
-import { getOfficialSyllabusExcerpt } from "@/server/platform/syllabus-sources";
+import { getOfficialSyllabusExcerpt, getSyllabusDocuments } from "@/server/platform/syllabus-sources";
 import { getOfficialStudyResources } from "@/server/platform/study-resources";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ const statusLabel: Record<string, string> = {
   NEEDS_REVISION: "Needs revision",
 };
 
-export default async function TopicPage({ params }: { params: Promise<{ topicId: string }> }) {
+export default async function TopicPage({ params, searchParams }: { params: Promise<{ topicId: string }>; searchParams: Promise<{ source?: string }> }) {
   const { topicId } = await params;
   const user = await requireAuth();
   const view = await getTopicView(user.id, topicId);
@@ -39,6 +39,18 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
     topic.chapter.unit.subject.id,
     topic.title,
     topic.description,
+    topic.chapter.title, topic.chapter.unit.subject.name, exam?.code,
+  );
+  const documents = await getSyllabusDocuments(topic.chapter.unit.examId, topic.chapter.unit.subject.id, exam?.code ?? "");
+  const selectedUrl = (await searchParams).source;
+  const selectedDocument = documents.find((source) => source.url === selectedUrl);
+  if (selectedDocument) return (
+    <section className="tp-card tp-card-pad tp-stack tp-gap-16">
+      <Link className="tp-link" href={`/app/learn/${topic.id}`}>← Back to {topic.title}</Link>
+      <h1>{selectedDocument.label}</h1>
+      <a className="tp-link" href={selectedDocument.url} target="_blank" rel="noopener noreferrer">Open original document</a>
+      <div className="tp-topic-body">{selectedDocument.content}</div>
+    </section>
   );
   const resources = getOfficialStudyResources(topic.chapter.unit.subject.code);
   const aiNotes = topic.materials.filter(
@@ -130,6 +142,16 @@ export default async function TopicPage({ params }: { params: Promise<{ topicId:
                 itself before relying on a topic boundary.
               </p>
             )}
+            {documents.length > 0 && <div className="tp-stack tp-gap-8 tp-mt-16">
+              {documents.map((source) => <div key={source.url} className="tp-stack tp-gap-6">
+                {source.note && <p className="tp-small tp-muted">{source.note}</p>}
+                {source.syllabusUrl && <a className="tp-link" href={source.syllabusUrl} target="_blank" rel="noopener noreferrer">Official subject-wise syllabuses</a>}
+                <Link className="tp-link tp-small" prefetch={false}
+                href={`/app/learn/${topic.id}?source=${encodeURIComponent(source.url)}`}>
+                Read complete document · {source.label}
+                </Link>
+              </div>)}
+            </div>}
           </section>
 
           <section className="tp-card tp-card-pad">

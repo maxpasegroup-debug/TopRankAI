@@ -81,7 +81,7 @@ export default async function DailyExamPlayerPage({ params }: { params: Promise<
             </div>
             <div className="tp-note tp-mt-16">
               <strong>Scoring.</strong> Marks and accuracy are calculated from the stored answer key on submission.
-              {meta?.mode === "PRACTICE_SET" ? " This paper is a practice set because the reviewed bank does not yet cover the full official question count." : ""}
+              {daily.slot > 0 ? " This follow-up set fits the time reserved between study breaks." : meta?.mode === "PRACTICE_SET" ? " This paper is a practice set because the reviewed bank does not yet cover the full official question count." : ""}
             </div>
           </aside>
         </div>

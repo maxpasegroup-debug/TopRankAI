@@ -7,8 +7,7 @@
  *   npx tsx scripts/import-syllabus.ts --max=8        # links per exam
  *
  * The script never invents content. Every row stores the exact URL it came
- * from, plus a status of IMPORTED or FAILED. PDFs are transcribed by the
- * configured Gemini model; HTML is reduced to readable text. Human review is
+ * from, plus a status of IMPORTED or FAILED. PDFs are read page by page with pypdf; HTML is reduced to readable text. Human review is
  * still required before relying on a source.
  */
 import "dotenv/config";
@@ -16,7 +15,7 @@ import { createHash } from "node:crypto";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { databaseUrl } from "../src/server/env";
-import { transcribePdf } from "../src/server/ai/pdf";
+import { execFileSync } from "node:child_process";
 import { syllabusSourceSeeds } from "../prisma/platform-seed/syllabus-sources";
 
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl() }) });
@@ -132,15 +131,15 @@ async function importDocument(input: {
     let text: string;
     if (isPdf) {
       report.format = "PDF";
-      const transcription = await transcribePdf({ buffer, label: `${input.examCode} · ${input.label}` });
-      if (!transcription.ok) throw new Error(transcription.message);
-      text = transcription.text;
+      text = execFileSync("python", ["scripts/pdf_text.py", "-", "-"], {
+        input: buffer, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
+      });
     } else {
       const html = input.html ?? buffer.toString("utf8");
       text = htmlToText(html);
     }
     if (text.length < 300) throw new Error("Extracted text was too short to be a syllabus document.");
-    text = sanitizeText(text).slice(0, 2_000_000);
+    text = sanitizeText(text);
 
     // Official sites often answer every path with the same navigation shell.
     // Reject that so the AI never treats menus as syllabus content.

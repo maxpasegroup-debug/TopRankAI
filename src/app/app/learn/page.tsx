@@ -87,7 +87,7 @@ export default async function LearnPage({
     <>
       <div className="tp-page-head">
         <div>
-          <div className="tp-eyebrow">{exam.category ?? "Syllabus"} Â· {exam.shortName ?? exam.name}</div>
+          <div className="tp-eyebrow">{exam.category ?? "Syllabus"} · {exam.shortName ?? exam.name}</div>
           <h1>Learning centre</h1>
           <p>Every unit, chapter and topic mapped to your exam. Mark topics as you study them.</p>
         </div>
@@ -98,7 +98,7 @@ export default async function LearnPage({
       </div>
 
       <form className="tp-row tp-gap-8 tp-wrap tp-mb-20" action="/app/learn" method="get" role="search">
-        <label className="tp-label" htmlFor="topic-search" style={{ position: "absolute", left: -9999 }}>Search topics</label>
+        <label className="tp-sr" htmlFor="topic-search">Search topics</label>
         <input
           id="topic-search"
           className="tp-input"
@@ -208,7 +208,7 @@ export default async function LearnPage({
               </div>
 
               {subject.units.map((unit) => (
-                <details className="tp-unit" key={unit.id} open={unit === subject.units[0]}>
+                <details className="tp-unit" key={unit.id}>
                   <summary className="tp-unit-head">
                     <Icon name="chevron-right" className="tp-unit-chevron" />
                     <h3>{unit.title}</h3>

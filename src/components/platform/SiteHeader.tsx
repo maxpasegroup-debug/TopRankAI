@@ -47,9 +47,10 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
         <div className="tp-header-actions">
           <ThemeCycle />
           {workspace ? (
-            <Link className="tp-btn tp-btn-sm" href={workspace}>My workspace</Link>
+            <Link className="tp-btn tp-btn-sm tp-workspace-link" href={workspace}>My workspace</Link>
           ) : (
             <>
+              {!user && <Link className="tp-btn tp-btn-ghost tp-btn-sm tp-workspace-link" href="/login">My workspace</Link>}
               <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/login">Sign in</Link>
               <Link className="tp-btn tp-btn-sm" href="/register">Start preparing</Link>
             </>

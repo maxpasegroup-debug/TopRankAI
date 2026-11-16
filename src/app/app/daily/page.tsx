@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
+import { DailyWorkloadForm } from "@/components/platform/app/DailyWorkloadForm";
+import { NextPaperNotice } from "@/components/platform/app/NextPaperNotice";
+import { getPaperSchedule } from "@/server/platform/paper-schedule";
+import { dailyCapacity, EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
 import { requireAuth } from "@/server/auth/session";
+import { getSelectedExam } from "@/server/platform/candidate";
 import { getActiveExam } from "@/server/platform/active";
 import { getDailyHistory, readPaperMeta } from "@/server/platform/daily-exam";
-import { formatDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
+import { formatDate, formatDateTime, todayDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Daily exams" };
@@ -30,9 +35,10 @@ const statusLabel: Record<string, string> = {
   EXPIRED: "Expired",
 };
 
-export default async function DailyExamsPage() {
+export default async function DailyExamsPage({ searchParams }: { searchParams: Promise<{ exam?: string }> }) {
   const user = await requireAuth();
-  const exam = await getActiveExam(user.id);
+  const code = (await searchParams).exam;
+  const exam = code ? await getSelectedExam(user.id, code) : await getActiveExam(user.id);
 
   if (!exam) {
     return (
@@ -53,16 +59,14 @@ export default async function DailyExamsPage() {
     );
   }
 
-  const history = await getDailyHistory(user.id, exam.examId);
-  const today = history[0];
-  const isToday = today && new Date(today.scheduledDate).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10);
-  const todays = isToday ? today : null;
+  const day = todayDate();
+  const [history, schedule] = await Promise.all([getDailyHistory(user.id, exam.examId), getPaperSchedule(user.id, exam, day)]);
+  const todayPapers = history.filter((paper) => paper.scheduledDate.getTime() === day.getTime());
   const submitted = history.filter((item) => item.attempt?.status === "SUBMITTED");
   const bestScore = submitted.reduce((best, item) => Math.max(best, percent(toNumber(item.attempt?.obtainedMarks), toNumber(item.attempt?.totalMarks))), 0);
   const averageAccuracy = submitted.length
     ? submitted.reduce((sum, item) => sum + toNumber(item.attempt?.accuracy), 0) / submitted.length
     : 0;
-  const todayMeta = todays ? readPaperMeta(todays.configSnapshot) : null;
   const official = exam.part;
 
   return (
@@ -76,9 +80,6 @@ export default async function DailyExamsPage() {
             {official ? ` · ${official.name}: ${official.totalQuestions} questions, ${official.durationMinutes} minutes, ${official.totalMarks} marks` : ""}
           </p>
         </div>
-        {todays && todays.attempt?.status === "SUBMITTED" ? (
-          <Link className="tp-btn tp-btn-ghost" href={`/app/daily/${todays.id}/result`}>Today&apos;s result</Link>
-        ) : null}
       </div>
 
       <div className="tp-grid tp-grid-3 tp-mb-24">
@@ -99,59 +100,35 @@ export default async function DailyExamsPage() {
         </div>
       </div>
 
-      {!todays ? (
-        <section className="tp-daily-card tp-mb-24">
-          <div className="tp-row-between">
-            <span className="tp-eyebrow">Today</span>
-            <span className="tp-pill tp-pill-accent">{official ? `${official.durationMinutes} min paper` : `${exam.dailyTestMinutes} min`}</span>
-          </div>
-          <h2>Today&apos;s paper has not been prepared yet.</h2>
-          <p className="tp-small tp-muted" style={{ maxWidth: 620 }}>
-            The paper is drawn deterministically from the reviewed question bank, so it stays the same for your
-            account all day. If the bank covers the full official question count, you get a complete mock. If it
-            does not, you get a substantial practice set and the page tells you exactly how many official questions
-            were available.
-          </p>
-          <div className="tp-daily-facts">
-            <span className="tp-daily-fact"><Icon name="layers" />{official ? `${official.totalQuestions} official questions` : `${exam.dailyTestQuestions} questions`}</span>
-            <span className="tp-daily-fact"><Icon name="clock" />{official ? `${official.durationMinutes} minutes` : `${exam.dailyTestMinutes} minutes`}</span>
-            <span className="tp-daily-fact"><Icon name="target" />{official ? `${official.totalMarks} marks` : `${levelLabel(exam.level)}`}</span>
-          </div>
-          <PrepareExamButton code={exam.code} label="Prepare today's paper" />
-        </section>
-      ) : (
-        <section className="tp-card tp-card-pad tp-mb-24">
-          <div className="tp-row-between">
+      <NextPaperNotice name={exam.shortName ?? exam.name} schedule={schedule} day={day} />
+      <section className="tp-card tp-card-pad tp-mb-24">
+        <h2 style={{ fontSize: 19 }}>Today’s papers</h2>
+        <p className="tp-small tp-muted tp-mb-16">
+          Start with a full mock when the reviewed bank covers the official pattern.
+          Additional timed sets last up to 60 minutes. Allow {EXAM_BREAK_MINUTES} minutes after submitting each paper.
+        </p>
+        {schedule.map((sitting) => {
+          const paper = todayPapers.find((entry) => entry.slot === sitting.slot);
+          const meta = paper && readPaperMeta(paper.configSnapshot);
+          const submitted = paper?.attempt?.status === "SUBMITTED";
+          return <div key={sitting.slot} className="tp-list-item tp-row-between">
             <div>
-              <div className="tp-row tp-gap-8 tp-wrap">
-                <h3 style={{ fontSize: 18 }}>Today&apos;s paper</h3>
-                <span className={`tp-pill ${statusTone[todays.status] ?? ""}`}>{statusLabel[todays.status] ?? todays.status}</span>
-                {todayMeta ? (
-                  <span className={`tp-pill ${todayMeta.mode === "FULL_MOCK" ? "tp-pill-ok" : "tp-pill-warn"}`}>{modeLabel[todayMeta.mode]}</span>
-                ) : null}
-              </div>
-              <p className="tp-small tp-muted" style={{ marginTop: 6 }}>
-                {todays.questionIds.length} questions · {todays.durationMinutes} minutes · {toNumber(todays.totalMarks)} total marks
-              </p>
-              {todayMeta ? (
-                <p className="tp-xs tp-faint" style={{ marginTop: 4 }}>
-                  Official {exam.shortName ?? exam.name} pattern: {todayMeta.officialTotal} questions, {todayMeta.officialDurationMinutes} minutes.
-                  {todayMeta.mode === "PRACTICE_SET" ? " This practice set uses the reviewed questions currently available." : ""}
-                </p>
-              ) : null}
+              <h3 style={{ fontSize: 16 }}>Paper {sitting.slot + 1} · {meta ? modeLabel[meta.mode] : sitting.slot ? "Timed practice" : "Full mock target"}</h3>
+              <p className="tp-xs tp-muted">{submitted ? "Submitted" : paper?.attempt ? "In progress" : sitting.available
+                ? "Ready to prepare" : `Planned for ${formatDateTime(sitting.startsAt)} IST`}</p>
             </div>
-            {todays.attempt?.status === "SUBMITTED" ? (
-              <Link className="tp-btn" href={`/app/daily/${todays.id}/result`}>
-                View result <Icon name="arrow-right" size={15} />
+            {paper && (submitted || paper.attempt || sitting.available) ? (
+              <Link className="tp-btn tp-btn-sm" href={`/app/daily/${paper.id}${submitted ? "/result" : ""}`}>
+                {submitted ? "Review result" : paper.attempt ? "Resume" : "Open paper"}
               </Link>
-            ) : (
-              <Link className="tp-btn" href={`/app/daily/${todays.id}`}>
-                {todays.attempt ? "Resume" : "Start paper"} <Icon name="play" size={14} />
-              </Link>
-            )}
-          </div>
-        </section>
-      )}
+            ) : sitting.available ? (
+              <PrepareExamButton code={exam.code} slot={sitting.slot} label="Prepare paper" className="tp-btn tp-btn-sm" />
+            ) : <span className="tp-pill">{sitting.slot === 0 || schedule[sitting.slot - 1]?.status === "SUBMITTED" ? "Study break" : "After previous paper"}</span>}
+          </div>;
+        })}
+      </section>
+      <DailyWorkloadForm key={exam.targetId} targetId={exam.targetId} count={exam.papersPerDay}
+        capacity={dailyCapacity(exam.durationMinutes)} included={exam.includedPapers} monthlyUntil={exam.monthlyUntil ? formatDateTime(exam.monthlyUntil) + " IST" : null} />
 
       <h2 style={{ fontSize: 20, marginBottom: 14 }}>Paper history</h2>
       {history.length ? (
@@ -199,7 +176,6 @@ export default async function DailyExamsPage() {
           <span className="tp-feature-icon" style={{ margin: 0 }}><Icon name="calendar" /></span>
           <h3>No paper has been generated yet</h3>
           <p>Your first paper appears here once it has been prepared for the day.</p>
-          <PrepareExamButton code={exam.code} label="Prepare today's paper" />
         </div>
       )}
 

@@ -1,3 +1,4 @@
+import { DAILY_PAPERS } from "@/shared/daily-workload";
 import { prisma } from "@/server/db";
 import { aiConfiguration } from "@/server/env";
 import type { GeneratedQuestion } from "@/server/ai/tasks";
@@ -161,7 +162,7 @@ export async function createExamWithConfiguration(input: {
         markingNote: input.markingNote ?? null,
         sourceUrl: input.officialUrl || null,
         questionTypes: ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "NUMERICAL"],
-        dailyTestCount: { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 2, EXTREME: 3 },
+        dailyTestCount: DAILY_PAPERS,
         active: true,
       },
     });

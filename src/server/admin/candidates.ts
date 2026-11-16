@@ -1,3 +1,4 @@
+import { levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
 import { Prisma } from "@/generated/prisma/client";
 import type { AuthUser } from "@/server/auth/session";
 import { prisma } from "@/server/db";
@@ -15,9 +16,10 @@ export async function candidateMonitor(_admin: AuthUser, options: { page: number
     prisma.user.count({ where }),
     prisma.user.findMany({ where, orderBy: { createdAt: "desc" }, skip, take: pageSize,
       select: { id: true, name: true, email: true, phone: true, status: true, createdAt: true,
+        subscription: { select: { plan: true, status: true, endsAt: true } },
         accountConsent: { select: { ageBand: true, country: true, acceptedAt: true, revokedAt: true } },
         studentProfile: { select: { targetYear: true, onboardingCompletedAt: true } },
-        candidateExamTargets: { where: { active: true }, orderBy: { createdAt: "asc" }, select: { targetYear: true, preparationLevel: true, dailyMinutes: true, exam: { select: { code: true, name: true, category: true, status: true } } } },
+        candidateExamTargets: { where: { active: true }, orderBy: { createdAt: "asc" }, select: { targetYear: true, preparationLevel: true, dailyPaperCount: true, dailyMinutes: true, exam: { select: { code: true, name: true, category: true, status: true } } } },
         _count: { select: { practiceAttempts: true } },
       } }),
   ]);
@@ -26,6 +28,6 @@ export async function candidateMonitor(_admin: AuthUser, options: { page: number
     joinedAt: candidate.createdAt, ageBand: candidate.accountConsent?.ageBand ?? "NOT RECORDED", country: candidate.accountConsent?.country ?? "—",
     consentCurrent: Boolean(candidate.accountConsent && !candidate.accountConsent.revokedAt), onboarded: Boolean(candidate.studentProfile?.onboardingCompletedAt),
     attempts: candidate._count.practiceAttempts, targets: candidate.candidateExamTargets.map((target) => ({ code: target.exam.code, name: target.exam.name,
-      category: target.exam.category, status: target.exam.status, targetYear: target.targetYear, preparationLevel: target.preparationLevel, dailyMinutes: target.dailyMinutes })),
+      category: target.exam.category, status: target.exam.status, targetYear: target.targetYear, preparationLevel: levelForPapers(paperCount(target.preparationLevel, target.dailyPaperCount, mockMonthlyActive(candidate.subscription))), dailyMinutes: target.dailyMinutes })),
   })) };
 }

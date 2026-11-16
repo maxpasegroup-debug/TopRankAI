@@ -1,3 +1,4 @@
+import { DAILY_PAPERS } from "../src/shared/daily-workload";
 import "dotenv/config";
 import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -95,7 +96,7 @@ async function seedCatalogue() {
         questionTypes: exam.questionTypes,
         dailyTestQuestions: exam.dailyTestQuestions,
         dailyTestMinutes: exam.dailyTestMinutes,
-        dailyTestCount: { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 2, EXTREME: 3 },
+        dailyTestCount: DAILY_PAPERS,
         markingNote: exam.markingNote,
         sourceUrl: exam.officialUrl,
         sections: (pattern ?? { parts: [] }) as unknown as Prisma.InputJsonValue,

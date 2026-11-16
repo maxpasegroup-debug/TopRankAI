@@ -131,7 +131,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
               <span className="tp-eyebrow">Syllabus</span>
               <h2 style={{ fontSize: 28, margin: "12px 0 18px", letterSpacing: "-0.03em" }}>What this paper covers</h2>
               {subjects.length ? subjects.map((subject) => (
-                <details className="tp-unit" key={subject.name} open={subject === subjects[0]}>
+                <details className="tp-unit" key={subject.name}>
                   <summary className="tp-unit-head">
                     <Icon name="chevron-right" className="tp-unit-chevron" />
                     <h3>{subject.name}</h3>

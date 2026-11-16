@@ -47,7 +47,9 @@ export default async function DashboardPage() {
 
   const exam = data.selected;
   const readiness = await getReadiness(user.id, exam);
-  const daily = data.dailyExams[0] ?? null;
+  const daily = data.dailyExams.find((paper) => paper.status === "IN_PROGRESS")
+    ?? data.dailyExams.find((paper) => paper.status === "SCHEDULED" && paper.slot < exam.papersPerDay)
+    ?? data.dailyExams.at(-1) ?? null;
   const attempt = daily?.attempt ?? null;
   const paperMeta = daily ? readPaperMeta(daily.configSnapshot) : null;
   const official = exam.part;
@@ -99,7 +101,7 @@ export default async function DashboardPage() {
               </>
             ) : attempt?.status === "SUBMITTED" ? (
               <>
-                <h2>Today&apos;s daily paper is complete.</h2>
+                <h2>Paper {daily.slot + 1} of {exam.papersPerDay} is complete.</h2>
                 <p className="tp-small tp-muted" style={{ maxWidth: 520 }}>
                   You scored {toNumber(attempt.obtainedMarks)} out of {toNumber(attempt.totalMarks)} marks at{" "}
                   {toNumber(attempt.accuracy).toFixed(1)}% accuracy. The result and every explanation are ready.
@@ -113,7 +115,7 @@ export default async function DashboardPage() {
                   <Link className="tp-btn tp-btn-lg" href={`/app/daily/${daily.id}/result`}>
                     View result <Icon name="arrow-right" size={16} />
                   </Link>
-                  <Link className="tp-btn tp-btn-ghost tp-btn-lg" href="/app/daily">Past papers</Link>
+                  <Link className="tp-btn tp-btn-ghost tp-btn-lg" href="/app/daily">Daily schedule</Link>
                 </div>
               </>
             ) : (

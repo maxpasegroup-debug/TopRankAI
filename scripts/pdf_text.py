@@ -1,3 +1,4 @@
+import io
 import re
 import sys
 
@@ -11,15 +12,19 @@ def clean(value: str) -> str:
 
 def main() -> None:
     source, target = sys.argv[1], sys.argv[2]
-    reader = PdfReader(source)
+    reader = PdfReader(io.BytesIO(sys.stdin.buffer.read()) if source == "-" else source)
     pages = []
-    for page in reader.pages:
+    for index, page in enumerate(reader.pages, start=1):
         try:
             pages.append(clean(page.extract_text() or ""))
-        except Exception:
-            pages.append("")
-    with open(target, "w", encoding="utf-8") as handle:
-        handle.write("\n\n".join(pages))
+        except Exception as error:
+            raise RuntimeError(f"Could not extract page {index}") from error
+    document = "\n\n".join(pages)
+    if target == "-":
+        sys.stdout.buffer.write(document.encode("utf-8"))
+    else:
+        with open(target, "w", encoding="utf-8") as handle:
+            handle.write(document)
 
 
 if __name__ == "__main__":

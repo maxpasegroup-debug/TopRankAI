@@ -9,6 +9,8 @@ import { previewStudyPlan } from "./planner";
 import { journeySchema, learningProgressSchema, planSchema, sessionSchema, taskSchema } from "./validation";
 import type { z } from "zod";
 import { assertDailyCapacity, assertFutureStudyDate } from "./schedule";
+import { targetWorkload } from "@/server/platform/target-workload";
+import { levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
 import { calendarDay } from "@/shared/study-calendar";
 
 const published = { status: "PUBLISHED" as const, active: true };
@@ -21,13 +23,16 @@ export async function getJourney(user: AuthUser) {
   const [exams, targets] = await Promise.all([
     prisma.exam.findMany({ where: { active: true }, orderBy: [{ category: "asc" }, { name: "asc" }],
       select: { id: true, name: true, code: true, category: true, description: true, officialUrl: true, status: true } }),
-    prisma.candidateExamTarget.findMany({ where: { userId: user.id, active: true }, include: { exam: { select: { id: true, name: true, code: true, category: true } } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
+    prisma.candidateExamTarget.findMany({ where: { userId: user.id, active: true }, include: { user: { select: { subscription: { select: { plan: true, status: true, endsAt: true } } } }, exam: { select: { id: true, name: true, code: true, category: true } } }, orderBy: [{ createdAt: "asc" }, { id: "asc" }] }),
   ]);
   const subjects = profile?.targetExamId ? await prisma.examSubject.findMany({
     where: { examId: profile.targetExamId, ...published, subject: published }, orderBy: { order: "asc" },
     select: { subject: { select: { id: true, name: true } } },
   }) : [];
-  return { profile, exams, targets, subjects: subjects.map((row) => row.subject) };
+  const effectiveTargets = targets.map(({ user: owner, ...target }) => ({
+    ...target, preparationLevel: levelForPapers(paperCount(target.preparationLevel, target.dailyPaperCount, mockMonthlyActive(owner.subscription))),
+  }));
+  return { profile, exams, targets: effectiveTargets, subjects: subjects.map((row) => row.subject) };
 }
 
 export async function saveJourney(user: AuthUser, input: z.infer<typeof journeySchema>) {
@@ -49,10 +54,11 @@ export async function saveJourney(user: AuthUser, input: z.infer<typeof journeyS
       if (available !== distinctExamIds.length) throw new ValidationApiError("One or more selected exams are unavailable");
       const activeIds: string[] = [];
       for (const target of examTargets) {
+        const workload = await targetWorkload(tx, user.id, target.examId, target.preparationLevel);
         const saved = await tx.candidateExamTarget.upsert({
           where: { userId_examId_targetYear: { userId: user.id, examId: target.examId, targetYear: target.targetYear } },
-          create: { userId: user.id, ...target, active: true },
-          update: { preparationLevel: target.preparationLevel, dailyMinutes: target.dailyMinutes, active: true },
+          create: { userId: user.id, ...target, ...workload, active: true },
+          update: { ...workload, dailyMinutes: target.dailyMinutes, active: true },
           select: { id: true },
         });
         activeIds.push(saved.id);

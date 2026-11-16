@@ -14,6 +14,9 @@ import { readExamPattern } from "@/server/platform/patterns";
 import { getOfficialSyllabusExcerpt } from "@/server/platform/syllabus-sources";
 import { profileUpdateSchema, syllabusProgressSchema, attemptAnswerSchema, examSelectionSchema } from "@/server/platform/validation";
 import { ACTIVE_EXAM_COOKIE } from "@/server/platform/cookies";
+import { dailyCapacity, includedPapers, mockMonthlyActive } from "@/shared/daily-workload";
+import { targetWorkload } from "@/server/platform/target-workload";
+import { ValidationApiError } from "@/server/api/errors";
 import { z } from "zod";
 
 export type PlatformActionResult<T = undefined> =
@@ -29,12 +32,12 @@ export async function setActiveExam(code: string) {
   return { ok: true as const };
 }
 
-export async function prepareDailyExam(code: string) {
+export async function prepareDailyExam(code: string, slot = 0) {
   const user = await requireAuth();
   try {
     const exam = await getSelectedExam(user.id, code);
-    if (!exam) return { ok: false as const, message: "Choose at least one exam before starting a daily paper." };
-    const dailyExam = await ensureDailyExam(user.id, exam);
+    if (!exam || exam.code !== code) return { ok: false as const, message: "Choose at least one exam before starting a daily paper." };
+    const dailyExam = await ensureDailyExam(user.id, exam, slot);
     return { ok: true as const, data: { id: dailyExam.id } };
   } catch (error) {
     return { ok: false as const, message: error instanceof Error ? error.message : "Could not prepare the daily exam." };
@@ -138,7 +141,7 @@ export async function requestTopicNotes(topicId: string): Promise<PlatformAction
     view.topic.chapter.unit.examId,
     view.topic.chapter.unit.subjectId,
     view.topic.title,
-    view.topic.description,
+    view.topic.description, view.topic.chapter.title, view.topic.chapter.unit.subject.name, view.exam.code,
   );
   const result = await generateStudyNotes({
     examName: view.exam.name,
@@ -255,6 +258,31 @@ export async function updateCandidateProfile(raw: unknown) {
   }
 }
 
+export async function saveDailyWorkload(targetId: string, count: number, activateMonthly: boolean) {
+  const user = await requireAuth();
+  const exam = (await getCandidateExams(user.id)).find((item) => item.targetId === targetId);
+  if (!exam || !Number.isInteger(count) || count < 1 || count > dailyCapacity(exam.durationMinutes)) {
+    return { ok: false, message: "Choose a valid number of daily papers." };
+  }
+  return prisma.$transaction(async (tx) => {
+    const target = await tx.candidateExamTarget.findFirst({ where: { id: targetId, userId: user.id, active: true } });
+    if (!target) return { ok: false, message: "Choose an active exam first." };
+    const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
+    if (count > includedPapers(target.preparationLevel) && !mockMonthlyActive(subscription)) {
+      if (activateMonthly !== true) return { ok: false, message: "Activate the mock monthly subscription for extra papers." };
+      if (subscription && !["FREE", "MOCK_MONTHLY"].includes(subscription.plan)) {
+        return { ok: false, message: "Your existing subscription cannot be replaced by the mock plan." };
+      }
+      const startsAt = new Date();
+      const endsAt = new Date(startsAt.getTime() + 30 * 86_400_000);
+      const monthly = { plan: "MOCK_MONTHLY", status: "ACTIVE" as const, startsAt, endsAt };
+      await tx.subscription.upsert({ where: { userId: user.id }, create: { userId: user.id, ...monthly }, update: monthly });
+    }
+    await tx.candidateExamTarget.update({ where: { id: target.id }, data: { dailyPaperCount: count } });
+    return { ok: true, message: "Daily schedule saved." };
+  });
+}
+
 const targetListSchema = z.array(examSelectionSchema).min(1).max(8);
 
 export async function updateExamPlan(raw: unknown) {
@@ -276,16 +304,25 @@ export async function updateExamPlan(raw: unknown) {
     if (item.partCode && !part) return { ok: false as const, message: `Choose a valid paper for ${exam.name}.` };
     partByExam.set(item.examId, part?.code ?? null);
   }
-  await prisma.$transaction(async (tx) => {
-    await tx.candidateExamTarget.updateMany({ where: { userId: user.id, active: true, examId: { notIn: exams.map((exam) => exam.id) } }, data: { active: false } });
-    for (const item of parsed.data) {
-      await tx.candidateExamTarget.upsert({
-        where: { userId_examId_targetYear: { userId: user.id, examId: item.examId, targetYear: item.targetYear } },
-        update: { preparationLevel: item.level, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
-        create: { userId: user.id, examId: item.examId, targetYear: item.targetYear, preparationLevel: item.level, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
-      });
-    }
-  }, { timeout: 20_000 });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.candidateExamTarget.updateMany({ where: { userId: user.id, active: true, examId: { notIn: exams.map((exam) => exam.id) } }, data: { active: false } });
+      for (const item of parsed.data) {
+        const workload = await targetWorkload(tx, user.id, item.examId, item.level);
+        await tx.candidateExamTarget.updateMany({
+          where: { userId: user.id, examId: item.examId, targetYear: { not: item.targetYear }, active: true }, data: { active: false },
+        });
+        await tx.candidateExamTarget.upsert({
+          where: { userId_examId_targetYear: { userId: user.id, examId: item.examId, targetYear: item.targetYear } },
+          update: { ...workload, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
+          create: { userId: user.id, examId: item.examId, targetYear: item.targetYear, ...workload, dailyMinutes: item.dailyMinutes, examPart: partByExam.get(item.examId) ?? null, active: true },
+        });
+      }
+    }, { timeout: 20_000 });
+  } catch (error) {
+    if (error instanceof ValidationApiError) return { ok: false as const, message: error.message };
+    throw error;
+  }
   return { ok: true as const };
 }
 

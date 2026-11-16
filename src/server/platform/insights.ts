@@ -1,7 +1,7 @@
 import { prisma } from "@/server/db";
 import { fallbackPlan, type StudyPlanSuggestion } from "@/server/ai/tasks";
 import { computeStreak, getSyllabusCompletion, type CandidateExam } from "./candidate";
-import { addDays, daysBetween, percent, toNumber, todayDate } from "./utils";
+import { addDays, daysBetween, localDateKey, percent, toNumber, todayDate } from "./utils";
 
 type Breakdown = Record<string, { total: number; correct: number; incorrect: number; unanswered: number; marks: number }>;
 
@@ -25,7 +25,8 @@ export async function getReadiness(userId: string, exam: CandidateExam) {
   const answered = correct + incorrect;
   const accuracy = answered ? (correct / answered) * 100 : 0;
 
-  const attendance = Math.min(1, last14.length / 10) * 20;
+  const daysAttended = new Set(last14.flatMap((attempt) => attempt.submittedAt ? [localDateKey(attempt.submittedAt)] : [])).size;
+  const attendance = Math.min(1, daysAttended / 10) * 20;
   const accuracyScore = (accuracy / 100) * 35;
   const volume = Math.min(1, answered / 200) * 15;
   const syllabusScore = (syllabus.percent / 100) * 20;
@@ -33,7 +34,7 @@ export async function getReadiness(userId: string, exam: CandidateExam) {
   const total = Math.round(attendance + accuracyScore + volume + syllabusScore + consistency);
 
   const components: ReadinessComponent[] = [
-    { key: "attendance", label: "Daily attendance", value: Math.round(attendance), detail: `${last14.length} of the last 14 days have a completed paper.` },
+    { key: "attendance", label: "Daily attendance", value: Math.round(attendance), detail: `${daysAttended} of the last 14 days have a completed paper.` },
     { key: "accuracy", label: "Answer accuracy", value: Math.round(accuracyScore), detail: `${accuracy.toFixed(1)}% accuracy across ${attempts.length} submitted papers.` },
     { key: "volume", label: "Question volume", value: Math.round(volume), detail: `${answered} questions answered so far.` },
     { key: "syllabus", label: "Syllabus coverage", value: Math.round(syllabusScore), detail: `${syllabus.completed} of ${syllabus.total} topics marked complete.` },
@@ -110,10 +111,19 @@ export async function getPlannerData(userId: string, exam: CandidateExam) {
   const [goals, revision, nextEvent, weakTopics] = await Promise.all([
     prisma.dailyGoal.findMany({ where: { userId, examId: exam.examId, goalDate: today }, orderBy: { order: "asc" } }),
     prisma.revisionQueue.findMany({
-      where: { userId, status: "PENDING" },
+      where: { userId, examId: exam.examId, status: "PENDING" },
       orderBy: [{ dueDate: "asc" }, { createdAt: "asc" }],
       take: 40,
-      include: { question: { select: { id: true, text: true, subject: { select: { name: true } } } }, topic: { select: { id: true, title: true } } },
+      include: {
+        question: { select: {
+          id: true, text: true, subject: { select: { name: true } },
+          userAnswers: {
+            where: { status: "INCORRECT", attempt: { userId, examId: exam.examId, status: "SUBMITTED" } },
+            orderBy: { createdAt: "desc" }, take: 1, select: { attempt: { select: { dailyExamId: true } } },
+          },
+        } },
+        topic: { select: { id: true, title: true } },
+      },
     }),
     prisma.examCalendar.findFirst({
       where: { examId: exam.examId, startDate: { gte: today }, status: { in: ["CONFIRMED", "TENTATIVE"] } },
@@ -244,7 +254,7 @@ export async function getCandidateProfile(userId: string) {
       education: true, currentEducationLevel: true, preferredLanguage: true, avatarUrl: true, dailyStudyMinutes: true,
       timezone: true, createdAt: true, lastActiveAt: true,
       accountConsent: { select: { ageBand: true, country: true, acceptedAt: true } },
-      subscription: { select: { plan: true, status: true, trialEndsAt: true } },
+      subscription: { select: { plan: true, status: true, trialEndsAt: true, endsAt: true } },
       candidateExamTargets: {
         where: { active: true },
         include: { exam: { select: { name: true, code: true } } },

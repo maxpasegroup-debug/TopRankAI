@@ -1,3 +1,6 @@
+import { NextPaperNotice } from "@/components/platform/app/NextPaperNotice";
+import { getPaperSchedule } from "@/server/platform/paper-schedule";
+import { getCandidateExams } from "@/server/platform/candidate";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/platform/Icon";
 import { NotificationActions } from "@/components/platform/app/NotificationActions";
@@ -20,7 +23,8 @@ const iconForType: Record<string, IconName> = {
 
 export default async function NotificationsPage() {
   const user = await requireAuth();
-  const items = await getNotifications(user.id);
+  const [items, exams] = await Promise.all([getNotifications(user.id), getCandidateExams(user.id)]);
+  const schedules = await Promise.all(exams.map((exam) => getPaperSchedule(user.id, exam)));
   const unread = items.filter((item) => !item.readAt).length;
 
   return (
@@ -34,6 +38,7 @@ export default async function NotificationsPage() {
         <NotificationActions unread={unread} />
       </div>
 
+      {exams.map((exam, index) => <NextPaperNotice key={exam.targetId} name={exam.shortName ?? exam.name} schedule={schedules[index]} />)}
       <div className="tp-card tp-card-pad">
         {items.length ? (
           items.map((item) => (

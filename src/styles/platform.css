@@ -315,6 +315,12 @@ body.body-platform {
 .tp-mt-32 { margin-top: 32px; }
 .tp-mb-16 { margin-bottom: 16px; }
 .tp-mb-24 { margin-bottom: 24px; }
+.tp-mb-20 { margin-bottom: 20px; }
+.tp-mb-28 { margin-bottom: 28px; }
+.tp-mt-12 { margin-top: 12px; }
+.tp-gap-6 { gap: 6px; }
+.tp-gap-10 { gap: 10px; }
+.tp-gap-14 { gap: 14px; }
 .tp-center { text-align: center; }
 .tp-muted { color: var(--tp-muted); }
 .tp-faint { color: var(--tp-faint); }
@@ -1891,6 +1897,7 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 .tp-topic-status[data-status="NEEDS_REVISION"] { background: var(--tp-warn); }
 
 .tp-topic-body {
+  overflow-wrap: anywhere;
   font-size: 14.5px;
   line-height: 1.75;
   color: var(--tp-ink-soft);
@@ -2560,6 +2567,7 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 
 @media (max-width: 640px) {
   .tp-header-actions .tp-btn { display: none; }
+  .tp-header-actions .tp-workspace-link { display: inline-flex; padding-inline: 10px; }
   .tp-hero { padding-top: 42px; }
   .tp-form-grid { grid-template-columns: 1fr; }
   .tp-form-grid .tp-span-2 { grid-column: auto; }
@@ -2570,4 +2578,11 @@ details[open] > .tp-unit-head .tp-unit-chevron {
   .tp-footer-inner { grid-template-columns: 1fr; gap: 28px; }
   .tp-page-head { margin-bottom: 18px; }
   .tp-stat { padding: 15px 16px; }
+}
+
+@media (max-width: 380px) {
+  .tp-header-inner { gap: 6px; padding-inline: 10px; }
+  .tp-header-actions { gap: 4px; }
+  .tp-header-actions .tp-theme, .tp-header-actions .tp-menu-btn { width: 34px; }
+  .tp-brand { gap: 6px; }
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { includedPapers } from "@/shared/daily-workload";
 import { updateExamPlan } from "@/server/actions/platform";
 
 type Level = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXTREME";
@@ -41,7 +42,7 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Target[]>(initial);
-  const [openGroup, setOpenGroup] = useState<string | null>(groups[0]?.slug ?? null);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,7 +141,7 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
                           data-active={item.level === level.value}
                           onClick={() => setLevel(item.examId, level.value)}
                         >
-                          {level.label}
+                          {level.label} · {includedPapers(level.value)}/day
                         </button>
                       ))}
                     </div>

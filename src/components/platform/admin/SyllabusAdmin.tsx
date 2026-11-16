@@ -229,7 +229,7 @@ export function SyllabusAdmin({
         {units.length ? (
           <div className="tp-stack tp-gap-12">
             {units.map((unit) => (
-              <details className="tp-card" key={unit.id} open>
+              <details className="tp-card" key={unit.id}>
                 <summary className="tp-row-between" style={{ padding: "14px 18px", cursor: "pointer", listStyle: "none" }}>
                   <div>
                     <h3 style={{ fontSize: 15 }}>{unit.title}</h3>

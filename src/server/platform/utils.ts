@@ -6,10 +6,10 @@ export const LEVEL_LABELS: Record<string, string> = {
 };
 
 export const LEVEL_DESCRIPTIONS: Record<string, string> = {
-  BEGINNER: "Build the foundation with shorter, confidence-building papers.",
-  INTERMEDIATE: "Balance learning with consistent exam-style practice.",
-  ADVANCED: "Push speed and accuracy with harder mixed papers.",
-  EXTREME: "Peak-intensity preparation for exam-day conditions.",
+  BEGINNER: "One daily full mock when the reviewed bank covers your paper.",
+  INTERMEDIATE: "Two daily papers with a study break between sittings.",
+  ADVANCED: "Three daily papers with time to review between sittings.",
+  EXTREME: "Four daily papers with time to review between sittings.",
 };
 
 export const levelMinutes: Record<string, number> = {

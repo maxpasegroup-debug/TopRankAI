@@ -24,10 +24,10 @@ type Level = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXTREME";
 type Selected = { examId: string; partCode?: string; level: Level; targetYear: number; dailyMinutes: number };
 
 const levels: { value: Level; label: string; minutes: number; hint: string }[] = [
-  { value: "BEGINNER", label: "Beginner", minutes: 30, hint: "Foundations" },
-  { value: "INTERMEDIATE", label: "Intermediate", minutes: 45, hint: "Steady" },
-  { value: "ADVANCED", label: "Advanced", minutes: 90, hint: "Intense" },
-  { value: "EXTREME", label: "Extreme", minutes: 120, hint: "Peak" },
+  { value: "BEGINNER", label: "Beginner", minutes: 30, hint: "1 paper/day" },
+  { value: "INTERMEDIATE", label: "Intermediate", minutes: 45, hint: "2 papers/day" },
+  { value: "ADVANCED", label: "Advanced", minutes: 90, hint: "3 papers/day" },
+  { value: "EXTREME", label: "Extreme", minutes: 120, hint: "4 papers/day" },
 ];
 
 const genders = [
@@ -56,7 +56,7 @@ export function RegisterWizard({ groups, currentYear }: { groups: Group[]; curre
   });
   const [selected, setSelected] = useState<Selected[]>([]);
   const [accepted, setAccepted] = useState(false);
-  const [openGroup, setOpenGroup] = useState<string | null>(groups[0]?.slug ?? null);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   const maxDob = useMemo(() => {
     const date = new Date(currentYear - 18, new Date().getMonth(), new Date().getDate());

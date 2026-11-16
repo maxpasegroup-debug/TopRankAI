@@ -70,10 +70,10 @@ export default async function DailyExamResultPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; question?: string }>;
 }) {
   const { id } = await params;
-  const requestedPage = Number((await searchParams).page ?? "1");
+  const query = await searchParams;
   const user = await requireAuth();
 
   const attempt = await prisma.examAttempt.findFirst({
@@ -94,6 +94,8 @@ export default async function DailyExamResultPage({
   const topicByName = new Map(review.flatMap((item) => (item.topic ? [[item.topic.title, item.topic] as const] : [])));
 
   const pageSize = 10;
+  const questionIndex = review.findIndex((item) => item.id === query.question);
+  const requestedPage = questionIndex >= 0 ? Math.floor(questionIndex / pageSize) + 1 : Number(query.page ?? "1");
   const totalPages = Math.max(1, Math.ceil(review.length / pageSize));
   const page = Math.min(Math.max(1, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 1), totalPages);
   const pageStart = (page - 1) * pageSize;
@@ -296,7 +298,7 @@ export default async function DailyExamResultPage({
         </div>
         <div className="tp-card tp-card-pad">
           {pageItems.map((item) => (
-            <article className="tp-review-item" key={item.id}>
+            <article className="tp-review-item" id={`answer-${item.id}`} key={item.id}>
               <div className="tp-review-head">
                 <span className="tp-review-num">{item.position}</span>
                 <div className="tp-grow">

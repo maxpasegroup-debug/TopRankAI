@@ -1,3 +1,4 @@
+import { levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { ProfileForm } from "@/components/platform/app/ProfileForm";
@@ -15,6 +16,8 @@ export default async function ProfilePage() {
     return <div className="tp-empty"><h3>Profile not found</h3></div>;
   }
 
+  const monthly = mockMonthlyActive(profile.subscription);
+  const expiredMock = profile.subscription?.plan === "MOCK_MONTHLY" && !monthly;
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
   return (
@@ -55,7 +58,7 @@ export default async function ProfilePage() {
             <h2 style={{ fontSize: 19, marginTop: 12 }}>{profile.name}</h2>
             <p className="tp-xs tp-muted">{profile.email}</p>
             <div className="tp-row tp-gap-8 tp-wrap" style={{ justifyContent: "center", marginTop: 12 }}>
-              <span className="tp-pill tp-pill-brand">{profile.subscription?.plan ?? "FREE"} plan</span>
+              <span className="tp-pill tp-pill-brand">{expiredMock ? "FREE" : profile.subscription?.plan ?? "FREE"} plan</span>
               <span className="tp-pill">{profile.accountConsent?.ageBand?.replace(/_/g, "+") ?? "18+"}</span>
             </div>
           </section>
@@ -69,7 +72,7 @@ export default async function ProfilePage() {
                     <div style={{ fontWeight: 600 }}>{target.exam.name}</div>
                     <div className="tp-xs tp-faint">Target {target.targetYear}</div>
                   </div>
-                  <span className="tp-pill tp-pill-brand">{levelLabel(target.preparationLevel)}</span>
+                  <span className="tp-pill tp-pill-brand">{levelLabel(levelForPapers(paperCount(target.preparationLevel, target.dailyPaperCount, monthly)))}</span>
                 </div>
               )) : <p className="tp-small tp-muted">No exam added yet.</p>}
             </div>
@@ -80,7 +83,7 @@ export default async function ProfilePage() {
             <h3 style={{ fontSize: 16, marginBottom: 10 }}>Account & privacy</h3>
             <div className="tp-stack tp-gap-8">
               <div className="tp-row-between tp-small"><span className="tp-muted">Consent version</span><span style={{ fontWeight: 600 }}>{profile.accountConsent?.acceptedAt ? formatDate(profile.accountConsent.acceptedAt, { day: "numeric", month: "short", year: "numeric" }) : "—"}</span></div>
-              <div className="tp-row-between tp-small"><span className="tp-muted">Subscription</span><span style={{ fontWeight: 600 }}>{profile.subscription?.status ?? "ACTIVE"}</span></div>
+              <div className="tp-row-between tp-small"><span className="tp-muted">Subscription</span><span style={{ fontWeight: 600 }}>{expiredMock ? "EXPIRED" : profile.subscription?.status ?? "ACTIVE"}</span></div>
               <div className="tp-row-between tp-small"><span className="tp-muted">Study time</span><span style={{ fontWeight: 600 }}>{profile.dailyStudyMinutes ?? 45} min/day</span></div>
             </div>
             <div className="tp-row tp-gap-8 tp-mt-16 tp-wrap">

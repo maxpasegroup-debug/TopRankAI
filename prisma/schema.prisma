@@ -402,6 +402,7 @@ model CandidateExamTarget {
   examId            String
   targetYear        Int
   preparationLevel  PreparationLevel @default(BEGINNER)
+  dailyPaperCount   Int?
   dailyMinutes      Int              @default(45)
   examPart          String?
   targetExamDate    DateTime?        @db.Date
@@ -964,7 +965,7 @@ model ExamConfiguration {
   questionTypes         String[] @default(["SINGLE_CHOICE"])
   dailyTestQuestions    Int      @default(8)
   dailyTestMinutes      Int      @default(12)
-  dailyTestCount        Json     @default("{\"BEGINNER\":1,\"INTERMEDIATE\":2,\"ADVANCED\":2,\"EXTREME\":3}")
+  dailyTestCount        Json     @default("{\"BEGINNER\":1,\"INTERMEDIATE\":2,\"ADVANCED\":3,\"EXTREME\":4}")
   markingNote           String?
   sourceUrl             String?
   verifiedAt            DateTime?
