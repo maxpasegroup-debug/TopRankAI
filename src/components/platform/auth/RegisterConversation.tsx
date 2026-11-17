@@ -647,15 +647,18 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
         {error ? <div className="tp-error" role="alert">{error}</div> : null}
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          <button
-            type="button"
-            className="tp-btn tp-btn-ghost tp-btn-sm"
-            onClick={() => goTo(index - 1)}
-            disabled={index === 0 || pending || uploading}
-            hidden={index === 0}
-          >
-            <Icon name="arrow-left" size={15} /> Back
-          </button>
+          {index > 0 ? (
+            <button
+              type="button"
+              className="tp-btn tp-btn-ghost tp-btn-sm"
+              onClick={() => goTo(index - 1)}
+              disabled={pending || uploading}
+            >
+              <Icon name="arrow-left" size={15} /> Back
+            </button>
+          ) : (
+            <span aria-hidden="true" />
+          )}
 
           <div className="flex flex-wrap items-center gap-2">
             {step === "phone" || step === "photo" ? (
