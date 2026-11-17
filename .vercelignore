@@ -1,0 +1,11 @@
+# Files Vercel CLI must not upload.
+# `.env` holds real credentials; production values live in Vercel's environment
+# settings instead. The build regenerates Prisma and Next output itself.
+.env
+.env.*
+!.env.example
+.next
+node_modules
+.git
+coverage
+*.tsbuildinfo
