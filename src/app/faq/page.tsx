@@ -25,7 +25,19 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "How is the daily paper selected?",
-    a: "The server chooses a stable, date-based slice of the reviewed question bank published for your exam. The same account sees the same paper for the same day. Question content is never generated live into a paper; AI drafts stay unpublished until an administrator reviews them.",
+    a: "Each scheduled sitting is assembled from the reviewed question bank for your exam, using the complete official pattern: the same question count, duration, total marks and marking rules as the real paper. When the bank covers every official section you receive a full mock; otherwise the paper is clearly labelled as a practice set. Opening the same sitting again gives you the same questions.",
+  },
+  {
+    q: "Can I schedule several papers at different times?",
+    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, and the mock monthly plan raises that to eight.",
+  },
+  {
+    q: "What does the mock monthly plan include?",
+    a: "It removes the level limit for 30 days so you can schedule up to eight papers per day for each exam. It is a test checkout: there is no payment gateway, no card data is collected and no money is charged. It does not promise rank, admission or any outcome.",
+  },
+  {
+    q: "What is the learning centre?",
+    a: "The learning centre lists the official units, chapters and topics for your exam. Opening a topic shows the official syllabus passage with its source link, any curated or clearly labelled AI-assisted notes, official external resources and previous/next navigation. You can search topics, save them and mark progress; the planner sends you to the exact topic for revision.",
   },
   {
     q: "What happens if I run out of time?",
@@ -49,7 +61,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is the platform free?",
-    a: "The build ships with a free subscription record for every new account, covering daily exams, the learning centre and analytics. Nothing in the interface implies a paid tier that does not exist.",
+    a: "Your level includes one to four daily papers, plus access to the learning centre and analytics. To schedule more papers than your level includes, activate the mock monthly subscription in your workspace. It supports up to eight papers per day and takes no payment.",
   },
   {
     q: "How do I report a wrong question or date?",

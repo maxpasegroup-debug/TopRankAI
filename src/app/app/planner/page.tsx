@@ -107,7 +107,7 @@ export default async function PlannerPage() {
                           {item.reason} · due {formatDate(item.dueDate, { day: "numeric", month: "short" })}
                         </div>
                       </div>
-                      <div className="tp-row tp-gap-8 tp-wrap">
+                      <div className="tp-row tp-gap-8 tp-wrap max-[640px]:ml-11 max-[640px]:basis-full">
                         {topicId ? (
                           <Link className="tp-btn tp-btn-soft tp-btn-sm" href={`/app/learn/${topicId}`}>Revise topic</Link>
                         ) : null}

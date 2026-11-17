@@ -14,6 +14,7 @@
     "prisma:deploy": "prisma migrate deploy --config prisma7.config.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:bootstrap-test-admin": "tsx scripts/bootstrap-test-admin.ts",
+    "db:reset-candidates": "tsx scripts/reset-candidates.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
     "import:pyq": "tsx scripts/import-pyq.ts",
     "syllabus:sync": "tsx scripts/sync-syllabus-library.ts",
@@ -45,10 +46,12 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.5",
     "@types/node": "^22.20.3",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "prisma": "^7.10.0",
+    "tailwindcss": "^4.3.5",
     "tsx": "^4.23.13",
     "vitest": "^5.0.1"
   }

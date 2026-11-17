@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import localFont from "next/font/local";
-import "./../styles/global.css";
-import "./../styles/experience.css";
-import "./../styles/platform.css";
+import "./../styles/tailwind.css";
 
 // Fonts are vendored so the app does not need to reach Google Fonts at build or
 // request time. The latin-ext files cover ₹ and other extended Latin glyphs.
@@ -80,6 +78,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${jakarta.variable} ${jakartaExt.variable} ${bricolage.variable} ${bricolageExt.variable}`}
       data-theme={theme}
       suppressHydrationWarning

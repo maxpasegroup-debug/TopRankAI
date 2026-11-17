@@ -23,7 +23,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
 
   return (
     <PublicShell>
-      <section className="tp-section" style={{ paddingBottom: 0 }}>
+      <section className="tp-exam-section">
         <div className="tp-shell">
           <div className="tp-row tp-gap-8 tp-small tp-muted" style={{ marginBottom: 20 }}>
             <Link href="/exams" className="tp-link">Exams</Link>
@@ -31,7 +31,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
             <span>{exam.category}</span>
           </div>
 
-          <div className="tp-dash" style={{ gridTemplateColumns: "minmax(0, 1.7fr) minmax(280px, 1fr)" }}>
+          <div className="tp-dash tp-exam-overview">
             <div>
               <span className="tp-pill tp-pill-brand">{exam.category}</span>
               <h1 style={{ fontSize: "clamp(32px, 4.4vw, 52px)", letterSpacing: "-0.035em", margin: "16px 0 12px" }}>{exam.name}</h1>
@@ -52,13 +52,13 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
                   ["Duration", `${primaryPart?.durationMinutes ?? exam.durationMinutes} minutes`],
                   ["Total questions", `${primaryPart?.totalQuestions ?? exam.totalQuestions}`],
                   ["Total marks", primaryPart ? `${primaryPart.totalMarks}` : `+${exam.positiveMarks} per correct`],
-                  ["Daily papers", primaryPart ? `Full mock when the bank covers ${primaryPart.totalQuestions} Q, otherwise a practice set` : "Pattern-matched daily paper"],
+                  ["Daily papers", "1–8 · start time per exam"],
                   ["Marking", `+${exam.positiveMarks} / −${exam.negativeMarks}`],
                   ["Paper variants", `${exam.parts.length || 1}`],
                   ["Syllabus topics", topicCount.toLocaleString("en-IN")],
                   ["Reviewed questions", `${exam.questionCount}`],
                 ].map(([label, value]) => (
-                  <div className="tp-row-between tp-small" key={label}>
+                  <div className="tp-snapshot-row tp-small" key={label}>
                     <span className="tp-muted">{label}</span>
                     <span style={{ fontWeight: 650 }}>{value}</span>
                   </div>
@@ -84,11 +84,11 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
       </section>
 
       {exam.parts.length ? (
-        <section className="tp-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
+        <section className="tp-exam-section">
           <div className="tp-shell">
             <span className="tp-eyebrow">Paper pattern</span>
             <h2 style={{ fontSize: 28, margin: "12px 0 18px", letterSpacing: "-0.03em" }}>Choose the paper that matches your goal</h2>
-            <div className={`tp-grid ${exam.parts.length > 1 ? "tp-grid-2" : ""}`}>
+            <div className="tp-paper-variants">
               {exam.parts.map((part) => (
                 <article className="tp-card tp-card-pad" key={part.code}>
                   <div className="tp-row-between tp-wrap tp-gap-8">
@@ -103,7 +103,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
                   {part.description ? <p className="tp-small tp-muted" style={{ marginTop: 8 }}>{part.description}</p> : null}
                   <div className="tp-stack tp-gap-6 tp-mt-12">
                     {part.sections.map((section) => (
-                      <div className="tp-row-between tp-xs" key={section.name}>
+                      <div className="tp-snapshot-row tp-xs" key={section.name}>
                         <span className="tp-muted">{section.name}</span>
                         <span style={{ fontWeight: 600 }}>
                           {section.questionCount} Q · {sectionMarkLabel(section)}
@@ -124,7 +124,7 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
         </section>
       ) : null}
 
-      <section className="tp-section">
+      <section className="tp-exam-section">
         <div className="tp-shell">
           <div className="tp-grid tp-grid-2" style={{ alignItems: "start" }}>
             <div>
@@ -173,24 +173,15 @@ export default async function ExamDetailPage({ params }: { params: Promise<{ cod
                   ))}
                 </div>
               ) : (
-                <div className="tp-empty">
-                  <span className="tp-feature-icon" style={{ margin: 0 }}><Icon name="calendar" /></span>
-                  <h3>No verified date recorded</h3>
-                  <p>
-                    The official notification for this cycle has not been captured in the platform. We do
-                    not publish guessed dates. Check the official website and add the date through the
-                    admin calendar once confirmed.
-                  </p>
+                <div className="tp-card tp-card-pad tp-stack tp-gap-12 tp-calendar-summary">
+                  <h3>Awaiting verified dates</h3>
+                  <p className="tp-small tp-muted">Candidates preparing for {exam.shortName ?? exam.name} receive a workspace notification when a date is confirmed.</p>
                   {exam.officialUrl ? (
                     <a className="tp-btn tp-btn-soft" href={exam.officialUrl} target="_blank" rel="noopener noreferrer">Check official website</a>
                   ) : null}
                 </div>
               )}
 
-              <div className="tp-note tp-mt-24">
-                <strong>How dates enter the platform.</strong> An administrator records the event with its
-                official source link. Confirmed events notify every candidate preparing for that exam.
-              </div>
             </div>
           </div>
         </div>

@@ -14,8 +14,9 @@ const loop: { icon: IconName; title: string; body: string; points: string[] }[] 
     body: "Registration collects your profile, then asks you to choose one or more exams grouped by category.",
     points: [
       "A separate preparation level per exam — Beginner, Intermediate, Advanced or Extreme.",
-      "Each level changes the daily paper size and the study-time target.",
-      "You can change exams and levels later from your workspace.",
+      "Beginner includes one paper a day, Intermediate two, Advanced three and Extreme four. You can schedule up to eight and choose an IST start time for each exam.",
+      "Papers above your level allowance use the mock monthly plan — no payment gateway and no money charged. Each level also sets a daily study target.",
+      "You can change exams, levels, start times and study minutes later from your workspace.",
     ],
   },
   {
@@ -23,7 +24,7 @@ const loop: { icon: IconName; title: string; body: string; points: string[] }[] 
     title: "2 · Sit today's paper",
     body: "A timed paper is assembled deterministically from the reviewed question bank for your exam.",
     points: [
-      "The selection is stable for your account on a given day — no random reshuffling.",
+      "Each sitting has a stable selection of questions. Full mocks follow the official paper pattern when the reviewed bank covers its sections. Otherwise, you receive a labelled practice set.",
       "A question palette lets you flag and revisit before submitting.",
       "The timer is enforced on the server; an expired paper is submitted automatically.",
     ],
@@ -44,8 +45,9 @@ const loop: { icon: IconName; title: string; body: string; points: string[] }[] 
     body: "Each wrong answer enters the revision queue with a due date based on your performance.",
     points: [
       "Topic progress is tracked as not started, learning, completed or needs revision.",
-      "The learning centre stores the syllabus, notes and formulas per topic.",
-      "AI study notes can be generated on demand for a topic, clearly labelled as AI-assisted.",
+      "Choose Revise topic in the planner to open the exact syllabus topic behind a mistake — not the old exam result.",
+      "The learning centre holds every official unit, chapter and topic, with the official source passage, your saved topics and AI-assisted notes where available.",
+      "Your daily study target is minutes spent studying or revising syllabus topics. Sitting a paper is tracked separately.",
     ],
   },
 ];

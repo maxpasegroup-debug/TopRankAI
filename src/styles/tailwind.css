@@ -1,0 +1,62 @@
+/* ============================================================================
+   Tailwind CSS entry
+   Tailwind owns the cascade: theme tokens, then the legacy design-system CSS,
+   then utilities. Utilities therefore win over component classes, which lets a
+   component migrate one element at a time without changing the visual design.
+   ========================================================================== */
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@import "./global.css" layer(components);
+@import "./experience.css" layer(components);
+@import "./platform.css" layer(components);
+
+/* Design tokens exposed to Tailwind. Values reference the existing CSS
+   variables, so light/dark/system themes keep working exactly as before. */
+@theme {
+  --color-bg: var(--tp-bg);
+  --color-bg-deep: var(--tp-bg-deep);
+  --color-surface: var(--tp-surface);
+  --color-surface-2: var(--tp-surface-2);
+  --color-surface-3: var(--tp-surface-3);
+  --color-line: var(--tp-line);
+  --color-line-strong: var(--tp-line-strong);
+  --color-ink: var(--tp-ink);
+  --color-ink-soft: var(--tp-ink-soft);
+  --color-muted: var(--tp-muted);
+  --color-faint: var(--tp-faint);
+  --color-brand: var(--tp-brand);
+  --color-brand-strong: var(--tp-brand-strong);
+  --color-brand-soft: var(--tp-brand-soft);
+  --color-brand-ink: var(--tp-brand-ink);
+  --color-action: var(--tp-action);
+  --color-action-strong: var(--tp-action-strong);
+  --color-accent: var(--tp-accent);
+  --color-accent-soft: var(--tp-accent-soft);
+  --color-violet: var(--tp-violet);
+  --color-ok: var(--tp-ok);
+  --color-ok-soft: var(--tp-ok-soft);
+  --color-warn: var(--tp-warn);
+  --color-warn-soft: var(--tp-warn-soft);
+  --color-danger: var(--tp-danger);
+  --color-danger-soft: var(--tp-danger-soft);
+
+  --radius-xs: var(--tp-radius-xs);
+  --radius-sm: var(--tp-radius-sm);
+  --radius-md: var(--tp-radius-md);
+  --radius-lg: var(--tp-radius-lg);
+  --radius-xl: var(--tp-radius-xl);
+
+  --shadow-sm: var(--tp-shadow-sm);
+  --shadow-md: var(--tp-shadow-md);
+  --shadow-lg: var(--tp-shadow-lg);
+
+  --font-sans: var(--tp-font);
+  --font-display: var(--tp-display);
+  --font-mono: var(--tp-mono);
+
+  --container-page: var(--tp-max);
+}

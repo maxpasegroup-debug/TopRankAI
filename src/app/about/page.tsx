@@ -30,8 +30,8 @@ export default async function AboutPage() {
             </h1>
             <p className="tp-lede">
               Indian competitive exams reward consistency more than any single brilliant study session.
-              TopRank AI exists to make that consistency concrete: one paper a day, scored honestly,
-              with a syllabus that shows what is left.
+              Choose a daily paper schedule that fits your preparation level and use your results
+              to see which syllabus topics to study next.
             </p>
           </div>
         </div>

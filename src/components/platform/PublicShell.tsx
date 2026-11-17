@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCurrentUser } from "@/server/auth/session";
 import { RevealProvider } from "./RevealProvider";
 import { SiteFooter } from "./SiteFooter";
@@ -15,9 +16,9 @@ export async function getViewer() {
 export async function PublicShell({ children }: { children: React.ReactNode }) {
   const viewer = await getViewer();
   return (
-    <div className="tp-site">
+    <div className="flex min-h-screen flex-col">
       <SiteHeader user={viewer} />
-      <main className="tp-site-main" id="main">
+      <main className="tp-site-main flex-1" id="main">
         {children}
       </main>
       <SiteFooter />

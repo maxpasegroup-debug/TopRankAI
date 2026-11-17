@@ -97,7 +97,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
               setMessage("");
               setError("");
             }}
-            style={{ width: 112, minHeight: 34, padding: "2px 8px" }}
+            style={{ width: 140, flex: "none", minHeight: 34, padding: "2px 8px" }}
           />
           <span className="tp-xs tp-faint">IST</span>
           <button

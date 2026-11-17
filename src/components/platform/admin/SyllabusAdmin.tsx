@@ -159,7 +159,7 @@ export function SyllabusAdmin({
         <section className="tp-card tp-card-pad">
           <h2 style={{ fontSize: 18, marginBottom: 4 }}>Coverage</h2>
           <p className="tp-xs tp-faint" style={{ marginBottom: 16 }}>{examName}</p>
-          <div className="tp-admin-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+          <div className="tp-admin-grid">
             <div className="tp-admin-stat">
               <span>Units</span>
               <strong>{units.length}</strong>
