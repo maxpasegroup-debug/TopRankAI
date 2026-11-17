@@ -12,8 +12,8 @@ export function PlanGenerator({ code }: { code: string }) {
   const [aiGenerated, setAiGenerated] = useState(false);
 
   function generate() {
+    const toastId = toast.loading("Building a study plan…");
     startTransition(async () => {
-      const toastId = toast.loading("Building a study plan…");
       const result = await requestStudyPlan(code);
       if (!result.ok) {
         toast.error(result.message, { id: toastId });

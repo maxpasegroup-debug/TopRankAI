@@ -11,8 +11,8 @@ export function RevisionActions({ id }: { id: string }) {
   const [pending, startTransition] = useTransition();
 
   function act(kind: "complete" | "dismiss") {
+    const toastId = toast.loading(kind === "complete" ? "Clearing this revision…" : "Dismissing this revision…");
     startTransition(async () => {
-      const toastId = toast.loading(kind === "complete" ? "Clearing this revision…" : "Dismissing this revision…");
       const result = kind === "complete" ? await completeRevisionItem(id) : await dismissRevisionItem(id);
       if (!result.ok) {
         toast.error(result.message ?? "Could not update this item.", { id: toastId });

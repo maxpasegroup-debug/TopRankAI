@@ -94,8 +94,8 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
       toast.error("Keep at least one exam in your plan.");
       return;
     }
+    const toastId = toast.loading("Saving your exam plan…");
     startTransition(async () => {
-      const toastId = toast.loading("Saving your exam plan…");
       const result = await updateExamPlan(selected.map((item) => ({
         examId: item.examId,
         partCode: item.partCode,

@@ -15,8 +15,8 @@ export function AdminLoginForm() {
   function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const toastId = toast.loading("Signing in…");
     startTransition(async () => {
-      const toastId = toast.loading("Signing in…");
       const result = await loginAdmin({
         email: String(data.get("email") ?? ""),
         password: String(data.get("password") ?? ""),
@@ -34,8 +34,8 @@ export function AdminLoginForm() {
   function reset(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const toastId = toast.loading("Updating the password…");
     startTransition(async () => {
-      const toastId = toast.loading("Updating the password…");
       const result = await resetAdminPassword({
         email: String(data.get("email") ?? ""),
         currentPassword: String(data.get("currentPassword") ?? ""),

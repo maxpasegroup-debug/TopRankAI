@@ -191,8 +191,8 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
       toast.error(issue);
       return;
     }
+    const toastId = toast.loading("Creating your account…");
     startTransition(async () => {
-      const toastId = toast.loading("Creating your account…");
       const result = await registerCandidate({
         name: account.name.trim(),
         email: account.email.trim().toLowerCase(),

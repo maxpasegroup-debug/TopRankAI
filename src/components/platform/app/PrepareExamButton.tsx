@@ -23,8 +23,8 @@ export function PrepareExamButton({
   const [pending, startTransition] = useTransition();
 
   function prepare() {
+    const toastId = toast.loading("Preparing today's paper…");
     startTransition(async () => {
-      const toastId = toast.loading("Preparing today's paper…");
       const result = await prepareDailyExam(code, slot);
       if (!result.ok) {
         toast.error(result.message, { id: toastId });

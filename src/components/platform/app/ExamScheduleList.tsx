@@ -100,8 +100,8 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
             className="tp-btn tp-btn-sm"
             disabled={pending || (!changed && !needsMonthly)}
             onClick={() => {
+              const toastId = toast.loading(needsMonthly ? "Activating mock monthly and saving…" : "Saving schedule…");
               startTransition(async () => {
-                const toastId = toast.loading(needsMonthly ? "Activating mock monthly and saving…" : "Saving schedule…");
                 const result = await saveDailyWorkload(row.targetId, count, needsMonthly, minutesValue(start));
                 if (!result.ok) {
                   toast.error(result.message, { id: toastId });

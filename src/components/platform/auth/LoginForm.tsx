@@ -15,8 +15,8 @@ export function LoginForm() {
   function onSubmit(formData: FormData) {
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
+    const toastId = toast.loading("Signing you in…");
     startTransition(async () => {
-      const toastId = toast.loading("Signing you in…");
       const result = await loginUser({ email, password });
       if (!result.ok) {
         toast.error(result.message, { id: toastId });

@@ -31,8 +31,8 @@ export function TopicActions({
   const [notesPending, startNotes] = useTransition();
 
   function setStatus(next: Status) {
+    const toastId = toast.loading("Updating this topic…");
     startTransition(async () => {
-      const toastId = toast.loading("Updating this topic…");
       const result = await updateTopicProgress({ topicId, status: next });
       if (!result.ok) {
         toast.error(result.message, { id: toastId });
@@ -44,8 +44,8 @@ export function TopicActions({
   }
 
   function toggleBookmark() {
+    const toastId = toast.loading(bookmarked ? "Removing from saved topics…" : "Saving this topic…");
     startTransition(async () => {
-      const toastId = toast.loading(bookmarked ? "Removing from saved topics…" : "Saving this topic…");
       const result = await updateTopicProgress({ topicId, status, bookmarked: !bookmarked });
       if (!result.ok) {
         toast.error(result.message, { id: toastId });
@@ -57,8 +57,8 @@ export function TopicActions({
   }
 
   function generateNotes() {
+    const toastId = toast.loading("Generating detailed notes…");
     startNotes(async () => {
-      const toastId = toast.loading("Generating detailed notes…");
       const result = await requestTopicNotes(topicId);
       if (!result.ok) {
         toast.error(result.message, { id: toastId });

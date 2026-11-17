@@ -11,8 +11,8 @@ export function StartExamButton({ dailyExamId }: { dailyExamId: string }) {
   const [pending, startTransition] = useTransition();
 
   function start() {
+    const toastId = toast.loading("Opening the paper…");
     startTransition(async () => {
-      const toastId = toast.loading("Opening the paper…");
       const result = await beginDailyExam(dailyExamId);
       if (!result.ok) {
         toast.error(result.message, { id: toastId });

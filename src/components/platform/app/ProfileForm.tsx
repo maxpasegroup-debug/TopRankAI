@@ -49,8 +49,8 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const toastId = toast.loading("Saving your profile…");
     startTransition(async () => {
-      const toastId = toast.loading("Saving your profile…");
       const result = await updateCandidateProfile({
         name: form.name,
         dateOfBirth: form.dateOfBirth,
