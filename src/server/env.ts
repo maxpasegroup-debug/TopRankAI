@@ -16,8 +16,14 @@ const envSchema = z.object({
   GEMINI_API_KEY: blankAsUndefined(z.string().min(10).optional()),
   GEMINI_MODEL: blankAsUndefined(z.string().min(1).default("gemini-3.5-flash")),
   AI_FEATURES_ENABLED: blankAsUndefined(z.string().optional()),
-  // Cloudflare R2 (S3-compatible). Every value is optional so the app still
-  // boots without storage; uploads report that storage is not configured.
+  // Image storage. Cloudinary is the active provider; R2 stays available for
+  // production. Every value is optional so the app boots without storage and
+  // uploads report that they are not configured.
+  STORAGE_PROVIDER: blankAsUndefined(z.enum(["cloudinary", "r2"]).optional()),
+  CLOUDINARY_CLOUD_NAME: blankAsUndefined(z.string().min(1).optional()),
+  CLOUDINARY_API_KEY: blankAsUndefined(z.string().min(1).optional()),
+  CLOUDINARY_API_SECRET: blankAsUndefined(z.string().min(1).optional()),
+  // Cloudflare R2 (S3-compatible), optional production alternative.
   R2_ACCOUNT_ID: blankAsUndefined(z.string().min(1).optional()),
   R2_ACCESS_KEY_ID: blankAsUndefined(z.string().min(1).optional()),
   R2_SECRET_ACCESS_KEY: blankAsUndefined(z.string().min(1).optional()),

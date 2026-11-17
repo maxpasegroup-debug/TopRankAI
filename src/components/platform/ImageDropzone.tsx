@@ -141,7 +141,7 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
             {busy ? `Uploading… ${status.kind === "uploading" ? status.percent : 0}%` : value ? "Profile picture added" : "Drag an image here"}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            JPEG, PNG or WebP. Up to 2 MB. It is stored in your TopRank bucket and shown only inside your account.
+            JPEG, PNG or WebP. Up to 2 MB. It is stored in TopRank&apos;s image storage and shown only inside your account.
           </p>
           {busy ? (
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-3" role="progressbar" aria-valuenow={status.kind === "uploading" ? status.percent : 0} aria-valuemin={0} aria-valuemax={100}>
@@ -187,9 +187,9 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
 
       {config?.configured === false ? (
         <p className="text-xs leading-relaxed text-warn">
-          File storage is not configured on this deployment yet, so uploads are disabled. Add the R2 variables to
-          <code className="mx-1 rounded-xs bg-surface-3 px-1 py-0.5 font-mono text-[11px]">.env</code>
-          to turn them on. You can finish your account without a picture and add one later.
+          File storage is not configured on this deployment yet, so uploads are disabled. An administrator needs to add
+          the storage credentials to the server environment. You can finish your account without a picture and add one
+          later.
         </p>
       ) : null}
 

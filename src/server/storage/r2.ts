@@ -3,12 +3,14 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getEnv } from "../env";
 
 /**
- * Cloudflare R2 storage.
+ * Cloudflare R2 storage, kept for production. Cloudinary is the active
+ * provider while R2 has no billing method on the account; the upload route
+ * picks whichever provider is configured (see `src/server/storage/index.ts`).
  *
  * R2 speaks the S3 API, so the AWS SDK is pointed at the account's R2 endpoint.
- * Uploads are proxied through a route handler rather than presigned URLs: the
- * browser never sees the credentials, the bucket needs no CORS rule, and the
- * MIME type and byte size are checked before anything is written.
+ * Uploads are proxied through the route handler: the browser never sees the
+ * credentials, the bucket needs no CORS rule, and the file type and size are
+ * checked before anything is written.
  *
  * Required environment (see .env.example):
  *   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET,
@@ -18,23 +20,7 @@ import { getEnv } from "../env";
  * bucket's r2.dev development URL or a custom domain connected to the bucket.
  */
 
-export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
-
-export type ImageType = { mime: "image/jpeg" | "image/png" | "image/webp"; extension: "jpg" | "png" | "webp" };
-
-export type StorageStatus =
-  | { configured: true }
-  | { configured: false; missing: string[] };
-
-type StorageConfig = {
-  accountId: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-  bucket: string;
-  publicBaseUrl: string;
-};
-
-const required = [
+const REQUIRED = [
   "R2_ACCOUNT_ID",
   "R2_ACCESS_KEY_ID",
   "R2_SECRET_ACCESS_KEY",
@@ -42,10 +28,22 @@ const required = [
   "R2_PUBLIC_BASE_URL",
 ] as const;
 
-function storageConfig(): StorageConfig | null {
+type R2Config = {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucket: string;
+  publicBaseUrl: string;
+};
+
+export function r2Missing(): string[] {
   const env = getEnv();
-  const missing = required.filter((key) => !env[key]);
-  if (missing.length) return null;
+  return REQUIRED.filter((key) => !env[key]);
+}
+
+export function r2Config(): R2Config | null {
+  const env = getEnv();
+  if (r2Missing().length) return null;
   return {
     accountId: env.R2_ACCOUNT_ID!,
     accessKeyId: env.R2_ACCESS_KEY_ID!,
@@ -55,15 +53,9 @@ function storageConfig(): StorageConfig | null {
   };
 }
 
-export function storageStatus(): StorageStatus {
-  const env = getEnv();
-  const missing = required.filter((key) => !env[key]);
-  return missing.length ? { configured: false, missing } : { configured: true };
-}
-
 let client: { key: string; value: S3Client } | null = null;
 
-function s3Client(config: StorageConfig) {
+function s3Client(config: R2Config) {
   // Reuse the client across requests in the same process. The key keeps a
   // configuration change (for example a rotated key) from reusing a stale one.
   const key = `${config.accountId}:${config.accessKeyId}:${config.bucket}`;
@@ -77,35 +69,16 @@ function s3Client(config: StorageConfig) {
   return value;
 }
 
-/** Detects the image type from its bytes; a client-supplied MIME type is never trusted. */
-export function detectImageType(bytes: Uint8Array): ImageType | null {
-  const startsWith = (offset: number, signature: number[]) =>
-    signature.every((byte, index) => bytes[offset + index] === byte);
+export type R2Upload = { key: string; url: string };
 
-  if (bytes.length > 3 && startsWith(0, [0xff, 0xd8, 0xff])) return { mime: "image/jpeg", extension: "jpg" };
-  if (bytes.length > 8 && startsWith(0, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) {
-    return { mime: "image/png", extension: "png" };
-  }
-  if (
-    bytes.length > 12 &&
-    startsWith(0, [0x52, 0x49, 0x46, 0x46]) &&
-    startsWith(8, [0x57, 0x45, 0x42, 0x50])
-  ) {
-    return { mime: "image/webp", extension: "webp" };
-  }
-  return null;
-}
-
-export type UploadResult = { key: string; url: string };
-
-export async function uploadObject(input: {
+export async function uploadToR2(input: {
   folder: "avatars";
   bytes: Uint8Array;
   contentType: string;
   extension: string;
-}): Promise<UploadResult> {
-  const config = storageConfig();
-  if (!config) throw new Error("Object storage is not configured.");
+}): Promise<R2Upload> {
+  const config = r2Config();
+  if (!config) throw new Error("R2 is not configured.");
 
   const now = new Date();
   const key = [
@@ -127,11 +100,4 @@ export async function uploadObject(input: {
   );
 
   return { key, url: `${config.publicBaseUrl}/${key}` };
-}
-
-/** True when a URL points at this bucket's public base, used to accept stored avatars only. */
-export function isOwnPublicUrl(value: string): boolean {
-  const config = storageConfig();
-  if (!config) return false;
-  return value.startsWith(`${config.publicBaseUrl}/`);
 }

@@ -24,7 +24,7 @@ The UI is an original indigo/violet and coral design, not the previous green/lim
 - **Authentication:** first-party session cookies, `bcryptjs` password hashing, role-gated server components and server actions. Candidate and administrator authentication are separate.
 - **UI:** CSS design tokens and components in `src/styles/platform.css`; Bricolage Grotesque + Plus Jakarta Sans, vendored under `src/app/fonts/` so builds and requests do not depend on Google Fonts being reachable; GSAP reveal motion on public pages with reduced-motion support.
 - **Tailwind CSS v4:** installed alongside the existing tokens and used for new components, with a staged migration in progress. Preflight is intentionally skipped so the current look is unchanged; `src/styles/tailwind.css` sets the layer order and imports the legacy stylesheet into `components`, which lets utilities override `tp-*` classes.
-- **File storage:** Cloudflare R2 over its S3-compatible API (`@aws-sdk/client-s3`). Uploads are proxied through a Next.js route handler, so credentials never reach the browser and the bucket needs no CORS rule.
+- **File storage:** Cloudinary signed uploads for images, with Cloudflare R2 (`@aws-sdk/client-s3`) kept as the production alternative. Both are proxied through a Next.js route handler, so credentials never reach the browser; `STORAGE_PROVIDER` pins the active backend, otherwise Cloudinary is preferred and R2 is used when only R2 is configured.
 - **Validation:** Zod schemas shared by UI payloads, server actions and importers. State → District choices are validated server-side against a generated district dataset.
 - **AI:** Google Gemini through the REST API (`src/server/ai/gemini.ts`), with JSON response schemas, bounded retries and timeouts, and an `AIUsageLog` audit trail.
 
@@ -39,12 +39,11 @@ DATABASE_URL="postgresql://..."
 # GEMINI_API_KEY="..."
 # GEMINI_MODEL="gemini-3.5-flash"
 # AI_FEATURES_ENABLED="true"
-# Optional file uploads (Cloudflare R2). Leave blank to disable uploads:
-# R2_ACCOUNT_ID="..."
-# R2_ACCESS_KEY_ID="..."
-# R2_SECRET_ACCESS_KEY="..."
-# R2_BUCKET="..."
-# R2_PUBLIC_BASE_URL="https://pub-....r2.dev"
+# Optional file uploads (Cloudinary). Leave blank to disable uploads:
+# CLOUDINARY_CLOUD_NAME="..."
+# CLOUDINARY_API_KEY="..."
+# CLOUDINARY_API_SECRET="..."
+# STORAGE_PROVIDER="cloudinary"   # or "r2" once an R2 bucket exists
 
 npm run prisma:generate
 npm run prisma:deploy     # apply forward migrations
@@ -185,7 +184,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 
 - Registration is a guided conversation rather than a single long form: one question per screen (name, email, password, phone, date of birth, gender, state, district, education, language, optional picture, exams, per-exam level and paper, review) with a visible transcript of earlier answers, Back and Skip, and nothing written until the final confirmation.
 - The state question is followed by a district question whose options come from the chosen state; the server rejects a district that does not belong to that state. The stored column is still `User.city`, relabelled District in the interface.
-- Profile pictures are uploaded by drag-and-drop or file browse through the R2 proxy. The old URL field is gone; when storage is not configured the uploader says so honestly and the rest of registration still works.
+- Profile pictures are uploaded by drag-and-drop or file browse through the server-side upload proxy. The old URL field is gone; when storage is not configured the uploader says so honestly and the rest of registration still works.
 - Candidate login is separate from the administrator entry point at `/login/admin`. A candidate login rejects administrator accounts and points to the admin page.
 - Login, logout, session handling, consent records, a `FREE` subscription record and notifications.
 - Administrators sign in at `/login/admin` and can reset their password after confirming the current password; a reset revokes all administrator sessions.
@@ -287,7 +286,8 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Syllabus and calendar importers were exercised directly, including duplicate-calendar skipping and cleanup.
 - The guided registration was driven end-to-end in the browser: intro → name → email → password → skip phone → DOB → gender → Kerala → Ernakulam → education → language → skip picture → exam selection → plan → review → account created; the new candidate landed on `/app` and `/app/profile` showed "14 districts in Kerala".
 - The district rule was checked against the Zod schema: Kerala + Ernakulam passes, Kerala + Mumbai fails with "Choose a district from the selected state.", and an unknown state is rejected.
-- `/api/uploads/avatar` returns `{"configured":false,...}` with the five missing variable names until R2 is configured; the uploader shows the matching notice instead of failing silently.
+- `/api/uploads/avatar` reports the active provider and its missing variables: it returned `{"configured":false,...,"missing":["CLOUDINARY_CLOUD_NAME","CLOUDINARY_API_KEY","CLOUDINARY_API_SECRET"]}` with Cloudinary pinned and no credentials, and the uploader shows the matching notice instead of failing silently.
+- The Cloudinary signature rule was checked against an independently computed SHA-1 of the sorted parameter string, so the signed server upload matches Cloudinary's documented scheme.
 - `npm run db:reset-candidates` reported exactly the single test candidate, then deleted it; only the administrator remained and a second run reported "Nothing to remove."
 
 ## Known limitations and pending work
@@ -306,7 +306,7 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - **Some result-page topic links are inferred.** Seeded questions are not all linked to a syllabus topic, and GATE official-mode questions have no curated topic ID. The closest-topic resolver labels inferred matches honestly and falls back to a subject-level label rather than inventing a mapping.
 - **Email verification and OTP delivery are not active.** Accounts work, but email ownership is not proven. Do not treat the email field as verified.
 - **Self-registration is 18+ only.** Guardian-consent onboarding exists in the legacy schema but is not enabled for this product flow.
-- **File uploads need R2 credentials.** The upload route, validation, object naming, dropzone and profile wiring are complete, but `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_BASE_URL` are not set in `.env`, so uploads currently answer `503` and the dropzone explains why. Nothing else depends on storage. The per-IP upload throttle is per process, not a shared limiter.
+- **File uploads need Cloudinary credentials.** The upload route, signature, validation, dropzone and profile wiring are complete, but `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` and `CLOUDINARY_API_SECRET` are not set, so uploads answer `503` and the dropzone explains why. Nothing else depends on storage. The R2 values in the local `.env` are placeholders and R2 additionally needs a billing method on the Cloudflare account; switch with `STORAGE_PROVIDER=r2` once both are real. The per-IP upload throttle is per process, not a shared limiter.
 - **Uploaded images are not moderated.** Only JPEG/PNG/WebP bytes under 2 MB are accepted and the type is sniffed from the file itself, but there is no human or automated content review.
 - **No paid plans or checkout.** Every new account receives a `FREE` subscription record; payment integration is not implemented.
 - **Calendar coverage is empty by design.** Real dates must be added by an administrator or imported from a verified source. No date is guessed.

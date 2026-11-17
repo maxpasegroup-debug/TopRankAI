@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { AVATAR_MAX_BYTES, detectImageType, storageStatus, uploadObject } from "@/server/storage/r2";
+import { AVATAR_MAX_BYTES, detectImageType } from "@/server/storage/image";
+import { storageStatus, uploadAvatar } from "@/server/storage";
 
 export const runtime = "nodejs";
 
@@ -47,6 +48,7 @@ export async function GET() {
   const status = storageStatus();
   return NextResponse.json({
     configured: status.configured,
+    provider: status.configured ? status.provider : null,
     maxBytes: AVATAR_MAX_BYTES,
     missing: status.configured ? [] : status.missing,
   });
@@ -99,13 +101,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const uploaded = await uploadObject({
-      folder: "avatars",
+    const uploaded = await uploadAvatar({
       bytes,
       contentType: image.mime,
       extension: image.extension,
     });
-    return NextResponse.json({ url: uploaded.url, key: uploaded.key }, { status: 201 });
+    return NextResponse.json({ url: uploaded.url, key: uploaded.key, provider: uploaded.provider }, { status: 201 });
   } catch (error) {
     console.error("avatar upload failed", error);
     return NextResponse.json(
