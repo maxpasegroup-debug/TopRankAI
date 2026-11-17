@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import type { UserRole } from "@/generated/prisma/enums";
 import { prisma } from "../db";
 import { canAccessRole, type Role } from "./roles";
@@ -51,7 +52,10 @@ export async function revokeSession(token: string) {
   });
 }
 
-export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser | null> {
+// The layout and the page both call requireAuth(), and getCurrentUser() is
+// called again by pages that need consent context. cache() keeps that to one
+// session query per request, which matters when every query is a Neon round trip.
+export const getCurrentUser = cache(async (allowConsentOnly = false): Promise<AuthUser | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
@@ -59,6 +63,8 @@ export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser
     return null;
   }
 
+  // Consent is joined into the session query instead of fetched afterwards, so
+  // a candidate request pays for one round trip, not two.
   const session = await prisma.session.findFirst({
     where: {
       tokenHash: hashSessionToken(token),
@@ -66,7 +72,27 @@ export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser
       expiresAt: { gt: new Date() },
       user: { status: "ACTIVE" },
     },
-    include: { user: true },
+    include: {
+      user: {
+        include: {
+          accountConsent: {
+            include: {
+              guardianGrant: {
+                include: {
+                  guardian: {
+                    select: {
+                      status: true,
+                      role: true,
+                      accountConsent: { select: { ageBand: true, termsVersion: true, privacyVersion: true, revokedAt: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!session) {
@@ -74,9 +100,7 @@ export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser
   }
 
   const consentRequired = ["CANDIDATE", "STUDENT", "PARENT"].includes(session.user.role);
-  const receipt = consentRequired ? await prisma.accountConsent.findUnique({
-      where: { userId: session.user.id }, include: { guardianGrant: { include: { guardian: { select: { status: true, role: true, accountConsent: { select: { ageBand: true, termsVersion: true, privacyVersion: true, revokedAt: true } } } } } } },
-    }) : null;
+  const receipt = consentRequired ? session.user.accountConsent : null;
   const requiresLegalConsent = consentRequired && (!(await import("./account-consent")).isConsentCurrent(receipt) || (session.user.role === "PARENT" && receipt?.ageBand !== "18_PLUS"));
   if (requiresLegalConsent && !allowConsentOnly) return null;
 
@@ -87,7 +111,7 @@ export async function getCurrentUser(allowConsentOnly = false): Promise<AuthUser
     role: session.user.role,
     requiresLegalConsent,
   };
-}
+});
 
 export async function requireAuth() {
   const user = await getCurrentUser(true);
