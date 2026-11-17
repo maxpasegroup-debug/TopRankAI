@@ -92,17 +92,37 @@ and redeploy (**Deployments → ⋯ → Redeploy**).
 npm i -g vercel
 vercel login
 vercel link          # create/link the project
+vercel project update toprank-ai-demo --framework nextjs --node-version 22.x
 vercel --prod        # deploy the current branch to production
 ```
 
+A CLI-created project can default to the **Other** framework preset, which makes
+every route return `404 NOT_FOUND` even though the Next.js build succeeded. The
+`project update` line fixes that once.
+
+If the link redirects to a Vercel login page, disable SSO protection:
+
+```bash
+vercel project protection disable toprank-ai-demo --sso
+```
+
 `vercel` prints the deployment URL when it finishes. Environment variables still
-need to be added in the dashboard (or with `vercel env add`).
+need to be added in the dashboard (or with `vercel env add`). Keep the
+administrator password private even when the site itself is public.
 
 ## Troubleshooting
 
 - **`Value 'CANDIDATE' not found in enum 'UserRole'` in local dev.** The
   `.next` build cache was copied from another checkout. Stop the dev server,
   delete `.next`, run `npm run prisma:generate`, and start again.
+- **Every route returns `404 NOT_FOUND` after a CLI deploy.** The project's
+  framework preset is **Other**. Run
+  `vercel project update <project> --framework nextjs --node-version 22.x` and
+  redeploy.
+- **`MIDDLEWARE_INVOCATION_FAILED` / `Cannot find module next/server`.** This
+  was caused by the deprecated `middleware.ts` entry being shipped unbundled by
+  Next 16. The headers now live in `next.config.ts`; do not re-add a root
+  `middleware.ts`.
 - **`PrismaClientInitializationError` on Vercel.** `DATABASE_URL` is missing or
   still points at `localhost`. Use the Neon pooled URL.
 - **Sign-in/sign-up works locally but 403s in production.** `APP_URL` does not
