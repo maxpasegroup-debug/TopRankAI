@@ -15,6 +15,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:bootstrap-test-admin": "tsx scripts/bootstrap-test-admin.ts",
     "db:reset-candidates": "tsx scripts/reset-candidates.ts",
+    "districts:sync": "tsx scripts/sync-districts.ts",
     "import:syllabus": "tsx scripts/import-syllabus.ts",
     "import:pyq": "tsx scripts/import-pyq.ts",
     "syllabus:sync": "tsx scripts/sync-syllabus-library.ts",
@@ -33,6 +34,7 @@
     "verify:postgres:finalize": "tsx verification/finalize-postgres.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1170.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "bcryptjs": "^3.0.3",

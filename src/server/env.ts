@@ -1,13 +1,28 @@
 import { z } from "zod";
 
+// A commented-out or blank key in `.env` arrives as an empty string. Treat it
+// as "not set" so an unconfigured optional integration never blocks boot.
+const blankAsUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    schema,
+  ) as unknown as T;
+
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   APP_URL: z.string().url().default("http://localhost:3000"),
-  AUTH_SECRET: z.string().min(16).optional(),
+  AUTH_SECRET: blankAsUndefined(z.string().min(16).optional()),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  GEMINI_API_KEY: z.string().min(10).optional(),
-  GEMINI_MODEL: z.string().min(1).default("gemini-3.5-flash"),
-  AI_FEATURES_ENABLED: z.string().optional(),
+  GEMINI_API_KEY: blankAsUndefined(z.string().min(10).optional()),
+  GEMINI_MODEL: blankAsUndefined(z.string().min(1).default("gemini-3.5-flash")),
+  AI_FEATURES_ENABLED: blankAsUndefined(z.string().optional()),
+  // Cloudflare R2 (S3-compatible). Every value is optional so the app still
+  // boots without storage; uploads report that storage is not configured.
+  R2_ACCOUNT_ID: blankAsUndefined(z.string().min(1).optional()),
+  R2_ACCESS_KEY_ID: blankAsUndefined(z.string().min(1).optional()),
+  R2_SECRET_ACCESS_KEY: blankAsUndefined(z.string().min(1).optional()),
+  R2_BUCKET: blankAsUndefined(z.string().min(1).optional()),
+  R2_PUBLIC_BASE_URL: blankAsUndefined(z.string().url().optional()),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

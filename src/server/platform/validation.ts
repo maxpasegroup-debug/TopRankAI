@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { educationStages, indianStates, languages } from "@/shared/india";
+import { isDistrictOfState } from "@/shared/india-districts";
 
 export const examSelectionSchema = z.object({
   examId: z.string().min(1).max(100),
@@ -14,12 +15,26 @@ const baseProfile = {
   dateOfBirth: z.iso.date(),
   gender: z.enum(["FEMALE", "MALE", "NON_BINARY", "PREFER_NOT_TO_SAY"]),
   state: z.enum(indianStates),
+  // `city` holds the district chosen from the State -> District dropdowns. The
+  // column name predates the district requirement; the UI and this check treat
+  // it as the district so no free text can be stored.
   city: z.string().trim().min(2).max(120),
   education: z.enum(educationStages),
   preferredLanguage: z.enum(languages),
   phone: z.string().trim().regex(/^[+]?[0-9 -]{7,16}$/).optional().or(z.literal("")),
   avatarUrl: z.string().url().max(500).optional().or(z.literal("")),
 };
+
+/** Rejects a district that does not belong to the selected state. */
+function districtBelongsToState(value: { state: string; city: string }, ctx: z.RefinementCtx) {
+  if (!isDistrictOfState(value.state, value.city)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["city"],
+      message: "Choose a district from the selected state.",
+    });
+  }
+}
 
 export const registrationSchema = z.object({
   email: z.email().transform((value) => value.toLowerCase()),
@@ -28,7 +43,7 @@ export const registrationSchema = z.object({
   privacyAccepted: z.literal(true),
   ...baseProfile,
   exams: z.array(examSelectionSchema).min(1).max(8),
-}).strict();
+}).strict().superRefine(districtBelongsToState);
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;
 
@@ -36,7 +51,7 @@ export const profileUpdateSchema = z.object({
   ...baseProfile,
   dailyStudyMinutes: z.number().int().min(15).max(720),
   timezone: z.string().min(1).max(100),
-}).strict();
+}).strict().superRefine(districtBelongsToState);
 
 export const syllabusProgressSchema = z.object({
   topicId: z.string().min(1).max(100),

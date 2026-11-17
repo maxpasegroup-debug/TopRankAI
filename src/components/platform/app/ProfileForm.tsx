@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { ImageDropzone } from "../ImageDropzone";
 import { updateCandidateProfile } from "@/server/actions/platform";
 import { educationStages, indianStates, languages, languageCodes } from "@/shared/india";
+import { districtsFor } from "@/shared/india-districts";
 
 export type ProfileDefaults = {
   name: string;
@@ -39,6 +41,8 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ ...defaults, preferredLanguage: normaliseLanguage(defaults.preferredLanguage) });
+  const [uploading, setUploading] = useState(false);
+  const districts = districtsFor(form.state);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -100,13 +104,35 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
         </div>
         <div className="tp-field">
           <label className="tp-label" htmlFor="profile-state">State or UT <span>*</span></label>
-          <select id="profile-state" className="tp-select" value={form.state} onChange={(event) => update("state", event.target.value)}>
+          <select
+            id="profile-state"
+            className="tp-select"
+            value={form.state}
+            onChange={(event) => {
+              const state = event.target.value;
+              setForm((current) => ({
+                ...current,
+                state,
+                city: districtsFor(state).includes(current.city) ? current.city : "",
+              }));
+            }}
+          >
             {indianStates.map((state) => <option key={state} value={state}>{state}</option>)}
           </select>
         </div>
         <div className="tp-field">
-          <label className="tp-label" htmlFor="profile-city">City <span>*</span></label>
-          <input id="profile-city" className="tp-input" value={form.city} onChange={(event) => update("city", event.target.value)} required />
+          <label className="tp-label" htmlFor="profile-district">District <span>*</span></label>
+          <select
+            id="profile-district"
+            className="tp-select"
+            value={form.city}
+            onChange={(event) => update("city", event.target.value)}
+            required
+          >
+            <option value="">Choose a district</option>
+            {districts.map((district) => <option key={district} value={district}>{district}</option>)}
+          </select>
+          <span className="tp-hint">{districts.length} districts in {form.state}.</span>
         </div>
         <div className="tp-field">
           <label className="tp-label" htmlFor="profile-education">Current stage</label>
@@ -137,9 +163,8 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
           />
         </div>
         <div className="tp-field tp-span-2">
-          <label className="tp-label" htmlFor="profile-avatar">Profile picture URL</label>
-          <input id="profile-avatar" className="tp-input" value={form.avatarUrl} onChange={(event) => update("avatarUrl", event.target.value)} placeholder="https://…" />
-          <span className="tp-hint">A direct image link. Leave blank to use your initials.</span>
+          <span className="tp-label">Profile picture</span>
+          <ImageDropzone value={form.avatarUrl} onChange={(url) => update("avatarUrl", url)} onBusyChange={setUploading} compact />
         </div>
         <div className="tp-field">
           <label className="tp-label" htmlFor="profile-timezone">Timezone</label>
@@ -150,8 +175,8 @@ export function ProfileForm({ defaults }: { defaults: ProfileDefaults }) {
 
       <div className="tp-row-between tp-mt-24">
         <span className="tp-xs tp-faint">Changing your date of birth may affect eligibility checks.</span>
-        <button type="submit" className="tp-btn" disabled={pending}>
-          {pending ? "Saving…" : "Save profile"} {pending ? null : <Icon name="check" size={15} />}
+        <button type="submit" className="tp-btn" disabled={pending || uploading}>
+          {uploading ? "Uploading image…" : pending ? "Saving…" : "Save profile"} {pending || uploading ? null : <Icon name="check" size={15} />}
         </button>
       </div>
     </form>
