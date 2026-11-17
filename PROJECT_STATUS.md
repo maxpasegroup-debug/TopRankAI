@@ -23,7 +23,9 @@ The UI is an original indigo/violet and coral design, not the previous green/lim
 - **Database:** PostgreSQL on Neon, accessed with Prisma 7 and `@prisma/adapter-pg`.
 - **Authentication:** first-party session cookies, `bcryptjs` password hashing, role-gated server components and server actions. Candidate and administrator authentication are separate.
 - **UI:** CSS design tokens and components in `src/styles/platform.css`; Bricolage Grotesque + Plus Jakarta Sans, vendored under `src/app/fonts/` so builds and requests do not depend on Google Fonts being reachable; GSAP reveal motion on public pages with reduced-motion support.
-- **Validation:** Zod schemas shared by UI payloads, server actions and importers.
+- **Tailwind CSS v4:** installed alongside the existing tokens and used for new components, with a staged migration in progress. Preflight is intentionally skipped so the current look is unchanged; `src/styles/tailwind.css` sets the layer order and imports the legacy stylesheet into `components`, which lets utilities override `tp-*` classes.
+- **File storage:** Cloudflare R2 over its S3-compatible API (`@aws-sdk/client-s3`). Uploads are proxied through a Next.js route handler, so credentials never reach the browser and the bucket needs no CORS rule.
+- **Validation:** Zod schemas shared by UI payloads, server actions and importers. State → District choices are validated server-side against a generated district dataset.
 - **AI:** Google Gemini through the REST API (`src/server/ai/gemini.ts`), with JSON response schemas, bounded retries and timeouts, and an `AIUsageLog` audit trail.
 
 ## Run locally
@@ -37,6 +39,12 @@ DATABASE_URL="postgresql://..."
 # GEMINI_API_KEY="..."
 # GEMINI_MODEL="gemini-3.5-flash"
 # AI_FEATURES_ENABLED="true"
+# Optional file uploads (Cloudflare R2). Leave blank to disable uploads:
+# R2_ACCOUNT_ID="..."
+# R2_ACCESS_KEY_ID="..."
+# R2_SECRET_ACCESS_KEY="..."
+# R2_BUCKET="..."
+# R2_PUBLIC_BASE_URL="https://pub-....r2.dev"
 
 npm run prisma:generate
 npm run prisma:deploy     # apply forward migrations
@@ -58,6 +66,9 @@ npm run generate:notes -- --exam=NEET               # detailed topic notes from 
 npm run notes:share -- --apply                      # reuse a note for the same subject/topic in other exams
 npm run questions:audit                             # find keys that contradict their own explanation
 npm run questions:dedupe -- --apply                 # archive duplicate stems and move their exam links
+npm run districts:sync                              # regenerate the State → District dataset
+npm run db:reset-candidates                         # report every non-admin account
+npm run db:reset-candidates --apply                 # delete them, keeping administrators
 ```
 
 Prisma 7 commands in this repository use `--config prisma7.config.ts`. `prisma migrate dev` can time out against the remote Neon database; the reliable route used here is:
@@ -172,7 +183,9 @@ There is **no single free, official, machine-readable API** for the syllabus and
 
 ### Accounts
 
-- Four-step registration: account, profile (DOB-derived eligibility, gender, state, city, education, language, phone, optional picture URL), exam selection with per-exam level, paper variant and target year, review and consent.
+- Registration is a guided conversation rather than a single long form: one question per screen (name, email, password, phone, date of birth, gender, state, district, education, language, optional picture, exams, per-exam level and paper, review) with a visible transcript of earlier answers, Back and Skip, and nothing written until the final confirmation.
+- The state question is followed by a district question whose options come from the chosen state; the server rejects a district that does not belong to that state. The stored column is still `User.city`, relabelled District in the interface.
+- Profile pictures are uploaded by drag-and-drop or file browse through the R2 proxy. The old URL field is gone; when storage is not configured the uploader says so honestly and the rest of registration still works.
 - Candidate login is separate from the administrator entry point at `/login/admin`. A candidate login rejects administrator accounts and points to the admin page.
 - Login, logout, session handling, consent records, a `FREE` subscription record and notifications.
 - Administrators sign in at `/login/admin` and can reset their password after confirming the current password; a reset revokes all administrator sessions.
@@ -194,7 +207,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 - Calendar: target dates and verified events only, with source links and confirmed/tentative states.
 - Achievements: 14 real milestones evaluated from recorded activity, earned states, progress meters and XP.
 - Notifications: activity-generated inbox with per-item and mark-all-read actions.
-- Profile and exam plan editing (multiple exams, one level, one paper variant per exam).
+- Profile and exam plan editing (multiple exams, one level, one paper variant per exam), including a State → District dropdown pair and drag-and-drop picture replacement.
 
 ### Admin console (`/admin`, sign in at `/login/admin`)
 
@@ -232,10 +245,12 @@ There is **no single free, official, machine-readable API** for the syllabus and
 | Exam parts / patterns | 16 exams with at least one paper pattern |
 | Official syllabus sources | 17 imported, 0 failed (all 16 exams, originals + locally extracted text in `syllabus/`) |
 | Verified calendar events | 0 (intentional) |
-| Candidate accounts | 2 testing accounts |
+| Candidate accounts | 0 — the roster was reset, ready for a fresh sign-up |
 | Administrator accounts | 1 review administrator |
 
 The original bootstrap administrator was removed. The remaining administrator is a review account created for testing; its password is not stored in this file.
+
+Every candidate account created during testing was deleted with `npm run db:reset-candidates --apply`; the script refuses to run when a non-administrator authored or reviewed syllabus/content records, and it never touches administrators. Candidate-owned rows were cascaded or explicitly removed with the account.
 
 The 16 exams are CAT, CLAT, CUET (UG), GATE Computer Science, IBPS PO, JEE Advanced, JEE Main, KEAM, NATA, NEET (UG), NIFT Entrance, SSC CGL, UCEED, UGC NET, UPSC CSE and UPSC NDA & NA.
 
@@ -270,6 +285,10 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Fonts are vendored under `src/app/fonts/`; the app renders and reloads without reaching Google Fonts, including the ₹ glyph through the latin-ext face.
 - Filled action buttons were re-checked in light and dark themes after the cascade fix: `.body-platform a` was outranking `.tp-btn` on specificity, so anchor buttons inherited the body ink (black in light theme). The base link rule now uses `:where(a)`, and every filled, accent, ghost and soft button resolves its intended ink (`#ffffff` on filled and accent, theme ink on ghost, brand ink on soft).
 - Syllabus and calendar importers were exercised directly, including duplicate-calendar skipping and cleanup.
+- The guided registration was driven end-to-end in the browser: intro → name → email → password → skip phone → DOB → gender → Kerala → Ernakulam → education → language → skip picture → exam selection → plan → review → account created; the new candidate landed on `/app` and `/app/profile` showed "14 districts in Kerala".
+- The district rule was checked against the Zod schema: Kerala + Ernakulam passes, Kerala + Mumbai fails with "Choose a district from the selected state.", and an unknown state is rejected.
+- `/api/uploads/avatar` returns `{"configured":false,...}` with the five missing variable names until R2 is configured; the uploader shows the matching notice instead of failing silently.
+- `npm run db:reset-candidates` reported exactly the single test candidate, then deleted it; only the administrator remained and a second run reported "Nothing to remove."
 
 ## Known limitations and pending work
 
@@ -287,7 +306,8 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - **Some result-page topic links are inferred.** Seeded questions are not all linked to a syllabus topic, and GATE official-mode questions have no curated topic ID. The closest-topic resolver labels inferred matches honestly and falls back to a subject-level label rather than inventing a mapping.
 - **Email verification and OTP delivery are not active.** Accounts work, but email ownership is not proven. Do not treat the email field as verified.
 - **Self-registration is 18+ only.** Guardian-consent onboarding exists in the legacy schema but is not enabled for this product flow.
-- **Profile pictures are URLs, not uploads.** There is no file storage or image moderation.
+- **File uploads need R2 credentials.** The upload route, validation, object naming, dropzone and profile wiring are complete, but `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_BASE_URL` are not set in `.env`, so uploads currently answer `503` and the dropzone explains why. Nothing else depends on storage. The per-IP upload throttle is per process, not a shared limiter.
+- **Uploaded images are not moderated.** Only JPEG/PNG/WebP bytes under 2 MB are accepted and the type is sniffed from the file itself, but there is no human or automated content review.
 - **No paid plans or checkout.** Every new account receives a `FREE` subscription record; payment integration is not implemented.
 - **Calendar coverage is empty by design.** Real dates must be added by an administrator or imported from a verified source. No date is guessed.
 - **Syllabus and question coverage are curated, not exhaustive.** 1,377 questions and 1,456 topics exercise the loop; they do not claim complete exam readiness. More AI-authored items improve variety across days, and the 1,456-topic catalogue still needs exam-specific rewrites in places (notably GATE CS, JEE Main Paper 2 aptitude/planning, and UGC NET Paper 2).
@@ -295,6 +315,7 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - **Legacy routes and screens remain.** Some older `/workspace`, `/practice/*`, `/learn/*`, `/progress-method` and `/admin/*` pages still exist for compatibility but are not linked from the new navigation. They may use the old design.
 - **Remote Neon latency is high in local development.** Page loads and submit actions can take seconds because each query is a network round trip. This is an environment characteristic, not a scoring shortcut; a local PostgreSQL instance would be faster for development.
 - **No deployment has been configured.** Everything above was verified on localhost.
+- **The Tailwind migration is staged.** The public header, footer and shell plus the new registration, profile and upload components use Tailwind utilities; most existing screens still rely on the `tp-*` stylesheet. Both systems share the same design tokens, so the look is unchanged, but a full migration is still pending.
 - **A design pass is still pending.** The light theme is heavier and the public pages are more card-heavy than intended; functionality was prioritised first.
 
 ## Branch and change discipline

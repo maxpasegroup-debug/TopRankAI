@@ -11,8 +11,8 @@ import { prisma } from "../src/server/db";
  * any authored content is reported instead of being destroyed silently.
  *
  * Usage:
- *   npm run db:reset-candidates            # report only
- *   npm run db:reset-candidates -- --apply # delete
+ *   npm run db:reset-candidates           # report only
+ *   npm run db:reset-candidates --apply   # delete
  */
 
 async function main() {
@@ -27,7 +27,7 @@ async function main() {
 
   console.log(`Non-admin accounts: ${users.length}`);
   for (const user of users) {
-    console.log(`  ${user.email} · ${user.role} · ${user.status} · ${user.createdAt.toISOString().slice(0, 10)}`);
+    console.log(`  ${user.email} | ${user.role} | ${user.status} | ${user.createdAt.toISOString().slice(0, 10)}`);
   }
   if (ids.length === 0) {
     console.log("Nothing to remove.");
@@ -59,7 +59,7 @@ async function main() {
       `knowledge jobs: ${knowledgeJobs}`,
       `syllabus versions authored/reviewed: ${syllabuses}`,
       `content sources authored/reviewed: ${contentSources}`,
-    ].join(" · "),
+    ].join(" | "),
   );
 
   if (syllabuses > 0 || contentSources > 0) {
