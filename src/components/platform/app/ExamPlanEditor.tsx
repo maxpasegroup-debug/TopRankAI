@@ -51,18 +51,33 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
     return map;
   }, [groups]);
 
-  function toggle(exam: CatalogueExam) {
-    setSelected((current) => {
-      if (current.some((item) => item.examId === exam.id)) return current.filter((item) => item.examId !== exam.id);
-      return [...current, {
-        examId: exam.id,
-        examName: exam.name,
-        partCode: exam.parts[0]?.code,
-        level: "INTERMEDIATE",
-        targetYear: currentYear + 1,
-        dailyMinutes: 45,
-      }];
-    });
+  async function toggle(exam: CatalogueExam) {
+    const exists = selected.some((item) => item.examId === exam.id);
+    if (exists) {
+      if (selected.length === 1) {
+        toast.error("Keep at least one exam in your plan.");
+        return;
+      }
+      const confirmed = await confirmAction({
+        title: `Remove ${exam.shortName ?? exam.name}?`,
+        description:
+          "New papers stop and the exam leaves the switcher. Your attempts, targets, syllabus progress and notes are kept, and adding the same exam and target year again resumes them.",
+        confirmLabel: "Remove exam",
+        cancelLabel: "Keep it",
+        tone: "danger",
+      });
+      if (!confirmed) return;
+      setSelected((current) => current.filter((item) => item.examId !== exam.id));
+      return;
+    }
+    setSelected((current) => [...current, {
+      examId: exam.id,
+      examName: exam.name,
+      partCode: exam.parts[0]?.code,
+      level: "INTERMEDIATE",
+      targetYear: currentYear + 1,
+      dailyMinutes: 45,
+    }]);
   }
 
   function setLevel(examId: string, level: Level) {
@@ -78,19 +93,6 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
     if (!selected.length) {
       toast.error("Keep at least one exam in your plan.");
       return;
-    }
-    const removed = initial.filter((item) => !selected.some((entry) => entry.examId === item.examId));
-    if (removed.length) {
-      const names = removed.map((item) => item.examName).join(", ");
-      const confirmed = await confirmAction({
-        title: `Remove ${names}?`,
-        description:
-          "New papers stop and the exam leaves the switcher. Your attempts, targets, syllabus progress and notes are kept, and adding the same exam and target year again resumes them.",
-        confirmLabel: "Remove and save",
-        cancelLabel: "Keep working",
-        tone: "danger",
-      });
-      if (!confirmed) return;
     }
     startTransition(async () => {
       const toastId = toast.loading("Saving your exam plan…");
