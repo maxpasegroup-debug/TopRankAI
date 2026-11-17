@@ -182,7 +182,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 
 ### Accounts
 
-- Registration is a guided conversation rather than a single long form: one question per screen (name, email, password, phone, date of birth, gender, state, district, education, language, optional picture, exams, per-exam level and paper, review) with a visible transcript of earlier answers, Back and Skip, and nothing written until the final confirmation.
+- Registration is a guided conversation rather than a single long form: one question per screen (name, email, password, phone, date of birth, gender, state, district, education, language, optional picture, exams, per-exam level and paper, review), with Back and Skip, no running transcript, and nothing written until the final review screen, which lists every answer once.
 - The state question is followed by a district question whose options come from the chosen state; the server rejects a district that does not belong to that state. The stored column is still `User.city`, relabelled District in the interface.
 - Profile pictures are uploaded by drag-and-drop or file browse through the server-side upload proxy. The old URL field is gone; when storage is not configured the uploader says so honestly and the rest of registration still works.
 - Candidate login is separate from the administrator entry point at `/login/admin`. A candidate login rejects administrator accounts and points to the admin page.

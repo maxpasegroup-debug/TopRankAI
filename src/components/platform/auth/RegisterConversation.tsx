@@ -103,7 +103,6 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
   const [accepted, setAccepted] = useState(false);
 
   const step = stepOrder[index];
-  const transcript = useRef<HTMLDivElement>(null);
   const answerArea = useRef<HTMLFormElement>(null);
 
   const maxDob = useMemo(() => {
@@ -120,8 +119,6 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
   }, [groups]);
 
   useEffect(() => {
-    const element = transcript.current;
-    if (element) element.scrollTop = element.scrollHeight;
     const first = answerArea.current?.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea");
     // Focus follows the question so the flow can be completed from the keyboard.
     first?.focus({ preventScroll: true });
@@ -249,8 +246,18 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
     }
   }
 
+  function planSummary(): string {
+    return selected
+      .map((item) => {
+        const exam = examById.get(item.examId);
+        const label = exam?.shortName ?? exam?.name ?? "Exam";
+        const level = levels.find((entry) => entry.value === item.level)?.label ?? item.level;
+        return `${label}: ${level}, ${item.targetYear}, ${item.dailyMinutes} min/day`;
+      })
+      .join(" · ");
+  }
+
   const progress = Math.round(((index + 1) / stepOrder.length) * 100);
-  const answered = stepOrder.slice(0, index);
 
   return (
     <section
@@ -276,17 +283,6 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
         <div className="h-full bg-brand transition-[width] duration-300" style={{ width: `${progress}%` }} />
       </div>
 
-      <div ref={transcript} className="max-h-[38vh] overflow-y-auto px-4 pt-4 sm:px-5" aria-hidden={answered.length === 0}>
-        {answered.map((id) => (
-          <div key={id} className="mb-3 grid gap-1.5">
-            <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-faint">{prompts[id].question}</p>
-            <p className="max-w-[92%] justify-self-start rounded-md bg-brand-soft px-3 py-2 text-[13.5px] font-semibold text-ink">
-              {answerFor(id)}
-            </p>
-          </div>
-        ))}
-      </div>
-
       <div className="px-4 pt-4 sm:px-5">
         <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-faint">
           {step === "intro" ? "Welcome" : step === "review" ? "One last check" : `Question ${index} of ${stepOrder.length - 2}`}
@@ -297,7 +293,7 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
         <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{prompts[step].detail}</p>
       </div>
 
-      <form ref={answerArea} className="grid gap-3 px-4 pb-4 pt-4 sm:px-5" onSubmit={submit}>
+      <form ref={answerArea} className="flex flex-1 flex-col gap-3 px-4 pb-4 pt-4 sm:px-5" onSubmit={submit}>
         {step === "intro" ? (
           <ul className="grid gap-2 text-[13px] text-muted">
             {[
@@ -627,6 +623,7 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
                 ["Stage", profile.education],
                 ["Language", profile.preferredLanguage],
                 ["Exams", answerFor("exams")],
+                ["Plan", planSummary() || "Not set"],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 border-b border-line pb-1.5 last:border-0">
                   <dt className="text-muted">{label}</dt>
@@ -646,7 +643,7 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
 
         {error ? <div className="tp-error" role="alert">{error}</div> : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
           {index > 0 ? (
             <button
               type="button"

@@ -2325,13 +2325,47 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 /* ---- guided registration ------------------------------------------------ */
 
 .tp-register-stage {
+  position: relative;
+  isolation: isolate;
   display: flex;
   min-height: 100vh;
   flex-direction: column;
   background:
-    radial-gradient(1100px 520px at 18% -10%, color-mix(in srgb, var(--tp-brand) 16%, transparent), transparent 70%),
-    radial-gradient(900px 480px at 88% 2%, color-mix(in srgb, var(--tp-violet) 14%, transparent), transparent 70%),
+    radial-gradient(1200px 620px at 12% -10%, color-mix(in srgb, var(--tp-brand) 24%, transparent), transparent 70%),
+    radial-gradient(1000px 560px at 88% -4%, color-mix(in srgb, var(--tp-violet) 20%, transparent), transparent 72%),
+    radial-gradient(900px 700px at 50% 120%, color-mix(in srgb, var(--tp-accent) 12%, transparent), transparent 70%),
     var(--tp-bg);
+}
+
+/* A faint plan grid, faded towards the edges, so the stage is not an empty field. */
+.tp-register-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--tp-line) 80%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--tp-line) 80%, transparent) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 4%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 4%, transparent 78%);
+  opacity: 0.85;
+}
+
+/* Soft aurora glows on both sides of the card. */
+.tp-register-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(560px 560px at 8% 26%, color-mix(in srgb, var(--tp-brand) 46%, transparent), transparent 66%),
+    radial-gradient(620px 620px at 96% 14%, color-mix(in srgb, var(--tp-violet) 42%, transparent), transparent 68%),
+    radial-gradient(760px 560px at 84% 104%, color-mix(in srgb, var(--tp-accent) 24%, transparent), transparent 70%),
+    radial-gradient(560px 460px at 16% 100%, color-mix(in srgb, var(--tp-brand) 28%, transparent), transparent 70%);
+  opacity: 0.7;
 }
 
 .tp-choice {
