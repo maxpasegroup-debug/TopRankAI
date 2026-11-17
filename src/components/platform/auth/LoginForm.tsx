@@ -4,24 +4,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Icon } from "@/components/platform/Icon";
+import { toast } from "@/components/platform/AppToaster";
 import { loginUser } from "@/server/actions/auth";
 
 export function LoginForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   function onSubmit(formData: FormData) {
-    setMessage(null);
     const email = String(formData.get("email") ?? "");
     const password = String(formData.get("password") ?? "");
     startTransition(async () => {
+      const toastId = toast.loading("Signing you in…");
       const result = await loginUser({ email, password });
       if (!result.ok) {
-        setMessage(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
+      toast.success("Signed in.", { id: toastId });
       router.replace(result.redirectTo);
       router.refresh();
     });
@@ -29,8 +30,6 @@ export function LoginForm() {
 
   return (
     <form action={onSubmit} className="tp-stack tp-gap-16">
-      {message ? <div className="tp-error" role="alert">{message}</div> : null}
-
       <div className="tp-field">
         <label className="tp-label" htmlFor="email">Email address</label>
         <input className="tp-input" id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />

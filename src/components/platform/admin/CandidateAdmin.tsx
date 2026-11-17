@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "../Icon";
+import { useToastFeedback } from "../useToastFeedback";
 import { setCandidateStatusAction } from "@/server/actions/admin";
 
 export type AdminCandidateRow = {
@@ -26,6 +27,7 @@ export function CandidateAdmin({ candidates }: { candidates: AdminCandidateRow[]
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"ALL" | "ACTIVE" | "SUSPENDED">("ALL");
+  useToastFeedback(message, setMessage, error, setError);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -56,9 +58,6 @@ export function CandidateAdmin({ candidates }: { candidates: AdminCandidateRow[]
 
   return (
     <div className="tp-stack tp-gap-16">
-      {message ? <div className="tp-success" role="status">{message}</div> : null}
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
-
       <div className="tp-row-between tp-wrap tp-gap-12">
         <div className="tp-tabs">
           {(["ALL", "ACTIVE", "SUSPENDED"] as const).map((key) => (

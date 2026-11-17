@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/platform/Icon";
 import { LogoMark } from "@/components/platform/Logo";
+import { toast } from "@/components/platform/AppToaster";
 import { ImageDropzone } from "@/components/platform/ImageDropzone";
 import { registerCandidate } from "@/server/actions/auth";
 import { educationStages, indianStates, languages } from "@/shared/india";
@@ -86,7 +87,6 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [index, setIndex] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(groups[0]?.slug ?? null);
   const [account, setAccount] = useState({ name: "", email: "", password: "", confirm: "", phone: "" });
@@ -158,14 +158,13 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
   }
 
   function goTo(next: number) {
-    setError(null);
     setIndex(Math.max(0, Math.min(stepOrder.length - 1, next)));
   }
 
   function next() {
     const issue = problem();
     if (issue) {
-      setError(issue);
+      toast.error(issue);
       return;
     }
     goTo(index + 1);
@@ -189,11 +188,11 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
   function createAccount() {
     const issue = problem();
     if (issue) {
-      setError(issue);
+      toast.error(issue);
       return;
     }
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading("Creating your account…");
       const result = await registerCandidate({
         name: account.name.trim(),
         email: account.email.trim().toLowerCase(),
@@ -217,9 +216,10 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
         })),
       });
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
+      toast.success("Account created. Opening your dashboard…", { id: toastId });
       router.replace(result.redirectTo);
       router.refresh();
     });
@@ -640,8 +640,6 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
             </label>
           </div>
         ) : null}
-
-        {error ? <div className="tp-error" role="alert">{error}</div> : null}
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
           {index > 0 ? (

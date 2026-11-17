@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { readAllNotifications, readNotification } from "@/server/actions/platform";
 
 export function NotificationActions({ unread, id }: { unread: number; id?: string }) {
@@ -13,6 +14,7 @@ export function NotificationActions({ unread, id }: { unread: number; id?: strin
     if (!id) return;
     startTransition(async () => {
       await readNotification(id);
+      toast.success("Notification marked read.");
       router.refresh();
     });
   }
@@ -20,6 +22,7 @@ export function NotificationActions({ unread, id }: { unread: number; id?: strin
   function markAll() {
     startTransition(async () => {
       await readAllNotifications();
+      toast.success("All notifications marked read.");
       router.refresh();
     });
   }

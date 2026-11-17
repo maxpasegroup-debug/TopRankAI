@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "../Icon";
+import { useToastFeedback } from "../useToastFeedback";
 import {
   approveQuestionAction,
   archiveQuestionAction,
@@ -61,6 +62,7 @@ export function QuestionAdmin({
   const [pending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"ALL" | "NEEDS_REVIEW" | "PUBLISHED" | "ARCHIVED">("ALL");
+  useToastFeedback(message, setMessage, error, setError);
 
   const [form, setForm] = useState({
     code: "",
@@ -201,9 +203,6 @@ export function QuestionAdmin({
 
   return (
     <div className="tp-stack tp-gap-20">
-      {message ? <div className="tp-success" role="status">{message}</div> : null}
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
-
       <div className="tp-grid tp-grid-2" style={{ alignItems: "start" }}>
         <section className="tp-card tp-card-pad">
           <h2 style={{ fontSize: 18, marginBottom: 4 }}>Manual question editor</h2>

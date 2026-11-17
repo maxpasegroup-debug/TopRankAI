@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { confirmAction, toast } from "../AppToaster";
 import { includedPapers } from "@/shared/daily-workload";
 import { updateExamPlan } from "@/server/actions/platform";
 
@@ -43,8 +44,6 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Target[]>(initial);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const examById = useMemo(() => {
     const map = new Map<string, CatalogueExam>();
@@ -75,14 +74,26 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
     setSelected((current) => current.map((item) => item.examId === examId ? { ...item, [key]: value } : item));
   }
 
-  function save() {
-    setMessage(null);
-    setError(null);
+  async function save() {
     if (!selected.length) {
-      setError("Keep at least one exam in your plan.");
+      toast.error("Keep at least one exam in your plan.");
       return;
     }
+    const removed = initial.filter((item) => !selected.some((entry) => entry.examId === item.examId));
+    if (removed.length) {
+      const names = removed.map((item) => item.examName).join(", ");
+      const confirmed = await confirmAction({
+        title: `Remove ${names}?`,
+        description:
+          "New papers stop and the exam leaves the switcher. Your attempts, targets, syllabus progress and notes are kept, and adding the same exam and target year again resumes them.",
+        confirmLabel: "Remove and save",
+        cancelLabel: "Keep working",
+        tone: "danger",
+      });
+      if (!confirmed) return;
+    }
     startTransition(async () => {
+      const toastId = toast.loading("Saving your exam plan…");
       const result = await updateExamPlan(selected.map((item) => ({
         examId: item.examId,
         partCode: item.partCode,
@@ -91,10 +102,10 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
         dailyMinutes: item.dailyMinutes,
       })));
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
-      setMessage("Your exam plan is saved.");
+      toast.success("Exam plan saved.", { id: toastId });
       router.refresh();
     });
   }
@@ -200,9 +211,6 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
           ) : (
             <p className="tp-small tp-muted">No exam selected. Choose at least one from the catalogue.</p>
           )}
-
-          {message ? <div className="tp-success tp-mt-16" role="status">{message}</div> : null}
-          {error ? <div className="tp-error tp-mt-16" role="alert">{error}</div> : null}
 
           <div className="tp-row tp-gap-8 tp-mt-16 tp-wrap">
             <button type="button" className="tp-btn" onClick={save} disabled={pending}>

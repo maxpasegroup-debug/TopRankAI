@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./Icon";
+import { toast } from "./AppToaster";
 
 /**
  * Drag-and-drop image uploader backed by the R2 proxy at /api/uploads/avatar.
@@ -62,11 +63,15 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
     if (blocked) return;
     const maxBytes = config?.maxBytes ?? 2 * 1024 * 1024;
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
-      setStatus({ kind: "error", message: "Choose a JPEG, PNG or WebP image." });
+      const message = "Choose a JPEG, PNG or WebP image.";
+      setStatus({ kind: "error", message });
+      toast.error(message);
       return;
     }
     if (file.size > maxBytes) {
-      setStatus({ kind: "error", message: `Images must be ${Math.round(maxBytes / (1024 * 1024))} MB or smaller.` });
+      const message = `Images must be ${Math.round(maxBytes / (1024 * 1024))} MB or smaller.`;
+      setStatus({ kind: "error", message });
+      toast.error(message);
       return;
     }
 
@@ -91,11 +96,18 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
       if (request.status >= 200 && request.status < 300 && payload.url) {
         onChange(payload.url);
         setStatus({ kind: "idle" });
+        toast.success("Profile picture uploaded.");
       } else {
-        setStatus({ kind: "error", message: payload.error ?? "The image could not be uploaded." });
+        const message = payload.error ?? "The image could not be uploaded.";
+        setStatus({ kind: "error", message });
+        toast.error(message);
       }
     };
-    request.onerror = () => setStatus({ kind: "error", message: "The upload was interrupted. Check your connection." });
+    request.onerror = () => {
+      const message = "The upload was interrupted. Check your connection.";
+      setStatus({ kind: "error", message });
+      toast.error(message);
+    };
     request.send(body);
   }
 
@@ -164,6 +176,7 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
                 onClick={() => {
                   onChange("");
                   setStatus({ kind: "idle" });
+                  toast("Profile picture removed.");
                 }}
                 disabled={disabled || busy}
               >
@@ -190,12 +203,6 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
           File storage is not configured on this deployment yet, so uploads are disabled. An administrator needs to add
           the storage credentials to the server environment. You can finish your account without a picture and add one
           later.
-        </p>
-      ) : null}
-
-      {status.kind === "error" ? (
-        <p className="text-xs font-semibold text-danger" role="alert">
-          {status.message}
         </p>
       ) : null}
     </div>

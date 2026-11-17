@@ -1,23 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { beginDailyExam } from "@/server/actions/platform";
 
 export function StartExamButton({ dailyExamId }: { dailyExamId: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
 
   function start() {
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading("Opening the paper…");
       const result = await beginDailyExam(dailyExamId);
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
+      toast.success("Paper started. Good luck.", { id: toastId });
       router.refresh();
     });
   }
@@ -27,7 +28,6 @@ export function StartExamButton({ dailyExamId }: { dailyExamId: string }) {
       <button type="button" className="tp-btn tp-btn-lg" onClick={start} disabled={pending}>
         {pending ? "Starting…" : "Start the paper"} {pending ? null : <Icon name="play" size={15} />}
       </button>
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
     </div>
   );
 }

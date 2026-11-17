@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { requestTopicNotes, updateTopicProgress } from "@/server/actions/platform";
 
 type Status = "NOT_STARTED" | "LEARNING" | "COMPLETED" | "NEEDS_REVISION";
@@ -28,47 +29,42 @@ export function TopicActions({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [notesPending, startNotes] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   function setStatus(next: Status) {
-    setMessage(null);
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading("Updating this topic…");
       const result = await updateTopicProgress({ topicId, status: next });
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
-      setMessage("Topic status updated.");
+      toast.success(`Marked as ${options.find((option) => option.value === next)?.label ?? "updated"}.`, { id: toastId });
       router.refresh();
     });
   }
 
   function toggleBookmark() {
-    setMessage(null);
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading(bookmarked ? "Removing from saved topics…" : "Saving this topic…");
       const result = await updateTopicProgress({ topicId, status, bookmarked: !bookmarked });
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
-      setMessage(bookmarked ? "Removed from saved topics." : "Saved to your topics.");
+      toast.success(bookmarked ? "Removed from saved topics." : "Saved to your topics.", { id: toastId });
       router.refresh();
     });
   }
 
   function generateNotes() {
-    setMessage(null);
-    setError(null);
     startNotes(async () => {
+      const toastId = toast.loading("Generating detailed notes…");
       const result = await requestTopicNotes(topicId);
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
-      setMessage("AI study notes added below. Review them critically.");
+      toast.success("AI study notes added below. Review them critically.", { id: toastId });
       router.refresh();
     });
   }
@@ -108,9 +104,6 @@ export function TopicActions({
       <button type="button" className="tp-btn tp-btn-soft tp-btn-sm tp-btn-block" onClick={generateNotes} disabled={notesPending}>
         {notesPending ? "Generating…" : hasAiNotes ? "Regenerate notes" : "Generate notes"} {notesPending ? null : <Icon name="spark" size={14} />}
       </button>
-
-      {message ? <div className="tp-success tp-mt-16" role="status">{message}</div> : null}
-      {error ? <div className="tp-error tp-mt-16" role="alert">{error}</div> : null}
     </div>
   );
 }

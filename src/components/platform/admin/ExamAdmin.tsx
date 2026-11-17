@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { useToastFeedback } from "../useToastFeedback";
 import { createCategoryAction, createExamAction, generateExamPatternAction, updateExamAction } from "@/server/actions/admin";
 
 export type AdminSubject = { id: string; name: string };
@@ -53,6 +54,7 @@ export function ExamAdmin({
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  useToastFeedback(message, setMessage, error, setError);
 
   const [examForm, setExamForm] = useState({
     code: "",
@@ -120,9 +122,6 @@ export function ExamAdmin({
 
   return (
     <div className="tp-stack tp-gap-20">
-      {message ? <div className="tp-success" role="status">{message}</div> : null}
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
-
       <div className="tp-grid tp-grid-2" style={{ alignItems: "start" }}>
         <section className="tp-card tp-card-pad">
           <h2 style={{ fontSize: 18, marginBottom: 4 }}>Add an exam shell</h2>

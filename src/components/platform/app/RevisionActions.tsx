@@ -1,23 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { completeRevisionItem, dismissRevisionItem } from "@/server/actions/platform";
 
 export function RevisionActions({ id }: { id: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
 
   function act(kind: "complete" | "dismiss") {
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading(kind === "complete" ? "Clearing this revision…" : "Dismissing this revision…");
       const result = kind === "complete" ? await completeRevisionItem(id) : await dismissRevisionItem(id);
       if (!result.ok) {
-        setError(result.message ?? "Could not update this item.");
+        toast.error(result.message ?? "Could not update this item.", { id: toastId });
         return;
       }
+      toast.success(kind === "complete" ? "Revision cleared." : "Revision dismissed.", { id: toastId });
       router.refresh();
     });
   }
@@ -32,7 +33,6 @@ export function RevisionActions({ id }: { id: string }) {
           Dismiss
         </button>
       </div>
-      {error ? <div className="tp-error tp-xs" role="alert">{error}</div> : null}
     </div>
   );
 }

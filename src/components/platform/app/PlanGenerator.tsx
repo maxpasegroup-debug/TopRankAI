@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { requestStudyPlan } from "@/server/actions/platform";
 import type { StudyPlanSuggestion } from "@/server/ai/tasks";
 
@@ -9,18 +10,18 @@ export function PlanGenerator({ code }: { code: string }) {
   const [pending, startTransition] = useTransition();
   const [plan, setPlan] = useState<StudyPlanSuggestion | null>(null);
   const [aiGenerated, setAiGenerated] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function generate() {
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading("Building a study plan…");
       const result = await requestStudyPlan(code);
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
       setPlan(result.data.plan);
       setAiGenerated(result.data.aiGenerated);
+      toast.success("Study plan ready.", { id: toastId });
     });
   }
 
@@ -29,8 +30,6 @@ export function PlanGenerator({ code }: { code: string }) {
       <button type="button" className="tp-btn tp-btn-soft tp-btn-sm" onClick={generate} disabled={pending}>
         {pending ? "Building a plan…" : "Suggest a study plan"} {pending ? null : <Icon name="spark" size={14} />}
       </button>
-
-      {error ? <div className="tp-error tp-mt-16" role="alert">{error}</div> : null}
 
       {plan ? (
         <div className="tp-stack tp-gap-12 tp-mt-16">

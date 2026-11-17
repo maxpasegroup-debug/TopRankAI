@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "../AppToaster";
 import { saveDailyWorkload } from "@/server/actions/platform";
 import { MAX_DAILY_PAPERS } from "@/shared/daily-workload";
 
@@ -47,8 +48,6 @@ export function ExamScheduleList({ rows, activeCode }: { rows: ExamScheduleRow[]
 function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean }) {
   const [count, setCount] = useState(row.count);
   const [start, setStart] = useState(timeValue(row.startMinutes));
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const needsMonthly = count > row.included && !row.monthlyUntil;
@@ -77,8 +76,6 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
             value={count}
             onChange={(event) => {
               setCount(Number(event.target.value));
-              setMessage("");
-              setError("");
             }}
           >
             {Array.from({ length: MAX_DAILY_PAPERS }, (_, index) => {
@@ -94,8 +91,6 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
             value={start}
             onChange={(event) => {
               setStart(event.target.value);
-              setMessage("");
-              setError("");
             }}
             style={{ width: 140, flex: "none", minHeight: 34, padding: "2px 8px" }}
           />
@@ -105,15 +100,14 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
             className="tp-btn tp-btn-sm"
             disabled={pending || (!changed && !needsMonthly)}
             onClick={() => {
-              setMessage("");
-              setError("");
               startTransition(async () => {
+                const toastId = toast.loading(needsMonthly ? "Activating mock monthly and saving…" : "Saving schedule…");
                 const result = await saveDailyWorkload(row.targetId, count, needsMonthly, minutesValue(start));
                 if (!result.ok) {
-                  setError(result.message);
+                  toast.error(result.message, { id: toastId });
                   return;
                 }
-                setMessage(result.message);
+                toast.success(result.message, { id: toastId });
                 router.refresh();
               });
             }}
@@ -124,8 +118,6 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
         {needsMonthly ? (
           <span className="tp-xs tp-faint">Mock monthly checkout — no payment gateway, no money charged.</span>
         ) : null}
-        {message ? <span className="tp-xs" style={{ color: "var(--tp-ok)" }}>{message}</span> : null}
-        {error ? <span className="tp-xs" style={{ color: "var(--tp-danger)" }}>{error}</span> : null}
       </div>
     </div>
   );

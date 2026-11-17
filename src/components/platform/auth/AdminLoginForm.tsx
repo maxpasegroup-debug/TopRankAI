@@ -3,30 +3,29 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { loginAdmin, resetAdminPassword } from "@/server/actions/auth";
 
 export function AdminLoginForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [mode, setMode] = useState<"login" | "reset">("login");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState("");
 
   function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage(null);
-    setError(null);
     const data = new FormData(event.currentTarget);
     startTransition(async () => {
+      const toastId = toast.loading("Signing in…");
       const result = await loginAdmin({
         email: String(data.get("email") ?? ""),
         password: String(data.get("password") ?? ""),
       });
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
+      toast.success("Administrator signed in.", { id: toastId });
       router.replace(result.redirectTo);
       router.refresh();
     });
@@ -34,10 +33,9 @@ export function AdminLoginForm() {
 
   function reset(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage(null);
-    setError(null);
     const data = new FormData(event.currentTarget);
     startTransition(async () => {
+      const toastId = toast.loading("Updating the password…");
       const result = await resetAdminPassword({
         email: String(data.get("email") ?? ""),
         currentPassword: String(data.get("currentPassword") ?? ""),
@@ -45,11 +43,11 @@ export function AdminLoginForm() {
         confirmPassword: String(data.get("confirmPassword") ?? ""),
       });
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
+      toast.success(result.message, { id: toastId });
       setResetEmail(String(data.get("email") ?? ""));
-      setMessage(result.message);
       setMode("login");
     });
   }
@@ -57,16 +55,13 @@ export function AdminLoginForm() {
   return (
     <div className="tp-stack tp-gap-16">
       <div className="tp-tabs" style={{ width: "100%" }}>
-        <button type="button" className="tp-tab" data-active={mode === "login"} onClick={() => { setMode("login"); setError(null); setMessage(null); }} style={{ flex: 1 }}>
+        <button type="button" className="tp-tab" data-active={mode === "login"} onClick={() => setMode("login")} style={{ flex: 1 }}>
           Administrator sign in
         </button>
-        <button type="button" className="tp-tab" data-active={mode === "reset"} onClick={() => { setMode("reset"); setError(null); setMessage(null); }} style={{ flex: 1 }}>
+        <button type="button" className="tp-tab" data-active={mode === "reset"} onClick={() => setMode("reset")} style={{ flex: 1 }}>
           Reset password
         </button>
       </div>
-
-      {message ? <div className="tp-success" role="status">{message}</div> : null}
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
 
       {mode === "login" ? (
         <form onSubmit={signIn} className="tp-stack tp-gap-16">

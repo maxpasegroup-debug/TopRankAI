@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { confirmAction, toast } from "../AppToaster";
 import { submitExamAttempt } from "@/server/actions/platform";
+
+const PALETTE_PAGE_SIZE = 25;
 
 type PaperQuestion = {
   position: number;
@@ -43,8 +46,7 @@ export function DailyPlayer({
     return initial;
   });
   const [hydrated, setHydrated] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [palettePage, setPalettePage] = useState(0);
   const submittedRef = useRef(false);
   const questionEnteredAt = useRef(Date.now());
   const storageKey = `toprank_attempt_${attemptId}`;
@@ -70,7 +72,9 @@ export function DailyPlayer({
           });
         }
         if (typeof saved.index === "number") {
-          setIndex(Math.max(0, Math.min(paper.length - 1, saved.index)));
+          const restored = Math.max(0, Math.min(paper.length - 1, saved.index));
+          setIndex(restored);
+          setPalettePage(Math.floor(restored / PALETTE_PAGE_SIZE));
         }
       }
     } catch {
@@ -98,12 +102,16 @@ export function DailyPlayer({
     () => paper.filter((question) => answers[question.id]?.flagged).length,
     [answers, paper],
   );
+  const palettePageCount = Math.max(1, Math.ceil(paper.length / PALETTE_PAGE_SIZE));
+  const paletteStart = palettePage * PALETTE_PAGE_SIZE;
+  const paletteEnd = Math.min(paper.length, paletteStart + PALETTE_PAGE_SIZE);
+  const paletteQuestions = paper.slice(paletteStart, paletteEnd);
 
   const submit = useCallback(
     (auto: boolean) => {
       if (submittedRef.current) return;
       submittedRef.current = true;
-      setError(null);
+      const toastId = toast.loading(auto ? "Time is up. Scoring your paper…" : "Scoring your paper…");
       const payload = paper.map((question) => {
         const state = answers[question.id];
         return {
@@ -117,7 +125,7 @@ export function DailyPlayer({
         const result = await submitExamAttempt(attemptId, payload);
         if (!result.ok) {
           submittedRef.current = false;
-          setError(result.message);
+          toast.error(result.message, { id: toastId });
           return;
         }
         try {
@@ -125,12 +133,23 @@ export function DailyPlayer({
         } catch {
           // Ignore storage cleanup failures.
         }
+        toast.success("Paper submitted. Opening your result…", { id: toastId });
         router.replace(`/app/daily/${dailyExamId}/result`);
       });
-      if (auto) setConfirming(false);
     },
-    [answers, attemptId, dailyExamId, paper, router],
+    [answers, attemptId, dailyExamId, paper, router, storageKey],
   );
+
+  const confirmSubmit = useCallback(async () => {
+    if (pending || submittedRef.current) return;
+    const confirmed = await confirmAction({
+      title: "Submit this paper?",
+      description: `You answered ${answeredCount} of ${paper.length} questions and flagged ${flaggedCount}. Once submitted, the paper is scored immediately and cannot be reopened.`,
+      confirmLabel: "Submit and score",
+      cancelLabel: "Keep working",
+    });
+    if (confirmed) submit(false);
+  }, [answeredCount, flaggedCount, paper.length, pending, submit]);
 
   useEffect(() => {
     const deadline = Date.now() + remainingSeconds * 1000;
@@ -143,7 +162,7 @@ export function DailyPlayer({
   }, [remainingSeconds]);
 
   useEffect(() => {
-    if (remaining === 0) submit(true);
+    if (remaining === 0) void submit(true);
   }, [remaining, submit]);
 
   function recordTime() {
@@ -158,7 +177,9 @@ export function DailyPlayer({
 
   function goTo(next: number) {
     recordTime();
-    setIndex(Math.max(0, Math.min(paper.length - 1, next)));
+    const target = Math.max(0, Math.min(paper.length - 1, next));
+    setIndex(target);
+    setPalettePage(Math.floor(target / PALETTE_PAGE_SIZE));
   }
 
   function choose(question: PaperQuestion, optionId: string) {
@@ -256,8 +277,6 @@ export function DailyPlayer({
             <p className="tp-hint tp-mt-16">This question has more than one correct option. Select every option that applies.</p>
           ) : null}
 
-          {error ? <div className="tp-error tp-mt-16" role="alert">{error}</div> : null}
-
           <div className="tp-row-between tp-question-actions">
             <button type="button" className="tp-btn tp-btn-ghost tp-btn-sm" onClick={toggleFlag}>
               <Icon name="flag" size={14} /> {answers[current.id]?.flagged ? "Unflag" : "Flag for review"}
@@ -272,22 +291,6 @@ export function DailyPlayer({
             </div>
           </div>
         </div>
-
-        {confirming ? (
-          <div className="tp-card tp-card-pad">
-            <h3 style={{ fontSize: 17 }}>Submit this paper?</h3>
-            <p className="tp-small tp-muted" style={{ marginTop: 6 }}>
-              You answered {answeredCount} of {paper.length} questions and flagged {flaggedCount}. Once submitted,
-              the paper is scored immediately and cannot be reopened.
-            </p>
-            <div className="tp-row tp-gap-8 tp-mt-16 tp-wrap">
-              <button type="button" className="tp-btn" onClick={() => submit(false)} disabled={pending}>
-                {pending ? "Scoring…" : "Submit and score"} {pending ? null : <Icon name="check" size={15} />}
-              </button>
-              <button type="button" className="tp-btn tp-btn-ghost" onClick={() => setConfirming(false)} disabled={pending}>Keep working</button>
-            </div>
-          </div>
-        ) : null}
       </div>
 
       <aside className="tp-card tp-card-pad tp-palette">
@@ -297,7 +300,8 @@ export function DailyPlayer({
         </div>
         <div className="tp-xs tp-faint" style={{ marginTop: 2 }}>{totalMarks} total marks · {durationMinutes} min</div>
         <div className="tp-palette-grid">
-          {paper.map((question, questionIndex) => {
+          {paletteQuestions.map((question, offset) => {
+            const questionIndex = paletteStart + offset;
             const state = answers[question.id];
             const paletteState = questionIndex === index
               ? "current"
@@ -321,13 +325,54 @@ export function DailyPlayer({
           })}
         </div>
 
+        {palettePageCount > 1 ? (
+          <>
+            <div className="tp-pager tp-mt-12">
+              <button
+                type="button"
+                className="tp-pager-link"
+                onClick={() => setPalettePage((page) => Math.max(0, page - 1))}
+                disabled={palettePage === 0}
+                aria-label="Previous palette page"
+              >
+                <Icon name="arrow-left" size={13} />
+              </button>
+              {Array.from({ length: palettePageCount }, (_, page) => (
+                <button
+                  type="button"
+                  key={page}
+                  className="tp-pager-link"
+                  data-active={page === palettePage}
+                  onClick={() => setPalettePage(page)}
+                  aria-label={`Palette page ${page + 1}`}
+                  aria-current={page === palettePage ? "page" : undefined}
+                >
+                  {page + 1}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="tp-pager-link"
+                onClick={() => setPalettePage((page) => Math.min(palettePageCount - 1, page + 1))}
+                disabled={palettePage === palettePageCount - 1}
+                aria-label="Next palette page"
+              >
+                <Icon name="arrow-right" size={13} />
+              </button>
+            </div>
+            <p className="tp-xs tp-faint tp-mt-8">
+              Questions {paletteStart + 1}–{paletteEnd} of {paper.length}
+            </p>
+          </>
+        ) : null}
+
         <div className="tp-stack tp-gap-8 tp-mt-16">
           <div className="tp-row tp-gap-8 tp-xs tp-muted"><span className="tp-pill tp-pill-ok" style={{ width: 14, height: 14, padding: 0, borderRadius: 4 }} /> Answered</div>
           <div className="tp-row tp-gap-8 tp-xs tp-muted"><span className="tp-pill tp-pill-warn" style={{ width: 14, height: 14, padding: 0, borderRadius: 4 }} /> Flagged</div>
           <div className="tp-row tp-gap-8 tp-xs tp-muted"><span className="tp-pill" style={{ width: 14, height: 14, padding: 0, borderRadius: 4 }} /> Not answered</div>
         </div>
 
-        <button type="button" className="tp-btn tp-btn-accent tp-btn-block tp-mt-16" onClick={() => setConfirming(true)} disabled={pending}>
+        <button type="button" className="tp-btn tp-btn-accent tp-btn-block tp-mt-16" onClick={() => void confirmSubmit()} disabled={pending}>
           {pending ? "Scoring…" : "Submit paper"}
         </button>
         <p className="tp-xs tp-faint tp-mt-8" style={{ lineHeight: 1.5 }}>

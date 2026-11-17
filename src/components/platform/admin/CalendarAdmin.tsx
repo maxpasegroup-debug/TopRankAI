@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "../Icon";
+import { useToastFeedback } from "../useToastFeedback";
 import { addCalendarAction, importCalendarAction } from "@/server/actions/admin";
 
 export type AdminCalendarRow = {
@@ -38,6 +39,8 @@ export function CalendarAdmin({ exams, events }: { exams: { id: string; code: st
   const [importText, setImportText] = useState("");
   const [importMessage, setImportMessage] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  useToastFeedback(message, setMessage, error, setError);
+  useToastFeedback(importMessage, setImportMessage, importError, setImportError);
   const [form, setForm] = useState({
     examId: exams[0]?.id ?? "",
     eventType: "EXAM" as (typeof eventTypes)[number][0],
@@ -104,9 +107,6 @@ export function CalendarAdmin({ exams, events }: { exams: { id: string; code: st
 
   return (
     <div className="tp-stack tp-gap-20">
-      {message ? <div className="tp-success" role="status">{message}</div> : null}
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
-
       <div className="tp-grid tp-grid-2" style={{ alignItems: "start" }}>
         <section className="tp-card tp-card-pad">
           <h2 style={{ fontSize: 18, marginBottom: 4 }}>Record a calendar event</h2>
@@ -211,8 +211,6 @@ export function CalendarAdmin({ exams, events }: { exams: { id: string; code: st
             <button type="submit" className="tp-btn tp-btn-soft tp-btn-sm tp-mt-12" disabled={pending || !importText.trim()}>
               {pending ? "Importing…" : "Import events"} {pending ? null : <Icon name="upload" size={14} />}
             </button>
-            {importMessage ? <div className="tp-success tp-mt-12" role="status">{importMessage}</div> : null}
-            {importError ? <div className="tp-error tp-mt-12" role="alert">{importError}</div> : null}
           </form>
         </div>
       </details>

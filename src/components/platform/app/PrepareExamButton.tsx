@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { prepareDailyExam } from "@/server/actions/platform";
 
 export function PrepareExamButton({
@@ -20,16 +21,16 @@ export function PrepareExamButton({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
 
   function prepare() {
-    setError(null);
     startTransition(async () => {
+      const toastId = toast.loading("Preparing today's paper…");
       const result = await prepareDailyExam(code, slot);
       if (!result.ok) {
-        setError(result.message);
+        toast.error(result.message, { id: toastId });
         return;
       }
+      toast.success("Today's paper is ready.", { id: toastId });
       router.push(`/app/daily/${result.data.id}`);
     });
   }
@@ -39,7 +40,6 @@ export function PrepareExamButton({
       <button type="button" className={className} onClick={prepare} disabled={pending}>
         {pending ? "Preparing…" : label} {pending ? null : <Icon name={icon} size={16} />}
       </button>
-      {error ? <div className="tp-error" role="alert">{error}</div> : null}
     </div>
   );
 }

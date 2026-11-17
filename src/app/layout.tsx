@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import localFont from "next/font/local";
+import { AppToaster } from "@/components/platform/AppToaster";
 import "./../styles/tailwind.css";
 
 // Fonts are vendored so the app does not need to reach Google Fonts at build or
@@ -86,6 +87,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="body-platform">
         <a className="tp-skip" href="#main">Skip to content</a>
         {children}
+        <AppToaster />
       </body>
     </html>
   );
