@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/server/db";
 import { requireAuth } from "@/server/auth/session";
@@ -36,7 +37,9 @@ export async function prepareDailyExam(code: string, slot = 0) {
   const user = await requireAuth();
   try {
     const exam = await getSelectedExam(user.id, code);
-    if (!exam || exam.code !== code) return { ok: false as const, message: "Choose at least one exam before starting a daily paper." };
+    if (!exam || exam.code.toLowerCase() !== code.toLowerCase()) {
+      return { ok: false as const, message: "That exam is not in your plan, so no new paper can be prepared for it. Add it again from My exams to resume." };
+    }
     const dailyExam = await ensureDailyExam(user.id, exam, slot);
     return { ok: true as const, data: { id: dailyExam.id } };
   } catch (error) {
@@ -351,6 +354,20 @@ export async function updateExamPlan(raw: unknown) {
     if (error instanceof ValidationApiError) return { ok: false as const, message: error.message };
     throw error;
   }
+  // Removal has to be visible everywhere at once: the top-right switcher reads
+  // the layout, and the active-exam cookie must not keep pointing at an exam
+  // that is no longer in the plan (otherwise re-adding it would silently make
+  // it active again instead of following the preserved state).
+  const store = await cookies();
+  const activeCode = store.get(ACTIVE_EXAM_COOKIE)?.value;
+  if (activeCode) {
+    const stillActive = await prisma.candidateExamTarget.findFirst({
+      where: { userId: user.id, active: true, exam: { active: true, code: activeCode } },
+      select: { id: true },
+    });
+    if (!stillActive) store.delete(ACTIVE_EXAM_COOKIE);
+  }
+  revalidatePath("/app", "layout");
   return { ok: true as const };
 }
 

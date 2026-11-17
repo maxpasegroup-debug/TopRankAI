@@ -186,6 +186,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 - The state question is followed by a district question whose options come from the chosen state; the server rejects a district that does not belong to that state. The stored column is still `User.city`, relabelled District in the interface.
 - Profile pictures are uploaded by drag-and-drop or file browse through the server-side upload proxy. The old URL field is gone; when storage is not configured the uploader says so honestly and the rest of registration still works.
 - Candidate login is separate from the administrator entry point at `/login/admin`. A candidate login rejects administrator accounts and points to the admin page.
+- Sign-in and administrator sign-in use the same stage as registration: the shared brand header (theme cycle, Home), the masked plan grid and aurora backdrop, and one compact card. The old split-screen auth layout is gone.
 - Login, logout, session handling, consent records, a `FREE` subscription record and notifications.
 - Administrators sign in at `/login/admin` and can reset their password after confirming the current password; a reset revokes all administrator sessions.
 - Self-registration is limited to candidates aged 18+ in this build. Under-18 onboarding requires verified guardian consent, which is not enabled.
@@ -207,6 +208,7 @@ There is **no single free, official, machine-readable API** for the syllabus and
 - Achievements: 14 real milestones evaluated from recorded activity, earned states, progress meters and XP.
 - Notifications: activity-generated inbox with per-item and mark-all-read actions.
 - Profile and exam plan editing (multiple exams, one level, one paper variant per exam), including a State → District dropdown pair and drag-and-drop picture replacement.
+- Removing an exam in My exams deactivates its target, clears it from the top-right exam switcher, and stops new papers for it. The target row (same exam and target year), submitted attempts, syllabus progress, notes and the saved start time are preserved; adding the same exam and target year again reactivates that row and resumes the preserved state. If the removed exam was the active one, the active-exam cookie is cleared so it does not silently become active again on re-add.
 
 ### Admin console (`/admin`, sign in at `/login/admin`)
 
@@ -268,6 +270,8 @@ Migrations `20261115000100_ai_exam_platform`, `20261115000200_exam_category_comp
 - Planner revision link checked in the browser: a revision item resolved to `/app/learn/<topicId>` with the label "Revise topic"; the old exam-result link and its `Review answer` label are gone.
 - Start-time scheduling checked by unit test: a 10:00 IST start resolves to `04:30Z`, and a paper is not available before that time. The daily schedule card is now a single per-exam list (papers/day + start time), not a separate active-exam form plus a duplicate list.
 - Public/auth surfaces checked in the browser after candidate sign-out: the public header showed only Sign in / Start preparing, with no "My workspace" and no administrator link; the administrator page no longer shows "Candidate? Use the candidate login", and the candidate login no longer claims administrators use the same form.
+- Exam removal was verified end-to-end with a temporary candidate: with GATE CS active, Remove + Save dropped GATE_CS from the switcher options, cleared `toprank_active_exam`, and kept NEET as the fallback active exam. Re-adding GATE CS at the same target year restored the same target row (identical id) with its saved start time, target date, completed syllabus topic and submitted attempt intact. The temporary candidate was deleted afterwards.
+- The restyled `/login` and `/login/admin` were captured at 1440 × 900 and 393 × 852 in both themes: shared header, masked grid backdrop, compact card, no horizontal overflow and no clipped form fields.
 - Responsive checks used same-origin iframes at 320, 375, 768 and 1024 px for `/`, `/exams`, `/register`, `/login`, `/login/admin`, `/app`, `/app/daily`, `/app/learn`, `/app/learn/[topicId]`, the result review, `/app/planner`, `/app/exams`, `/app/analytics`, `/app/profile`, `/app/notifications`, `/app/calendar` and `/app/achievements`. No page exceeded its viewport; the 320 px admin login overflow was fixed with `min-width: 0` and input caps.
 - Date rollover checked on 16 Nov: the candidate's 15 Nov CAT result stayed in history, the dashboard correctly showed that today's paper was not prepared, and preparing created a new “CAT full mock · 16 Nov” paper while `/app/daily` listed both days.
 - Result review renders correct and selected answers, section pills, `paperMeta` mode/official count, and syllabus links; seeded unlinked questions resolve to a closest topic and are labelled as inferred.

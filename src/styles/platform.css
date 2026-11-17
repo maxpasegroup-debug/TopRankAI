@@ -2156,93 +2156,8 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 
 /* ---- auth ---------------------------------------------------------------- */
 
-.tp-auth {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  min-height: 100vh;
-}
-.tp-auth-aside {
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: clamp(28px, 4vw, 56px);
-  background: linear-gradient(150deg, #1d1743 0%, #35267c 48%, #6d3a86 100%);
-  color: #f4f1ff;
-}
-.tp-auth-aside::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.13) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(600px 380px at 70% 30%, #000, transparent 75%);
-}
-.tp-auth-aside > * {
-  position: relative;
-  z-index: 1;
-}
-.tp-auth-aside .tp-brand {
-  color: #fff;
-}
-.tp-auth-quote {
-  font-family: var(--tp-display);
-  font-size: clamp(24px, 2.8vw, 34px);
-  line-height: 1.25;
-  letter-spacing: -0.03em;
-  max-width: 440px;
-}
-.tp-auth-quote em {
-  font-style: normal;
-  color: #ffb3a3;
-}
-.tp-auth-points {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 32px;
-}
-.tp-auth-point {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  font-size: 13.5px;
-  color: rgba(244, 241, 255, 0.8);
-  max-width: 420px;
-}
-.tp-auth-point svg {
-  width: 17px;
-  height: 17px;
-  color: #ffb3a3;
-  flex: none;
-  margin-top: 2px;
-}
-.tp-auth-main {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(24px, 4vw, 56px);
-  min-width: 0;
-}
-.tp-auth-card {
-  width: 100%;
-  max-width: 560px;
-  min-width: 0;
-}
-.tp-auth-card input,
-.tp-auth-card select {
-  max-width: 100%;
-}
-.tp-auth-card h1 {
-  font-size: clamp(26px, 3.2vw, 34px);
-  letter-spacing: -0.032em;
-}
-.tp-auth-card > p {
-  margin-top: 8px;
-  color: var(--tp-muted);
-  font-size: 14px;
-}
+/* Sign-in and sign-up share the `.tp-register-stage` backdrop above; their
+   cards are plain Tailwind surfaces, so no separate auth layout is needed. */
 
 .tp-steps-bar {
   display: flex;
@@ -2598,8 +2513,6 @@ details[open] > .tp-unit-head .tp-unit-chevron {
   .tp-player { grid-template-columns: 1fr; }
   .tp-palette { position: static; max-height: none; }
   .tp-question { min-height: 0; }
-  .tp-auth { grid-template-columns: 1fr; }
-  .tp-auth-aside { display: none; }
   .tp-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tp-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tp-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }

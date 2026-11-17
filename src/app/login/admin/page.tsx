@@ -18,51 +18,53 @@ export default async function AdminLoginPage() {
   if (user?.role === "PLATFORM_ADMIN" && !user.requiresLegalConsent) redirect("/admin");
 
   return (
-    <div className="tp-auth">
-      <aside className="tp-auth-aside">
-        <Link className="tp-brand" href="/">
+    <div className="tp-register-stage">
+      <header className="mx-auto flex w-full max-w-page items-center justify-between gap-4 px-[clamp(16px,4vw,34px)] py-4">
+        <Link className="tp-brand" href="/" aria-label="TopRank AI home">
           <span className="tp-brand-mark"><LogoMark size={20} /></span>
           <span>TopRank<em>AI</em></span>
         </Link>
-        <div>
-          <p className="tp-auth-quote">
-            Operations, separated.<br />
-            <em>Candidate accounts stay candidate-only.</em>
-          </p>
-          <div className="tp-auth-points">
-            {[
-              "This is a dedicated administrator entry point, not the candidate login.",
-              "Review AI-generated exam patterns, questions and syllabus imports.",
-              "Suspend accounts, verify dates and audit every AI call.",
-            ].map((point) => (
-              <div className="tp-auth-point" key={point}>
-                <Icon name="check" />
-                <span>{point}</span>
-              </div>
-            ))}
-          </div>
+        <div className="flex items-center gap-2">
+          <ThemeCycle />
+          <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/">
+            <Icon name="arrow-left" size={15} /> Home
+          </Link>
         </div>
-        <p className="tp-xs" style={{ color: "rgba(244,241,255,0.55)" }}>
-          Administrator credentials are separate from candidate accounts.
-        </p>
-      </aside>
+      </header>
 
-      <main className="tp-auth-main" id="main">
-        <div className="tp-auth-card">
-          <div className="tp-row-between" style={{ marginBottom: 26 }}>
-            <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/">
-              <Icon name="arrow-left" size={15} /> Home
-            </Link>
-            <ThemeCycle />
+      <main className="flex flex-1 items-start justify-center px-[clamp(14px,4vw,34px)] pb-14 pt-2 sm:pt-6" id="main">
+        <section
+          className="w-full max-w-[460px] overflow-hidden rounded-xl border border-line bg-surface shadow-lg"
+          aria-labelledby="admin-login-title"
+        >
+          <div className="px-4 pt-4 sm:px-5">
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-faint">Administration</p>
+            <h1
+              id="admin-login-title"
+              className="text-[clamp(22px,3.6vw,26px)] font-bold leading-tight tracking-[-0.02em] text-ink"
+            >
+              Administrator access
+            </h1>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-muted">
+              Sign in to the operations workspace. Candidate accounts cannot use this page.
+            </p>
           </div>
-          <span className="tp-eyebrow">Administration</span>
-          <h1 style={{ marginTop: 10 }}>Administrator access</h1>
-          <p>Sign in to the operations workspace. Candidate accounts cannot use this page.</p>
-          <div className="tp-mt-24">
+
+          <div className="px-4 pb-4 pt-4 sm:px-5">
             <AdminLoginForm />
           </div>
-        </div>
+
+          <div className="border-t border-line bg-surface-2 px-4 py-3 sm:px-5">
+            <p className="text-[11.5px] leading-relaxed text-faint">
+              Administrator credentials are separate from candidate accounts and are never created by public sign-up.
+            </p>
+          </div>
+        </section>
       </main>
+
+      <p className="px-[clamp(16px,4vw,34px)] pb-8 text-center text-[11.5px] text-faint">
+        Operations access is limited to platform administrators.
+      </p>
     </div>
   );
 }

@@ -294,8 +294,9 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
             Paper size and marking always follow the official exam configuration.
           </p>
           <div className="tp-note tp-mt-16">
-            <strong>Removing an exam</strong> keeps your past attempts in the database but stops new papers being
-            prepared for it.
+            <strong>Removing an exam</strong> stops new papers for it and hides it from the exam switcher, but keeps
+            your attempts, targets, syllabus progress and notes. Add the same exam and target year again to resume
+            exactly where you stopped.
           </div>
         </section>
       </aside>
