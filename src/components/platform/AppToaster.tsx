@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Toaster as HotToaster, toast, type Toast } from "react-hot-toast";
 
 export { toast };
@@ -13,6 +15,12 @@ export type ConfirmOptions = {
 };
 
 let cancelActive: (() => void) | null = null;
+
+/** Close a confirmation that is still open when the route changes. */
+export function dismissConfirm() {
+  cancelActive?.();
+  toast.dismiss("tp-confirm");
+}
 
 /**
  * A confirmation rendered as a toast with two actions. It replaces the old
@@ -67,6 +75,13 @@ export function confirmAction({
 }
 
 export function AppToaster() {
+  const pathname = usePathname();
+  useEffect(() => {
+    // A confirmation belongs to the page that opened it. Do not leave a stale
+    // "Submit and score" or "Remove exam" action floating over the next page.
+    dismissConfirm();
+  }, [pathname]);
+
   return (
     <HotToaster
       position="top-center"
