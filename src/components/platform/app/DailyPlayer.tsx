@@ -219,15 +219,25 @@ export function DailyPlayer({
     <div className="tp-player">
       <div className="tp-stack tp-gap-16">
         <div className="tp-card tp-card-pad" style={{ padding: "14px 18px" }}>
-          <div className="tp-row-between">
+          <div className="tp-row-between" style={{ flexWrap: "wrap", gap: 10 }}>
             <div className="tp-row tp-gap-8 tp-wrap">
               <span className="tp-pill tp-pill-brand">Question {index + 1} of {paper.length}</span>
               <span className="tp-pill">{current.subject}</span>
               <span className="tp-pill tp-capitalize">{current.difficulty.toLowerCase()}</span>
             </div>
-            <span className="tp-timer" data-urgent={remaining <= 60}>
-              <Icon name="clock" size={14} /> {minutes}:{String(seconds).padStart(2, "0")}
-            </span>
+            <div className="tp-row tp-gap-8">
+              <span className="tp-timer" data-urgent={remaining <= 60}>
+                <Icon name="clock" size={14} /> {minutes}:{String(seconds).padStart(2, "0")}
+              </span>
+              <button
+                type="button"
+                className="tp-btn tp-btn-accent tp-btn-sm"
+                onClick={() => void confirmSubmit()}
+                disabled={pending}
+              >
+                {pending ? "Scoring…" : "Submit"}
+              </button>
+            </div>
           </div>
           <div className="tp-meter tp-mt-16"><span style={{ width: `${((index + 1) / paper.length) * 100}%` }} /></div>
         </div>
