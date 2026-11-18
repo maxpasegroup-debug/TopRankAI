@@ -218,6 +218,7 @@ model User {
   dailyGoals          DailyGoal[]
   performanceRecords  PerformanceRecord[]
   notifications       Notification[]
+  mockPayments        MockPayment[]
   achievements        UserAchievement[]
   subscription        Subscription?
   aiUsageLogs         AIUsageLog[]
@@ -1302,6 +1303,20 @@ model UserAchievement {
 
   @@unique([userId, achievementId])
   @@index([userId, earnedAt])
+}
+
+model MockPayment {
+  id          String   @id
+  userId      String
+  plan        String
+  amountPaise Int
+  currency    String   @default("INR")
+  status      String
+  endsAt      DateTime?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Subscription {

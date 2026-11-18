@@ -274,7 +274,7 @@ export async function updateCandidateProfile(raw: unknown) {
   }
 }
 
-export async function saveDailyWorkload(targetId: string, count: number, activateMonthly: boolean, startMinutes?: number) {
+export async function saveDailyWorkload(targetId: string, count: number, startMinutes?: number) {
   const user = await requireAuth();
   const exam = (await getCandidateExams(user.id)).find((item) => item.targetId === targetId);
   const start = startMinutes ?? exam?.dailyStartMinutes ?? 480;
@@ -284,34 +284,9 @@ export async function saveDailyWorkload(targetId: string, count: number, activat
   return prisma.$transaction(async (tx) => {
     const target = await tx.candidateExamTarget.findFirst({ where: { id: targetId, userId: user.id, active: true } });
     if (!target) return { ok: false, message: "Choose an active exam first." };
-    let subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
-    const included = includedPapers(target.preparationLevel);
-    const extra = count > included;
-    let mockPayment = false;
-    let monthlyUntil = mockMonthlyActive(subscription) ? subscription!.endsAt : null;
-    if (extra && !mockMonthlyActive(subscription)) {
-      if (activateMonthly !== true) {
-        return { ok: false, message: "Activate the mock monthly plan for extra papers." };
-      }
-      if (subscription && !["FREE", "MOCK_MONTHLY"].includes(subscription.plan)) {
-        return { ok: false, message: "Your existing subscription cannot be replaced by the mock plan." };
-      }
-      const startsAt = new Date();
-      const endsAt = new Date(startsAt.getTime() + 30 * 86_400_000);
-      const monthly = {
-        plan: "MOCK_MONTHLY",
-        status: "ACTIVE" as const,
-        startsAt,
-        endsAt,
-        features: { mockPayment: true, source: "mock-monthly-checkout" },
-      };
-      subscription = await tx.subscription.upsert({
-        where: { userId: user.id },
-        create: { userId: user.id, ...monthly },
-        update: monthly,
-      });
-      monthlyUntil = endsAt;
-      mockPayment = true;
+    const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
+    if (count > includedPapers(target.preparationLevel) && !mockMonthlyActive(subscription)) {
+      return { ok: false, message: "Visit Subscriptions and complete a mock checkout to add extra papers." };
     }
     await tx.candidateExamTarget.update({
       where: { id: target.id },
@@ -319,10 +294,8 @@ export async function saveDailyWorkload(targetId: string, count: number, activat
     });
     return {
       ok: true,
-      message: mockPayment
-        ? "Mock payment successful — no money was charged. Extra papers are active."
-        : "Daily schedule saved.",
-      data: { mockPayment, monthlyUntil },
+      message: "Daily schedule saved.",
+      data: { mockPayment: false, monthlyUntil: mockMonthlyActive(subscription) ? subscription!.endsAt : null },
     };
   });
 }

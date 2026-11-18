@@ -59,7 +59,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
         <div className="tp-row tp-gap-8 tp-wrap">
           <strong>{row.name}</strong>
           {active ? <span className="tp-pill tp-pill-brand">Active</span> : null}
-          {row.monthlyUntil ? <span className="tp-pill tp-pill-ok">Mock monthly</span> : null}
+          {row.monthlyUntil ? <span className="tp-pill tp-pill-ok">Pro · mock</span> : null}
         </div>
         <div className="tp-xs tp-faint" style={{ marginTop: 3 }}>
           {row.durationMinutes} min official paper · starts {start} IST
@@ -80,7 +80,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
           >
             {Array.from({ length: MAX_DAILY_PAPERS }, (_, index) => {
               const value = index + 1;
-              return <option value={value} key={value}>{value}{value > row.included ? " (monthly)" : ""}</option>;
+              return <option value={value} key={value}>{value}{value > row.included ? " (Pro)" : ""}</option>;
             })}
           </select>
           <label className="tp-xs tp-muted" htmlFor={`start-${row.targetId}`}>Start</label>
@@ -100,9 +100,13 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
             className="tp-btn tp-btn-sm"
             disabled={pending || (!changed && !needsMonthly)}
             onClick={() => {
-              const toastId = toast.loading(needsMonthly ? "Activating mock monthly and saving…" : "Saving schedule…");
+              if (needsMonthly) {
+                router.push(`/app/subscriptions?target=${encodeURIComponent(row.targetId)}&papers=${count}&start=${minutesValue(start)}`);
+                return;
+              }
+              const toastId = toast.loading("Saving schedule…");
               startTransition(async () => {
-                const result = await saveDailyWorkload(row.targetId, count, needsMonthly, minutesValue(start));
+                const result = await saveDailyWorkload(row.targetId, count, minutesValue(start));
                 if (!result.ok) {
                   toast.error(result.message, { id: toastId });
                   return;
@@ -112,11 +116,11 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
               });
             }}
           >
-            {pending ? "Saving…" : needsMonthly ? "Pay mock & save" : "Save"}
+            {pending ? "Saving…" : needsMonthly ? "View subscriptions" : "Save"}
           </button>
         </div>
         {needsMonthly ? (
-          <span className="tp-xs tp-faint">Mock monthly checkout — no payment gateway, no money charged.</span>
+          <span className="tp-xs tp-faint">Pro · mock checkout — no payment gateway, no money charged.</span>
         ) : null}
       </div>
     </div>

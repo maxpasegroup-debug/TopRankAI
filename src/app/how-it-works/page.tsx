@@ -15,7 +15,7 @@ const loop: { icon: IconName; title: string; body: string; points: string[] }[] 
     points: [
       "A separate preparation level per exam — Beginner, Intermediate, Advanced or Extreme.",
       "Beginner includes one paper a day, Intermediate two, Advanced three and Extreme four. You can schedule up to eight and choose an IST start time for each exam.",
-      "Papers above your level allowance use the mock monthly plan — no payment gateway and no money charged. Each level also sets a daily study target.",
+      "Papers above your level allowance use a monthly or yearly mock Pro plan from Subscriptions — no payment gateway and no money charged. Each level also sets a daily study target.",
       "You can change exams, levels, start times and study minutes later from your workspace.",
     ],
   },

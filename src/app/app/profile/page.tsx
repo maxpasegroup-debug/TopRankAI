@@ -18,7 +18,7 @@ export default async function ProfilePage() {
   }
 
   const monthly = mockMonthlyActive(profile.subscription);
-  const expiredMock = profile.subscription?.plan === "MOCK_MONTHLY" && !monthly;
+  const expiredMock = ["MOCK_MONTHLY", "MOCK_YEARLY"].includes(profile.subscription?.plan ?? "") && !monthly;
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
   return (
@@ -60,7 +60,7 @@ export default async function ProfilePage() {
             <h2 style={{ fontSize: 19, marginTop: 12 }}>{profile.name}</h2>
             <p className="tp-xs tp-muted">{profile.email}</p>
             <div className="tp-row tp-gap-8 tp-wrap" style={{ justifyContent: "center", marginTop: 12 }}>
-              <span className="tp-pill tp-pill-brand">{expiredMock ? "FREE" : profile.subscription?.plan ?? "FREE"} plan</span>
+              <span className="tp-pill tp-pill-brand">{monthly ? "Pro · mock" : expiredMock ? "FREE" : profile.subscription?.plan ?? "FREE"} plan</span>
               <span className="tp-pill">{profile.accountConsent?.ageBand?.replace(/_/g, "+") ?? "18+"}</span>
             </div>
           </section>
@@ -83,6 +83,7 @@ export default async function ProfilePage() {
 
           <section className="tp-card tp-card-pad">
             <h3 style={{ fontSize: 16, marginBottom: 10 }}>Account & privacy</h3>
+            <Link className="tp-btn tp-btn-soft tp-btn-sm tp-mb-16" href="/app/subscriptions">Manage subscription & payments</Link>
             <div className="tp-stack tp-gap-8">
               <div className="tp-row-between tp-small"><span className="tp-muted">Consent version</span><span style={{ fontWeight: 600 }}>{profile.accountConsent?.acceptedAt ? formatDate(profile.accountConsent.acceptedAt, { day: "numeric", month: "short", year: "numeric" }) : "—"}</span></div>
               <div className="tp-row-between tp-small"><span className="tp-muted">Subscription</span><span style={{ fontWeight: 600 }}>{expiredMock ? "EXPIRED" : profile.subscription?.status ?? "ACTIVE"}</span></div>

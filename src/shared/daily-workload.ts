@@ -3,7 +3,7 @@ export type DailyLevel = typeof levels[number];
 export const EXAM_BREAK_MINUTES = 45;
 
 export const DAILY_PAPERS = { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 3, EXTREME: 4 } as const;
-// Extra papers above the level allowance need the mock monthly plan. This is a
+// Extra papers above the level allowance need the mock Pro plan. This is a
 // product limit, not a physical "fits in 24 hours" calculation.
 export const MAX_DAILY_PAPERS = 8;
 
@@ -16,7 +16,7 @@ export function levelForPapers(count: number) {
 }
 
 export function mockMonthlyActive(plan: { plan: string; status: string; endsAt: Date | null } | null, now = new Date()) {
-  return plan?.plan === "MOCK_MONTHLY" && plan.status === "ACTIVE" && !!plan.endsAt && plan.endsAt > now;
+  return !!plan && ["MOCK_MONTHLY", "MOCK_YEARLY"].includes(plan.plan) && plan.status === "ACTIVE" && !!plan.endsAt && plan.endsAt > now;
 }
 
 export function paperCount(level: DailyLevel, requested: number | null, monthly: boolean) {

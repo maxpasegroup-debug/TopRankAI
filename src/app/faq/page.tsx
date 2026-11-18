@@ -29,11 +29,11 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Can I schedule several papers at different times?",
-    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, and the mock monthly plan raises that to eight.",
+    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, and the mock Pro plan raises that to eight.",
   },
   {
-    q: "What does the mock monthly plan include?",
-    a: "It removes the level limit for 30 days so you can schedule up to eight papers per day for each exam. It is a test checkout: there is no payment gateway, no card data is collected and no money is charged. It does not promise rank, admission or any outcome.",
+    q: "What does the mock Pro plan include?",
+    a: "Choose monthly (₹299) or yearly (₹2,999) test pricing in the workspace Subscriptions tab to schedule up to eight papers per day for each exam. You can simulate success or failure, view payment history and renew manually. It is a test checkout: there is no payment gateway, no card data is collected and no money is charged. It does not promise rank, admission or any outcome.",
   },
   {
     q: "What is the learning centre?",
@@ -61,7 +61,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is the platform free?",
-    a: "Your level includes one to four daily papers, plus access to the learning centre and analytics. To schedule more papers than your level includes, activate the mock monthly subscription in your workspace. It supports up to eight papers per day and takes no payment.",
+    a: "Your level includes one to four daily papers, plus access to the learning centre and analytics. To schedule more papers than your level includes, choose a mock monthly or yearly Pro subscription in your workspace. It supports up to eight papers per day and takes no payment.",
   },
   {
     q: "How do I report a wrong question or date?",

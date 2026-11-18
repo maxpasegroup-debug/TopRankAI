@@ -34,6 +34,7 @@ const navGroups: { label: string; items: { href: string; label: string; icon: Ic
     label: "Account",
     items: [
       { href: "/app/notifications", label: "Notifications", icon: "bell" },
+      { href: "/app/subscriptions", label: "Subscriptions", icon: "spark" },
       { href: "/app/profile", label: "Profile", icon: "user" },
       { href: "/app/exams", label: "My exams", icon: "target" },
     ],
@@ -45,6 +46,7 @@ export type AppShellProps = {
   exams: ShellExam[];
   activeCode: string | null;
   unread: number;
+  pro?: boolean;
   children: React.ReactNode;
 };
 
@@ -59,7 +61,7 @@ function titleForPath(pathname: string) {
   return "Workspace";
 }
 
-export function AppShell({ user, exams, activeCode, unread, children }: AppShellProps) {
+export function AppShell({ user, exams, activeCode, unread, pro, children }: AppShellProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -120,7 +122,10 @@ export function AppShell({ user, exams, activeCode, unread, children }: AppShell
               {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : initials || "T"}
             </span>
             <div className="tp-grow" style={{ minWidth: 0 }}>
-              <div className="tp-small" style={{ fontWeight: 650, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name}</div>
+              <div className="tp-small tp-row tp-gap-8" style={{ fontWeight: 650 }}>
+                <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name}</span>
+                {pro ? <span className="tp-pill tp-pill-brand" style={{ flexShrink: 0 }}>Pro</span> : null}
+              </div>
               <div className="tp-xs tp-faint" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.email}</div>
             </div>
           </div>

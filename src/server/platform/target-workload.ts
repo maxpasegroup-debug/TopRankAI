@@ -15,7 +15,7 @@ export async function targetWorkload(tx: Prisma.TransactionClient, userId: strin
   const current = paperCount(prior.preparationLevel, prior.dailyPaperCount, monthly);
   const count = levelForPapers(current) === level ? current : includedPapers(level);
   if (!monthly && count > includedPapers(prior.preparationLevel)) {
-    throw new ValidationApiError("Open Daily exams to activate mock monthly access for the extra papers.");
+    throw new ValidationApiError("Open Subscriptions to activate mock Pro access for the extra papers.");
   }
   return { preparationLevel: prior.preparationLevel, dailyPaperCount: count };
 }
