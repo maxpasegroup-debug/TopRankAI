@@ -1584,7 +1584,23 @@ body.body-platform {
 #review {
   scroll-margin-top: 92px;
 }
+.tp-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: tp-spin 0.65s linear infinite;
+}
+.tp-pager-link[data-busy="true"] {
+  cursor: progress;
+}
+@keyframes tp-spin {
+  to { transform: rotate(360deg); }
+}
 .tp-pager-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1598,6 +1614,14 @@ body.body-platform {
   font-size: 12.5px;
   font-weight: 650;
   text-decoration: none;
+}
+.tp-pager-text[data-hidden="true"] {
+  visibility: hidden;
+}
+.tp-pager-link[data-busy="true"] .tp-spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
 }
 .tp-pager-link:hover {
   border-color: var(--tp-brand);
@@ -1731,6 +1755,170 @@ body.body-platform {
 @keyframes tp-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.62; }
+}
+.tp-timer[data-critical="true"] {
+  border-color: var(--tp-danger);
+  background: var(--tp-danger);
+  color: #ffffff;
+  animation: tp-timer-beat 0.9s ease-in-out infinite;
+}
+@keyframes tp-timer-beat {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--tp-danger) 40%, transparent); }
+  50% { transform: scale(1.045); box-shadow: 0 0 0 9px color-mix(in srgb, var(--tp-danger) 0%, transparent); }
+}
+
+/* ---- exam timer alerts --------------------------------------------------- */
+
+.tp-time-alert {
+  --tp-alert-tone: var(--tp-brand);
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(520px, calc(100vw - 28px));
+  height: auto;
+  padding: 13px 46px 14px 14px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--tp-alert-tone) 42%, var(--tp-line-strong));
+  background: color-mix(in srgb, var(--tp-surface) 94%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 26px 60px rgba(8, 6, 18, 0.38),
+    0 0 0 1px color-mix(in srgb, var(--tp-alert-tone) 18%, transparent);
+  transform: translateX(-50%);
+  overflow: hidden;
+  animation: tp-alert-in 0.46s cubic-bezier(0.2, 1.15, 0.32, 1) both;
+}
+.tp-time-alert[data-level="warn"] { --tp-alert-tone: var(--tp-warn); }
+.tp-time-alert[data-level="danger"],
+.tp-time-alert[data-level="critical"],
+.tp-time-alert[data-level="over"] { --tp-alert-tone: var(--tp-danger); }
+.tp-time-alert[data-level="critical"],
+.tp-time-alert[data-level="over"] {
+  animation:
+    tp-alert-in 0.46s cubic-bezier(0.2, 1.15, 0.32, 1) both,
+    tp-alert-glow 1.4s ease-in-out 0.5s infinite;
+}
+.tp-time-alert::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--tp-alert-tone) 18%, transparent) 45%, transparent 70%);
+  transform: translateX(-120%);
+  animation: tp-alert-shine 1.9s ease-in-out 0.35s;
+  pointer-events: none;
+}
+.tp-time-alert-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--tp-alert-tone);
+  background: color-mix(in srgb, var(--tp-alert-tone) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tp-alert-tone) 40%, transparent);
+}
+.tp-time-alert-icon::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--tp-alert-tone) 55%, transparent);
+  animation: tp-alert-ring 1.7s ease-out infinite;
+}
+.tp-time-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tp-time-alert-body strong {
+  font-family: var(--tp-display);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+.tp-time-alert-body span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--tp-muted);
+}
+.tp-time-alert-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--tp-faint);
+  cursor: pointer;
+}
+.tp-time-alert-close:hover {
+  color: var(--tp-ink);
+  background: var(--tp-surface-2);
+  border-color: var(--tp-line);
+}
+.tp-time-alert-meter {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--tp-alert-tone), color-mix(in srgb, var(--tp-alert-tone) 26%, transparent));
+  transform-origin: left center;
+  animation: tp-alert-meter 6.5s linear forwards;
+}
+.tp-time-alert[data-level="over"] .tp-time-alert-meter {
+  animation-duration: 1.5s;
+}
+.tp-player[data-locked="true"] .tp-question,
+.tp-player[data-locked="true"] .tp-palette {
+  pointer-events: none;
+  opacity: 0.72;
+  transition: opacity 0.3s ease;
+}
+@keyframes tp-alert-in {
+  0% { opacity: 0; transform: translateX(-50%) translateY(18px) scale(0.94); }
+  65% { opacity: 1; transform: translateX(-50%) translateY(-2px) scale(1.012); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes tp-alert-shine {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(120%); }
+}
+@keyframes tp-alert-ring {
+  0% { opacity: 0.9; transform: scale(0.85); }
+  80%, 100% { opacity: 0; transform: scale(1.45); }
+}
+@keyframes tp-alert-glow {
+  0%, 100% { box-shadow: 0 26px 60px rgba(8, 6, 18, 0.38), 0 0 0 0 color-mix(in srgb, var(--tp-alert-tone) 34%, transparent); }
+  50% { box-shadow: 0 26px 60px rgba(8, 6, 18, 0.38), 0 0 0 9px color-mix(in srgb, var(--tp-alert-tone) 0%, transparent); }
+}
+@keyframes tp-alert-meter {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tp-time-alert,
+  .tp-time-alert[data-level="critical"],
+  .tp-time-alert[data-level="over"] { animation: tp-alert-in 0.2s ease both; }
+  .tp-time-alert::after,
+  .tp-time-alert-icon::after { animation: none; }
+  .tp-timer[data-critical="true"] { animation: none; }
+  .tp-spinner { animation-duration: 1.2s; }
+}
+@media (max-width: 640px) {
+  .tp-time-alert { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); padding: 12px 42px 13px 12px; gap: 10px; }
+  .tp-time-alert-body strong { font-size: 14px; }
+  .tp-time-alert-body span { font-size: 12px; }
 }
 
 /* ---- result -------------------------------------------------------------- */

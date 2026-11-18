@@ -21,6 +21,21 @@ type PaperQuestion = {
 
 type AnswerState = { selected: string[]; flagged: boolean; timeSpentSeconds: number };
 
+type TimeNotice = {
+  id: number;
+  level: "info" | "warn" | "danger" | "critical" | "over";
+  title: string;
+  detail: string;
+};
+
+const TIME_WARNINGS = [
+  { seconds: 600, level: "info" as const, title: "10 minutes left", detail: "Finish the sections you have not touched yet — the palette still marks every unanswered question." },
+  { seconds: 300, level: "warn" as const, title: "5 minutes left", detail: "Commit to your best answers. You can still change them until the clock hits zero." },
+  { seconds: 60, level: "danger" as const, title: "1 minute left", detail: "Check your flagged questions now. The paper submits itself when the timer ends." },
+  { seconds: 30, level: "danger" as const, title: "30 seconds left", detail: "Last pass. Unanswered questions stay blank and carry no penalty." },
+  { seconds: 5, level: "critical" as const, title: "5 seconds left", detail: "Scoring starts automatically in a moment." },
+];
+
 export function DailyPlayer({
   dailyExamId,
   attemptId,
@@ -47,6 +62,9 @@ export function DailyPlayer({
   });
   const [hydrated, setHydrated] = useState(false);
   const [palettePage, setPalettePage] = useState(0);
+  const [timeNotice, setTimeNotice] = useState<TimeNotice | null>(null);
+  const noticeSeq = useRef(0);
+  const previousRemaining = useRef(remainingSeconds);
   const submittedRef = useRef(false);
   const questionEnteredAt = useRef(Date.now());
   const storageKey = `toprank_attempt_${attemptId}`;
@@ -162,7 +180,44 @@ export function DailyPlayer({
   }, [remainingSeconds]);
 
   useEffect(() => {
-    if (remaining === 0) void submit(true);
+    const previous = previousRemaining.current;
+    previousRemaining.current = remaining;
+    if (submittedRef.current || previous === remaining) return;
+
+    if (remaining === 0) {
+      noticeSeq.current += 1;
+      setTimeNotice({
+        id: noticeSeq.current,
+        level: "over",
+        title: "Time is up",
+        detail: "Your paper is being scored. The result opens automatically.",
+      });
+      return;
+    }
+
+    const crossed = TIME_WARNINGS.filter((warning) => previous > warning.seconds && remaining <= warning.seconds);
+    if (!crossed.length) return;
+    // Tiers run high to low, so the last crossed tier is the most urgent one.
+    const warning = crossed[crossed.length - 1];
+    noticeSeq.current += 1;
+    setTimeNotice({ id: noticeSeq.current, level: warning.level, title: warning.title, detail: warning.detail });
+    if (warning.seconds <= 60 && typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+      navigator.vibrate(warning.seconds <= 5 ? [90, 60, 90] : 110);
+    }
+  }, [remaining]);
+
+  useEffect(() => {
+    if (!timeNotice || timeNotice.level === "over") return;
+    const timer = window.setTimeout(() => setTimeNotice(null), 6500);
+    return () => window.clearTimeout(timer);
+  }, [timeNotice]);
+
+  useEffect(() => {
+    if (remaining !== 0) return;
+    // Let the closing notice animate before the result opens. The question area is
+    // locked at zero, so nobody can answer while this short pause runs.
+    const timer = window.setTimeout(() => void submit(true), 1500);
+    return () => window.clearTimeout(timer);
   }, [remaining, submit]);
 
   function recordTime() {
@@ -212,11 +267,28 @@ export function DailyPlayer({
 
   const minutes = Math.floor(remaining / 60);
   const seconds = remaining % 60;
+  const locked = remaining === 0;
 
   if (!current) return null;
 
   return (
-    <div className="tp-player">
+    <>
+      {timeNotice ? (
+        <div className="tp-time-alert" data-level={timeNotice.level} role="alert" key={timeNotice.id}>
+          <span className="tp-time-alert-icon" aria-hidden="true">
+            <Icon name={timeNotice.level === "info" || timeNotice.level === "warn" ? "clock" : timeNotice.level === "over" ? "flag" : "alert"} size={17} />
+          </span>
+          <div className="tp-time-alert-body">
+            <strong>{timeNotice.title}</strong>
+            <span>{timeNotice.detail}</span>
+          </div>
+          <button type="button" className="tp-time-alert-close" onClick={() => setTimeNotice(null)} aria-label="Dismiss time warning">
+            <Icon name="x" size={13} />
+          </button>
+          <span className="tp-time-alert-meter" aria-hidden="true" />
+        </div>
+      ) : null}
+      <div className="tp-player" data-locked={locked ? "true" : undefined}>
       <div className="tp-stack tp-gap-16">
         <div className="tp-card tp-card-pad" style={{ padding: "14px 18px" }}>
           <div className="tp-row-between" style={{ flexWrap: "wrap", gap: 10 }}>
@@ -226,14 +298,14 @@ export function DailyPlayer({
               <span className="tp-pill tp-capitalize">{current.difficulty.toLowerCase()}</span>
             </div>
             <div className="tp-row tp-gap-8">
-              <span className="tp-timer" data-urgent={remaining <= 60}>
+              <span className="tp-timer" data-urgent={remaining <= 60} data-critical={remaining <= 30}>
                 <Icon name="clock" size={14} /> {minutes}:{String(seconds).padStart(2, "0")}
               </span>
               <button
                 type="button"
                 className="tp-btn tp-btn-accent tp-btn-sm"
                 onClick={() => void confirmSubmit()}
-                disabled={pending}
+                disabled={pending || locked}
               >
                 {pending ? "Scoring…" : "Submit"}
               </button>
@@ -382,7 +454,7 @@ export function DailyPlayer({
           <div className="tp-row tp-gap-8 tp-xs tp-muted"><span className="tp-pill" style={{ width: 14, height: 14, padding: 0, borderRadius: 4 }} /> Not answered</div>
         </div>
 
-        <button type="button" className="tp-btn tp-btn-accent tp-btn-block tp-mt-16" onClick={() => void confirmSubmit()} disabled={pending}>
+        <button type="button" className="tp-btn tp-btn-accent tp-btn-block tp-mt-16" onClick={() => void confirmSubmit()} disabled={pending || locked}>
           {pending ? "Scoring…" : "Submit paper"}
         </button>
         <p className="tp-xs tp-faint tp-mt-8" style={{ lineHeight: 1.5 }}>
@@ -390,6 +462,7 @@ export function DailyPlayer({
           Your selections are saved on this device until you submit.
         </p>
       </aside>
-    </div>
+      </div>
+    </>
   );
 }
