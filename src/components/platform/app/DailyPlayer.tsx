@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Icon } from "../Icon";
 import { confirmAction, toast } from "../AppToaster";
+import { TimerNotice, type TimerNoticeData } from "./TimerNotice";
 import { submitExamAttempt } from "@/server/actions/platform";
 
 const PALETTE_PAGE_SIZE = 25;
+const STRIP_PAGE_SIZE = 8;
 
 type PaperQuestion = {
   position: number;
@@ -20,13 +22,6 @@ type PaperQuestion = {
 };
 
 type AnswerState = { selected: string[]; flagged: boolean; timeSpentSeconds: number };
-
-type TimeNotice = {
-  id: number;
-  level: "info" | "warn" | "danger" | "critical" | "over";
-  title: string;
-  detail: string;
-};
 
 const TIME_WARNINGS = [
   { seconds: 600, level: "info" as const, title: "10 minutes left", detail: "Finish the sections you have not touched yet — the palette still marks every unanswered question." },
@@ -62,7 +57,8 @@ export function DailyPlayer({
   });
   const [hydrated, setHydrated] = useState(false);
   const [palettePage, setPalettePage] = useState(0);
-  const [timeNotice, setTimeNotice] = useState<TimeNotice | null>(null);
+  const [stripPage, setStripPage] = useState(0);
+  const [timeNotice, setTimeNotice] = useState<TimerNoticeData | null>(null);
   const noticeSeq = useRef(0);
   const previousRemaining = useRef(remainingSeconds);
   const submittedRef = useRef(false);
@@ -110,6 +106,10 @@ export function DailyPlayer({
     }
   }, [answers, index, hydrated, storageKey]);
 
+  useEffect(() => {
+    setStripPage(Math.floor(index / STRIP_PAGE_SIZE));
+  }, [index]);
+
   const current = paper[index];
 
   const answeredCount = useMemo(
@@ -124,6 +124,10 @@ export function DailyPlayer({
   const paletteStart = palettePage * PALETTE_PAGE_SIZE;
   const paletteEnd = Math.min(paper.length, paletteStart + PALETTE_PAGE_SIZE);
   const paletteQuestions = paper.slice(paletteStart, paletteEnd);
+  const stripPageCount = Math.max(1, Math.ceil(paper.length / STRIP_PAGE_SIZE));
+  const stripStart = stripPage * STRIP_PAGE_SIZE;
+  const stripEnd = Math.min(paper.length, stripStart + STRIP_PAGE_SIZE);
+  const stripQuestions = paper.slice(stripStart, stripEnd);
 
   const submit = useCallback(
     (auto: boolean) => {
@@ -272,23 +276,7 @@ export function DailyPlayer({
   if (!current) return null;
 
   return (
-    <>
-      {timeNotice ? (
-        <div className="tp-time-alert" data-level={timeNotice.level} role="alert" key={timeNotice.id}>
-          <span className="tp-time-alert-icon" aria-hidden="true">
-            <Icon name={timeNotice.level === "info" || timeNotice.level === "warn" ? "clock" : timeNotice.level === "over" ? "flag" : "alert"} size={17} />
-          </span>
-          <div className="tp-time-alert-body">
-            <strong>{timeNotice.title}</strong>
-            <span>{timeNotice.detail}</span>
-          </div>
-          <button type="button" className="tp-time-alert-close" onClick={() => setTimeNotice(null)} aria-label="Dismiss time warning">
-            <Icon name="x" size={13} />
-          </button>
-          <span className="tp-time-alert-meter" aria-hidden="true" />
-        </div>
-      ) : null}
-      <div className="tp-player" data-locked={locked ? "true" : undefined}>
+    <div className="tp-player" data-locked={locked ? "true" : undefined}>
       <div className="tp-stack tp-gap-16">
         <div className="tp-card tp-card-pad" style={{ padding: "14px 18px" }}>
           <div className="tp-row-between" style={{ flexWrap: "wrap", gap: 10 }}>
@@ -313,6 +301,69 @@ export function DailyPlayer({
           </div>
           <div className="tp-meter tp-mt-16"><span style={{ width: `${((index + 1) / paper.length) * 100}%` }} /></div>
         </div>
+
+        <div className="tp-question-strip" aria-label="Question navigator">
+          <div className="tp-question-strip-head">
+            <span className="tp-question-strip-title"><Icon name="layers" size={13} /> Questions</span>
+            <span className="tp-question-strip-count">{answeredCount}/{paper.length} answered</span>
+          </div>
+          <div className="tp-question-strip-row">
+            {stripPageCount > 1 ? (
+              <button
+                type="button"
+                className="tp-strip-arrow"
+                onClick={() => setStripPage((pageNo) => Math.max(0, pageNo - 1))}
+                disabled={stripPage === 0}
+                aria-label="Previous questions"
+              >
+                <Icon name="arrow-left" size={13} />
+              </button>
+            ) : null}
+            <div className="tp-question-strip-chips">
+              {stripQuestions.map((question, offset) => {
+                const questionIndex = stripStart + offset;
+                const state = answers[question.id];
+                const chipState = questionIndex === index
+                  ? "current"
+                  : state?.flagged
+                    ? "flagged"
+                    : (state?.selected.length ?? 0) > 0
+                      ? "answered"
+                      : "unanswered";
+                return (
+                  <button
+                    type="button"
+                    key={question.id}
+                    className="tp-strip-chip"
+                    data-state={chipState}
+                    onClick={() => goTo(questionIndex)}
+                    aria-current={questionIndex === index ? "true" : undefined}
+                    aria-label={`Question ${questionIndex + 1}${chipState === "answered" ? ", answered" : ""}${chipState === "flagged" ? ", flagged" : ""}`}
+                  >
+                    {questionIndex + 1}
+                  </button>
+                );
+              })}
+            </div>
+            {stripPageCount > 1 ? (
+              <button
+                type="button"
+                className="tp-strip-arrow"
+                onClick={() => setStripPage((pageNo) => Math.min(stripPageCount - 1, pageNo + 1))}
+                disabled={stripPage === stripPageCount - 1}
+                aria-label="Next questions"
+              >
+                <Icon name="arrow-right" size={13} />
+              </button>
+            ) : null}
+          </div>
+          <p className="tp-question-strip-meta">
+            Questions {stripStart + 1}–{stripEnd} of {paper.length}
+            {stripPageCount > 1 ? ` · set ${stripPage + 1} of ${stripPageCount}` : ""}
+          </p>
+        </div>
+
+        {timeNotice ? <TimerNotice key={timeNotice.id} notice={timeNotice} onDismiss={() => setTimeNotice(null)} /> : null}
 
         <div className="tp-card tp-question">
           <div className="tp-question-head">
@@ -376,11 +427,11 @@ export function DailyPlayer({
       </div>
 
       <aside className="tp-card tp-card-pad tp-palette">
-        <div className="tp-row-between">
+        <div className="tp-row-between tp-palette-head">
           <h3 style={{ fontSize: 15 }}>Question palette</h3>
           <span className="tp-xs tp-faint">{answeredCount}/{paper.length}</span>
         </div>
-        <div className="tp-xs tp-faint" style={{ marginTop: 2 }}>{totalMarks} total marks · {durationMinutes} min</div>
+        <div className="tp-xs tp-faint tp-palette-head" style={{ marginTop: 2 }}>{totalMarks} total marks · {durationMinutes} min</div>
         <div className="tp-palette-grid">
           {paletteQuestions.map((question, offset) => {
             const questionIndex = paletteStart + offset;
@@ -408,7 +459,7 @@ export function DailyPlayer({
         </div>
 
         {palettePageCount > 1 ? (
-          <>
+          <div className="tp-palette-pager">
             <div className="tp-pager tp-mt-12">
               <button
                 type="button"
@@ -445,7 +496,7 @@ export function DailyPlayer({
             <p className="tp-xs tp-faint tp-mt-8">
               Questions {paletteStart + 1}–{paletteEnd} of {paper.length}
             </p>
-          </>
+          </div>
         ) : null}
 
         <div className="tp-stack tp-gap-8 tp-mt-16">
@@ -462,7 +513,6 @@ export function DailyPlayer({
           Your selections are saved on this device until you submit.
         </p>
       </aside>
-      </div>
-    </>
+    </div>
   );
 }
