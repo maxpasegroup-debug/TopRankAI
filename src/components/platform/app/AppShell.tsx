@@ -124,7 +124,7 @@ export function AppShell({ user, exams, activeCode, unread, pro, children }: App
             <div className="tp-grow" style={{ minWidth: 0 }}>
               <div className="tp-small tp-row tp-gap-8" style={{ fontWeight: 650 }}>
                 <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name}</span>
-                {pro ? <span className="tp-pill tp-pill-brand" style={{ flexShrink: 0 }}>Pro</span> : null}
+                {pro ? <span className="tp-pro-badge" style={{ flexShrink: 0, padding: "4px 8px", fontSize: 9.5 }}><Icon name="crown" size={11} /> Pro</span> : null}
               </div>
               <div className="tp-xs tp-faint" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.email}</div>
             </div>

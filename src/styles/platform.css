@@ -3018,8 +3018,88 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 /* Subscription checkout stays centered, with safe scrolling on small screens. */
 .tp-subscription-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .tp-subscription-plans > section { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
-.tp-plan-features { padding-left: 20px; margin: 20px 0; flex: 1; }
-.tp-plan-features li + li { margin-top: 10px; }
+.tp-plan-card { position: relative; overflow: hidden; }
+.tp-plan-card-featured {
+  border-color: color-mix(in srgb, var(--tp-brand) 42%, var(--tp-line-strong));
+  box-shadow: 0 20px 48px -24px color-mix(in srgb, var(--tp-brand) 55%, transparent);
+}
+.tp-plan-card-featured::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--tp-brand), var(--tp-accent));
+}
+.tp-plan-name { font-size: 17px; margin-top: 16px; }
+.tp-plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 4px;
+  font-family: var(--tp-display);
+  font-size: 34px;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+.tp-plan-price span {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--tp-faint);
+}
+.tp-pro-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #e0a82e 70%, #ffffff 12%);
+  background: linear-gradient(135deg, #ffe08a, #f5b942);
+  color: #3b2a05;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: 0 4px 14px color-mix(in srgb, #f5b942 32%, transparent);
+  white-space: nowrap;
+}
+.tp-pro-badge svg { flex: 0 0 auto; }
+.tp-plan-summary { margin-bottom: 24px; }
+.tp-plan-summary-pro {
+  border-color: color-mix(in srgb, #f5b942 38%, var(--tp-line-strong));
+  background:
+    radial-gradient(480px 180px at 0% 0%, color-mix(in srgb, #f5b942 12%, transparent), transparent 70%),
+    var(--tp-surface);
+}
+.tp-plan-features { list-style: none; padding: 0; margin: 20px 0; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.tp-plan-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--tp-muted); }
+.tp-plan-features li svg { flex: 0 0 auto; margin-top: 1px; color: var(--tp-ok); }
+.tp-plan-features-compact { margin: 16px 0; gap: 8px; }
+.tp-plan-table th:first-child { text-align: left; font-weight: 600; color: var(--tp-ink-soft); }
+.tp-plan-table th:nth-child(2),
+.tp-plan-table td:nth-child(2) { width: 170px; }
+.tp-plan-table th:nth-child(3),
+.tp-plan-table td:nth-child(3) { width: 130px; }
+.tp-plan-table-pro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #f5b942;
+  font-weight: 750;
+}
+.tp-plan-yes {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--tp-ok-soft);
+  color: var(--tp-ok);
+}
+.tp-plan-no { color: var(--tp-faint); }
 .tp-payment-dialog { position: fixed; inset: 0; margin: auto; width: min(480px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; border: 1px solid var(--tp-line); border-radius: 24px; padding: 24px; background: var(--tp-surface); color: var(--tp-ink); box-shadow: 0 24px 80px #0005; }
 .tp-payment-dialog::backdrop { background: #08081299; backdrop-filter: blur(4px); }
 .tp-payment-dialog .tp-note { overflow-wrap: anywhere; }
@@ -3030,4 +3110,9 @@ details[open] > .tp-unit-head .tp-unit-chevron {
   .tp-subscription-plans { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .tp-payment-history { flex-direction: column; }
   .tp-payment-dialog { padding: 20px; }
+  .tp-plan-price { font-size: 30px; }
+  .tp-plan-table th:nth-child(2),
+  .tp-plan-table td:nth-child(2),
+  .tp-plan-table th:nth-child(3),
+  .tp-plan-table td:nth-child(3) { width: auto; }
 }

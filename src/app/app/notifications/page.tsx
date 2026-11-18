@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/platform/Icon";
 import { NotificationActions } from "@/components/platform/app/NotificationActions";
 import { requireAuth } from "@/server/auth/session";
 import { getNotifications } from "@/server/platform/insights";
+import { getSubscription } from "@/server/platform/subscriptions";
 import { formatDateTime } from "@/server/platform/utils";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ const iconForType: Record<string, IconName> = {
 
 export default async function NotificationsPage() {
   const user = await requireAuth();
+  await getSubscription(user.id);
   const [items, exams] = await Promise.all([getNotifications(user.id), getCandidateExams(user.id)]);
   const schedules = await Promise.all(exams.map((exam) => getPaperSchedule(user.id, exam)));
   const unread = items.filter((item) => !item.readAt).length;

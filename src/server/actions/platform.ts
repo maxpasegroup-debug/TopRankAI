@@ -286,7 +286,7 @@ export async function saveDailyWorkload(targetId: string, count: number, startMi
     if (!target) return { ok: false, message: "Choose an active exam first." };
     const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
     if (count > includedPapers(target.preparationLevel) && !mockMonthlyActive(subscription)) {
-      return { ok: false, message: "Visit Subscriptions and complete a mock checkout to add extra papers." };
+      return { ok: false, message: "Choose a Pro plan in Subscriptions to add extra papers." };
     }
     await tx.candidateExamTarget.update({
       where: { id: target.id },

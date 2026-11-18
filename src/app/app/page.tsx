@@ -3,6 +3,7 @@ import { Icon } from "@/components/platform/Icon";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
 import { requireAuth } from "@/server/auth/session";
 import { getActiveExam } from "@/server/platform/active";
+import { getSubscription } from "@/server/platform/subscriptions";
 import { getDashboardData } from "@/server/platform/candidate";
 import { readPaperMeta } from "@/server/platform/daily-exam";
 import { getReadiness } from "@/server/platform/insights";
@@ -22,6 +23,7 @@ function greeting() {
 
 export default async function DashboardPage() {
   const user = await requireAuth();
+  await getSubscription(user.id);
   const active = await getActiveExam(user.id);
   const [data, readiness] = await Promise.all([
     getDashboardData(user.id, active?.code ?? null),

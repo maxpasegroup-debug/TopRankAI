@@ -29,11 +29,11 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Can I schedule several papers at different times?",
-    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, and the mock Pro plan raises that to eight.",
+    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, and Pro raises that to eight.",
   },
   {
-    q: "What does the mock Pro plan include?",
-    a: "Choose monthly (₹299) or yearly (₹2,999) test pricing in the workspace Subscriptions tab to schedule up to eight papers per day for each exam. You can simulate success or failure, view payment history and renew manually. It is a test checkout: there is no payment gateway, no card data is collected and no money is charged. It does not promise rank, admission or any outcome.",
+    q: "What does Pro include?",
+    a: "Pro raises the daily paper limit to eight for every exam in your plan, including extra official-pattern mocks beyond your level allowance. Everything else stays available on Free: the learning centre, planner, revision queue, analytics, paper history, AI-assisted notes and deterministic scoring. Monthly is ₹299 and yearly is ₹2,999. No card details are collected and renewal is manual — extra time is added after your current expiry.",
   },
   {
     q: "What is the learning centre?",
@@ -61,7 +61,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is the platform free?",
-    a: "Your level includes one to four daily papers, plus access to the learning centre and analytics. To schedule more papers than your level includes, choose a mock monthly or yearly Pro subscription in your workspace. It supports up to eight papers per day and takes no payment.",
+    a: "Free includes one to four daily papers depending on your level, plus the learning centre, planner, revision queue and analytics. A monthly or yearly Pro plan raises that to eight papers a day for each exam. Pro is activated from Subscriptions and does not renew automatically.",
   },
   {
     q: "How do I report a wrong question or date?",

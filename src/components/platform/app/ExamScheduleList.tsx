@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Icon } from "../Icon";
 import { toast } from "../AppToaster";
 import { saveDailyWorkload } from "@/server/actions/platform";
 import { MAX_DAILY_PAPERS } from "@/shared/daily-workload";
@@ -59,7 +60,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
         <div className="tp-row tp-gap-8 tp-wrap">
           <strong>{row.name}</strong>
           {active ? <span className="tp-pill tp-pill-brand">Active</span> : null}
-          {row.monthlyUntil ? <span className="tp-pill tp-pill-ok">Pro · mock</span> : null}
+          {row.monthlyUntil ? <span className="tp-pro-badge" style={{ padding: "4px 8px", fontSize: 9.5 }}><Icon name="crown" size={11} /> Pro</span> : null}
         </div>
         <div className="tp-xs tp-faint" style={{ marginTop: 3 }}>
           {row.durationMinutes} min official paper · starts {start} IST
@@ -120,7 +121,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
           </button>
         </div>
         {needsMonthly ? (
-          <span className="tp-xs tp-faint">Pro · mock checkout — no payment gateway, no money charged.</span>
+          <span className="tp-xs tp-faint">Extra papers across all your exams, activated from Subscriptions.</span>
         ) : null}
       </div>
     </div>

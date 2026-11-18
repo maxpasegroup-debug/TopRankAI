@@ -2,70 +2,170 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Icon } from "../Icon";
+import { toast } from "../AppToaster";
 import { mockCheckout } from "@/server/actions/subscriptions";
 import { MOCK_PLANS, formatPrice, type MockPlan } from "@/shared/subscriptions";
 
-export function SubscriptionCheckout({ active, schedule }: {
+type CheckoutResult = { ok: boolean; message: string; paymentId?: string } | null;
+
+const planFeatures = [
+  "Up to 8 full papers a day for every exam in your plan",
+  "Extra official-pattern mocks beyond your level allowance",
+  "Flexible start times with the built-in recovery breaks",
+  "Full solutions, analytics, planner and revision queue",
+  "Pro badge on your profile and renewal reminders",
+];
+
+export function SubscriptionCheckout({ active, currentPlan, schedule, yearlySaving }: {
   active: boolean;
+  currentPlan: MockPlan | null;
   schedule?: { targetId: string; count: number; startMinutes: number; name: string };
+  yearlySaving: number;
 }) {
+  const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
-  const [plan, setPlan] = useState<MockPlan>("MOCK_MONTHLY");
-  const [id, setId] = useState("");
-  const [result, setResult] = useState<{ ok: boolean; message: string; paymentId?: string } | null>(null);
+  const [plan, setPlan] = useState<MockPlan>(currentPlan ?? "MOCK_YEARLY");
+  const [result, setResult] = useState<CheckoutResult>(null);
   const [pending, startTransition] = useTransition();
 
-  function pay(outcome: "SUCCESS" | "FAILED") {
+  function open(next: MockPlan) {
+    setPlan(next);
+    setResult(null);
+    dialog.current?.showModal();
+  }
+
+  function close() {
+    if (!pending) dialog.current?.close();
+  }
+
+  function activate() {
+    const toastId = toast.loading("Activating your plan…");
     startTransition(async () => {
       try {
-        setResult(await mockCheckout({ id, plan, outcome, schedule }));
+        const response = await mockCheckout({ id: crypto.randomUUID(), plan, outcome: "SUCCESS", schedule });
+        setResult(response);
+        if (response.ok) {
+          toast.success("Pro is active. Your extra papers are unlocked.", { id: toastId });
+          router.refresh();
+        } else {
+          toast.error(response.message, { id: toastId });
+        }
       } catch {
-        setResult({ ok: false, message: "Connection interrupted. Retry this checkout to safely check the same payment; it will not extend your plan twice." });
+        setResult({ ok: false, message: "Connection interrupted. Please try again." });
+        toast.error("Connection interrupted. Please try again.", { id: toastId });
       }
     });
   }
 
-  return <>
-    {schedule ? <div className="tp-note tp-mb-24">After a successful checkout, <strong>{schedule.name}</strong> will use <strong>{schedule.count} papers/day</strong> starting at {String(Math.floor(schedule.startMinutes / 60)).padStart(2, "0")}:{String(schedule.startMinutes % 60).padStart(2, "0")} IST. Your requested schedule is saved only on success.</div> : null}
-    <div className="tp-subscription-plans">
-      {Object.entries(MOCK_PLANS).map(([code, details]) => <section className="tp-card tp-card-pad" key={code}>
-        <span className="tp-pill tp-pill-brand">Pro · {details.label}</span>
-        <h2 style={{ marginTop: 16 }}>{formatPrice(details.amountPaise)}<span className="tp-small tp-muted"> / {code === "MOCK_MONTHLY" ? "month" : "year"}</span></h2>
-        <p className="tp-small tp-muted">{code === "MOCK_YEARLY" ? "Save ₹589 compared with 12 monthly payments." : "One calendar month of extra-paper access."}</p>
-        <ul className="tp-plan-features">
-          <li>Choose up to 8 full papers per day for each selected exam.</li>
-          <li>Same official paper format and marking rules as your daily exams.</li>
-          <li>Flexible start times and the existing 45-minute breaks.</li>
-          <li>Preparation level reflects your chosen paper count.</li>
-          <li>Pro badge, payment history and in-app renewal reminders.</li>
-        </ul>
-        <button className="tp-btn tp-btn-block" onClick={() => {
-          setPlan(code as MockPlan); setId(crypto.randomUUID()); setResult(null); dialog.current?.showModal();
-        }}>{active ? "Renew" : "Choose"} {details.label.toLowerCase()}</button>
-      </section>)}
-    </div>
-    <p className="tp-small tp-muted tp-mt-16">Test prices only. No gateway, bank details, real charges or automatic renewal. Renewing adds time after your current expiry, including when you switch billing periods. Existing learning, planner and review features stay available on Free.</p>
-    <dialog ref={dialog} className="tp-payment-dialog" aria-labelledby="checkout-title" onCancel={(event) => { if (pending) event.preventDefault(); }}>
-      <div className="tp-row-between tp-gap-12">
-        <h2 id="checkout-title">Mock checkout</h2>
-        <button className="tp-btn tp-btn-ghost tp-btn-sm" aria-label="Close checkout" disabled={pending} onClick={() => dialog.current?.close()}>✕</button>
+  return (
+    <section className="tp-mb-24">
+      <div className="tp-row-between tp-gap-12 tp-wrap">
+        <div>
+          <h2 style={{ fontSize: 19 }}>Choose a plan</h2>
+          <p className="tp-small tp-muted" style={{ marginTop: 4 }}>
+            Same papers and scoring you already use — Pro simply lets you run more of them each day.
+          </p>
+        </div>
+        {active ? <span className="tp-pill tp-pill-ok"><Icon name="crown" size={13} /> Pro active</span> : null}
       </div>
-      <p className="tp-muted tp-mt-16">Pro {MOCK_PLANS[plan].label} · {formatPrice(MOCK_PLANS[plan].amountPaise)}</p>
-      <p className="tp-small tp-mt-16">This is a test payment. Choose an outcome below. No money will be charged.</p>
-      {result ? <div className="tp-note tp-mt-16" role={result.ok ? "status" : "alert"}>
-        <strong>{result.ok ? "Payment successful" : "Payment error"}</strong>
-        <p>{result.message}</p>
-        {result.paymentId ? <p className="tp-xs tp-faint">Reference: {result.paymentId}</p> : null}
-      </div> : null}
-      {result?.ok ? <div className="tp-stack tp-gap-12 tp-mt-24">
-        <Link href="/app/daily" className="tp-btn" onClick={() => dialog.current?.close()}>Go to daily exams</Link>
-        <button className="tp-btn tp-btn-ghost" onClick={() => dialog.current?.close()}>View subscription & history</button>
-      </div> : <div className="tp-stack tp-gap-12 tp-mt-24">
-        {result?.paymentId ? <button className="tp-btn" onClick={() => { setId(crypto.randomUUID()); setResult(null); }}>Try another mock payment</button> : <>
-          <button className="tp-btn" disabled={pending} onClick={() => pay("SUCCESS")}>{pending ? "Processing…" : "Simulate successful payment"}</button>
-          <button className="tp-btn tp-btn-ghost" disabled={pending} onClick={() => pay("FAILED")}>Simulate payment failure</button>
-        </>}
-      </div>}
-    </dialog>
-  </>;
+
+      {schedule ? (
+        <div className="tp-note tp-mt-16">
+          After activation, <strong>{schedule.name}</strong> will run <strong>{schedule.count} papers a day</strong> starting at{" "}
+          {String(Math.floor(schedule.startMinutes / 60)).padStart(2, "0")}:{String(schedule.startMinutes % 60).padStart(2, "0")} IST.
+          Your requested schedule is saved only when the plan is activated.
+        </div>
+      ) : null}
+
+      <div className="tp-subscription-plans tp-mt-16">
+        {Object.entries(MOCK_PLANS).map(([code, details]) => {
+          const planCode = code as MockPlan;
+          const yearly = planCode === "MOCK_YEARLY";
+          return (
+            <section className={`tp-card tp-card-pad tp-plan-card ${yearly ? "tp-plan-card-featured" : ""}`} key={code}>
+              <div className="tp-row-between tp-gap-8 tp-wrap">
+                <span className={`tp-pro-badge ${yearly ? "tp-pro-badge-gold" : ""}`}><Icon name="crown" size={13} /> Pro</span>
+                {yearly
+                  ? <span className="tp-pill tp-pill-ok">Save {formatPrice(yearlySaving)}</span>
+                  : currentPlan === planCode ? <span className="tp-pill tp-pill-ok">Current plan</span> : null}
+              </div>
+
+              <h3 className="tp-plan-name">{details.label}</h3>
+              <div className="tp-plan-price">
+                {formatPrice(details.amountPaise)}
+                <span>/ {yearly ? "year" : "month"}</span>
+              </div>
+              <p className="tp-small tp-muted">
+                {yearly
+                  ? `${formatPrice(Math.round(details.amountPaise / 12))} a month, billed once a year.`
+                  : "A full month of extra papers across every exam in your plan."}
+              </p>
+
+              <ul className="tp-plan-features">
+                {planFeatures.map((feature) => (
+                  <li key={feature}><Icon name="check" size={14} /> <span>{feature}</span></li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                className={`tp-btn tp-btn-block ${yearly ? "tp-btn-accent" : ""}`}
+                onClick={() => open(planCode)}
+              >
+                {active ? (currentPlan === planCode ? "Extend this plan" : "Switch and extend") : "Choose"} {details.label.toLowerCase()}
+                <Icon name="arrow-right" size={15} />
+              </button>
+            </section>
+          );
+        })}
+      </div>
+
+      <p className="tp-small tp-muted tp-mt-16">
+        Extra time is added after your current expiry. No card details are collected and no automatic renewal is set up.
+      </p>
+
+      <dialog ref={dialog} className="tp-payment-dialog" aria-labelledby="checkout-title" onCancel={(event) => { if (pending) event.preventDefault(); }}>
+        <div className="tp-row-between tp-gap-12">
+          <h2 id="checkout-title" style={{ fontSize: 20 }}>{result?.ok ? "Pro activated" : `Activate Pro ${MOCK_PLANS[plan].label}`}</h2>
+          <button className="tp-btn tp-btn-ghost tp-btn-sm" aria-label="Close" disabled={pending} onClick={close}>
+            <Icon name="x" size={15} />
+          </button>
+        </div>
+
+        {result?.ok ? (
+          <div className="tp-stack tp-gap-16 tp-mt-16">
+            <span className="tp-pro-badge"><Icon name="crown" size={14} /> Pro {MOCK_PLANS[plan].label}</span>
+            <p className="tp-small tp-muted">{result.message}</p>
+            <div className="tp-stack tp-gap-10">
+              <Link href="/app/daily" className="tp-btn" onClick={close}>Start a paper</Link>
+              <button type="button" className="tp-btn tp-btn-ghost" onClick={close}>Stay on subscriptions</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="tp-row-between tp-gap-12 tp-mt-16">
+              <span className="tp-small tp-muted">Pro {MOCK_PLANS[plan].label}</span>
+              <strong>{formatPrice(MOCK_PLANS[plan].amountPaise)}</strong>
+            </div>
+            <ul className="tp-plan-features tp-plan-features-compact">
+              <li><Icon name="check" size={14} /> <span>Up to 8 papers a day for each exam</span></li>
+              <li><Icon name="check" size={14} /> <span>All your existing study tools stay available</span></li>
+              <li><Icon name="check" size={14} /> <span>Pro badge and renewal reminders</span></li>
+            </ul>
+            <p className="tp-xs tp-faint">Plan access begins immediately and runs until the same date next {plan === "MOCK_YEARLY" ? "year" : "month"}.</p>
+            {result && !result.ok ? <p className="tp-small" role="alert" style={{ color: "var(--tp-danger)" }}>{result.message}</p> : null}
+            <div className="tp-row tp-gap-10 tp-wrap tp-mt-16">
+              <button type="button" className="tp-btn" disabled={pending} onClick={activate}>
+                {pending ? "Activating…" : `Activate ${MOCK_PLANS[plan].label.toLowerCase()}`}
+                {pending ? null : <Icon name="crown" size={15} />}
+              </button>
+              <button type="button" className="tp-btn tp-btn-ghost" disabled={pending} onClick={close}>Cancel</button>
+            </div>
+          </>
+        )}
+      </dialog>
+    </section>
+  );
 }

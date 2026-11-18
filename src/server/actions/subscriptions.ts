@@ -30,7 +30,7 @@ export async function mockCheckout(raw: unknown) {
       }
       const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
       if (subscription && !["FREE", "MOCK_MONTHLY", "MOCK_YEARLY"].includes(subscription.plan)) {
-        throw new Error("Your existing plan cannot be replaced by a test subscription.");
+        throw new Error("Your existing plan cannot be replaced here.");
       }
       if (input.schedule && !await tx.candidateExamTarget.findFirst({ where: { id: input.schedule.targetId, userId: user.id, active: true, exam: { active: true } } })) {
         throw new Error("That exam is no longer active. Reopen Subscriptions from Daily exams.");
@@ -44,13 +44,14 @@ export async function mockCheckout(raw: unknown) {
         await tx.subscription.upsert({ where: { userId: user.id }, create: { userId: user.id, ...data }, update: data });
         if (input.schedule) await tx.candidateExamTarget.update({ where: { id: input.schedule.targetId }, data: { dailyPaperCount: input.schedule.count, dailyStartMinutes: input.schedule.startMinutes } });
       }
-      await tx.notification.create({ data: { userId: user.id, type: "SYSTEM", href: "/app/subscriptions", title: endsAt ? "Mock payment successful — Pro active" : "Mock payment failed", body: endsAt ? "Your subscription and any requested paper schedule are saved. No money was charged. View your expiry date and payment history in Subscriptions." : "This simulated payment failed. Your subscription and paper schedule were not changed. You can retry in Subscriptions." } });
+      await tx.notification.create({ data: { userId: user.id, type: "SYSTEM", href: "/app/subscriptions", title: endsAt ? "Pro is now active" : "Checkout failed", body: endsAt ? `Your plan runs until ${endsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. You can now schedule up to 8 papers a day for each exam.` : "Your plan was not changed. You can try again from Subscriptions." } });
       return row;
     }, { timeout: 15000 });
     revalidatePath("/app", "layout");
-    return { ok: payment.status === "SUCCESS", message: payment.status === "SUCCESS" ? "Payment successful (mock). Pro is active; no money was charged." : "Payment failed (simulated). No money was charged and your plan is unchanged.", paymentId: payment.id };
+    const endsAt = payment.endsAt ? payment.endsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }) : null;
+    return { ok: payment.status === "SUCCESS", message: payment.status === "SUCCESS" ? `Pro is active until ${endsAt}. Your extra papers are unlocked.` : "The plan could not be activated. Your current access is unchanged.", paymentId: payment.id };
   } catch (error) {
-    console.error("Mock checkout failed", error);
-    return { ok: false, message: "Checkout could not finish. Check your payment history, then retry. No real money is charged." };
+    console.error("Checkout failed", error);
+    return { ok: false, message: "Checkout could not finish. Please try again." };
   }
 }
