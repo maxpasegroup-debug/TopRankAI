@@ -22,7 +22,7 @@ const answerSchema = z.array(z.object({
 
 type Breakdown = Record<string, { total: number; correct: number; incorrect: number; unanswered: number; marks: number }>;
 
-export type PaperMode = "FULL_MOCK" | "PRACTICE_SET";
+export type PaperMode = "FULL_MOCK" | "PRACTICE_SET" | "CUSTOM_TEST";
 
 export type PaperMeta = {
   mode: PaperMode;
@@ -179,7 +179,7 @@ function asNumber(value: unknown, fallback = 0) {
 export function readPaperMeta(snapshot: unknown): PaperMeta | null {
   if (!snapshot || typeof snapshot !== "object") return null;
   const raw = snapshot as Record<string, unknown>;
-  const mode = raw.mode === "FULL_MOCK" ? "FULL_MOCK" : raw.mode === "PRACTICE_SET" ? "PRACTICE_SET" : null;
+  const mode = raw.mode === "FULL_MOCK" ? "FULL_MOCK" : raw.mode === "PRACTICE_SET" ? "PRACTICE_SET" : raw.mode === "CUSTOM_TEST" ? "CUSTOM_TEST" : null;
   if (!mode) return null;
   const coverage = Array.isArray(raw.sectionCoverage)
     ? raw.sectionCoverage.flatMap((entry) => {
@@ -196,6 +196,11 @@ export function readPaperMeta(snapshot: unknown): PaperMeta | null {
     officialDurationMinutes: asNumber(raw.officialDurationMinutes),
     sectionCoverage: coverage,
   };
+}
+
+/** Custom tests are outside the daily schedule, so slot checks do not apply. */
+export function isCustomPaper(snapshot: unknown) {
+  return Boolean(snapshot && typeof snapshot === "object" && (snapshot as Record<string, unknown>).mode === "CUSTOM_TEST");
 }
 
 function readPaperQuestions(snapshot: unknown): PaperPlanQuestion[] {
@@ -546,7 +551,13 @@ export async function ensureDailyExam(userId: string, exam: CandidateExam, slot 
   }
 
   const missed = await prisma.dailyExam.updateMany({
-    where: { userId, examId: exam.examId, scheduledDate: { lt: today }, status: { in: ["SCHEDULED", "IN_PROGRESS"] } },
+    where: {
+      userId,
+      examId: exam.examId,
+      scheduledDate: { lt: today },
+      status: { in: ["SCHEDULED", "IN_PROGRESS"] },
+      NOT: { configSnapshot: { path: ["mode"], equals: "CUSTOM_TEST" } },
+    },
     data: { status: "MISSED", missedAt: new Date() },
   });
   if (missed.count > 0) {
@@ -619,7 +630,9 @@ export async function startDailyExam(userId: string, dailyExamId: string) {
 
   const exam = (await getCandidateExams(userId)).find((entry) => entry.examId === dailyExam.examId);
   if (!exam) throw new Error("This exam is outside your active plan.");
-  await checkPaperSlot(userId, exam, dailyExam.slot, dailyExam.scheduledDate);
+  if (!isCustomPaper(dailyExam.configSnapshot)) {
+    await checkPaperSlot(userId, exam, dailyExam.slot, dailyExam.scheduledDate);
+  }
   const attempt = await prisma.examAttempt.upsert({
     where: { dailyExamId: dailyExam.id },
     update: {},
@@ -849,7 +862,7 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
       where: { id: attempt.dailyExamId },
       data: { status: "SUBMITTED", submittedAt },
     });
-    if (target) {
+    if (target && !isCustomPaper(attempt.dailyExam.configSnapshot)) {
       const afterBreak = new Date(submittedAt.getTime() + EXAM_BREAK_MINUTES * 60_000);
       const nextToday = attempt.dailyExam.slot + 1 < target.papersPerDay &&
         localDateKey(afterBreak) === recordDate.toISOString().slice(0, 10);
@@ -1099,7 +1112,7 @@ export async function getAttemptResult(userId: string, attemptId: string) {
 
 export async function getDailyHistory(userId: string, examId: string) {
   return prisma.dailyExam.findMany({
-    where: { userId, examId },
+    where: { userId, examId, slot: { lt: 1000 } },
     orderBy: [{ scheduledDate: "desc" }, { slot: "asc" }],
     take: 30,
     include: { attempt: { select: { id: true, status: true, accuracy: true, obtainedMarks: true, totalMarks: true, submittedAt: true, correctCount: true, incorrectCount: true, unansweredCount: true } } },

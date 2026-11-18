@@ -53,6 +53,7 @@ export type IconName =
   | "upload"
   | "database"
   | "cpu"
+  | "print"
   | "crown";
 
 const paths: Record<IconName, string> = {
@@ -108,6 +109,7 @@ const paths: Record<IconName, string> = {
   upload: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12",
   database: "M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3",
   cpu: "M6 6h12v12H6zM9 1v3m6-3v3M9 20v3m6-3v3M1 9h3m-3 6h3m16-6h3m-3 6h3M10 10h4v4h-4z",
+  print: "M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z",
   crown: "M3 8.5 7.5 12 12 4l4.5 8L21 8.5 19 18H5L3 8.5zM5 21h14",
 };
 

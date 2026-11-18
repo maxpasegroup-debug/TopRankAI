@@ -101,22 +101,31 @@ export async function assertExamTarget(userId: string, examId: string) {
 }
 
 export const computeStreak = cache(async (userId: string, examId?: string): Promise<number> => {
-  const records = await prisma.performanceRecord.findMany({
-    where: { userId, testsAttended: { gt: 0 }, ...(examId ? { examId } : {}) },
-    orderBy: { recordDate: "desc" },
-    take: 400,
-    select: { recordDate: true },
-  });
+  const [records, freezes] = await Promise.all([
+    prisma.performanceRecord.findMany({
+      where: { userId, testsAttended: { gt: 0 }, ...(examId ? { examId } : {}) },
+      orderBy: { recordDate: "desc" },
+      take: 400,
+      select: { recordDate: true },
+    }),
+    prisma.streakFreeze.findMany({
+      where: { userId, ...(examId ? { examId } : {}) },
+      select: { freezeDate: true },
+    }),
+  ]);
   if (!records.length) return 0;
   const days = new Set(records.map((record) => record.recordDate.toISOString().slice(0, 10)));
+  const frozen = new Set(freezes.map((freeze) => freeze.freezeDate.toISOString().slice(0, 10)));
   const today = todayDate();
   const todayKey = today.toISOString().slice(0, 10);
   const yesterdayKey = addDays(today, -1).toISOString().slice(0, 10);
-  if (!days.has(todayKey) && !days.has(yesterdayKey)) return 0;
+  if (!days.has(todayKey) && !days.has(yesterdayKey) && !frozen.has(yesterdayKey)) return 0;
   let cursor = days.has(todayKey) ? today : addDays(today, -1);
   let streak = 0;
-  while (days.has(cursor.toISOString().slice(0, 10))) {
-    streak += 1;
+  while (true) {
+    const key = cursor.toISOString().slice(0, 10);
+    if (days.has(key)) streak += 1;
+    else if (!frozen.has(key)) break;
     cursor = addDays(cursor, -1);
     if (streak > 400) break;
   }
@@ -144,7 +153,7 @@ export async function getDashboardData(userId: string, examCode?: string | null)
 
   const [dailyExams, recentAttempts, streaks, revisionDue, goals, unreadNotifications, syllabus, nextEvent, earnedAchievements, totalAchievements, performance] = await Promise.all([
     prisma.dailyExam.findMany({
-      where: { userId, examId: selected.examId, scheduledDate: today },
+      where: { userId, examId: selected.examId, scheduledDate: today, slot: { lt: 1000 } },
       orderBy: { slot: "asc" },
       include: { attempt: { select: { id: true, status: true, obtainedMarks: true, totalMarks: true, accuracy: true } } },
     }),

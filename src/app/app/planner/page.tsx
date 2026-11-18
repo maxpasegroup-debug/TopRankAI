@@ -3,9 +3,12 @@ import { Icon } from "@/components/platform/Icon";
 import { PlanGenerator } from "@/components/platform/app/PlanGenerator";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
 import { RevisionActions } from "@/components/platform/app/RevisionActions";
+import { StreakFreezeCard } from "@/components/platform/app/StreakFreezeCard";
+import { ProUpsell } from "@/components/platform/app/ProUpsell";
 import { requireAuth } from "@/server/auth/session";
 import { getActiveExam } from "@/server/platform/active";
 import { getPlannerData } from "@/server/platform/insights";
+import { getFreezeState } from "@/server/platform/streak-freeze";
 import { formatDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +31,10 @@ export default async function PlannerPage() {
     );
   }
 
-  const plan = await getPlannerData(user.id, exam);
+  const [plan, freeze] = await Promise.all([
+    getPlannerData(user.id, exam),
+    getFreezeState(user.id, exam.examId),
+  ]);
   const goalsDone = plan.goals.filter((goal) => goal.completedAt).length;
 
   return (
@@ -44,6 +50,15 @@ export default async function PlannerPage() {
           {plan.daysToExam !== null ? <span className="tp-pill"><Icon name="calendar" size={14} /> {plan.daysToExam} days to target</span> : <span className="tp-pill">Target date not set</span>}
         </div>
       </div>
+
+      {!freeze.pro ? (
+        <ProUpsell
+          compact
+          title="Plan further with Pro"
+          body="Run up to eight papers a day, build custom tests and protect a missed day with two streak freezes a month."
+          points={["Up to 8 daily papers per exam", "Custom tests and weekly report card", "2 streak freezes a month"]}
+        />
+      ) : null}
 
       <div className="tp-dash">
         <div className="tp-stack tp-gap-20">
@@ -140,6 +155,23 @@ export default async function PlannerPage() {
         </div>
 
         <aside className="tp-stack tp-gap-20">
+          <StreakFreezeCard
+            state={{
+              code: exam.code,
+              pro: freeze.pro,
+              allowance: freeze.allowance,
+              used: freeze.used,
+              remaining: freeze.remaining,
+              frozenDates: freeze.frozenDates.map((item) => ({
+                date: formatDate(item.date, { day: "numeric", month: "short" }),
+                createdAt: formatDate(item.createdAt, { day: "numeric", month: "short" }),
+              })),
+              yesterday: formatDate(freeze.yesterday, { day: "numeric", month: "short" }),
+              canProtectYesterday: freeze.canProtectYesterday,
+              reason: freeze.reason,
+            }}
+          />
+
           <section className="tp-card tp-card-pad">
             <h3 style={{ fontSize: 16, marginBottom: 12 }}>Weakest topics</h3>
             {plan.weakest.length ? (

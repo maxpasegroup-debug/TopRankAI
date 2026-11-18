@@ -33,7 +33,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "What does Pro include?",
-    a: "Pro raises the daily paper limit to eight for every exam in your plan, including extra official-pattern mocks beyond your level allowance. Everything else stays available on Free: the learning centre, planner, revision queue, analytics, paper history, AI-assisted notes and deterministic scoring. Monthly is ₹299 and yearly is ₹2,999. No card details are collected and renewal is manual — extra time is added after your current expiry.",
+    a: "Pro raises the daily paper limit to eight for every exam in your plan and adds the practice tools: custom tests by subject, topic and difficulty (up to five a day), advanced analytics with negative-mark loss, time per question and subject momentum, a printable weekly report card, a formula and mistake revision sheet, and two streak freezes a calendar month. Everything you already use stays available on Free: the learning centre, planner, revision queue, core analytics, paper history, AI-assisted notes and deterministic scoring. Monthly is ₹299 and yearly is ₹2,999. Checkout accepts card or UPI details; the card number and CVV are never stored. Renewal is manual — extra time is added after your current expiry.",
   },
   {
     q: "What is the learning centre?",
@@ -61,7 +61,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is the platform free?",
-    a: "Free includes one to four daily papers depending on your level, plus the learning centre, planner, revision queue and analytics. A monthly or yearly Pro plan raises that to eight papers a day for each exam. Pro is activated from Subscriptions and does not renew automatically.",
+    a: "Free includes one to four daily papers depending on your level, plus the learning centre, planner, revision queue and core analytics. A monthly or yearly Pro plan raises that to eight papers a day for each exam and adds custom tests, advanced analytics, the weekly report card, the formula and mistake sheet and two streak freezes a month. Pro is activated from Subscriptions by card or UPI and does not renew automatically.",
   },
   {
     q: "How do I report a wrong question or date?",

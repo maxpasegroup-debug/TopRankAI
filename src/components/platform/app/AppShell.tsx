@@ -18,6 +18,7 @@ const navGroups: { label: string; items: { href: string; label: string; icon: Ic
     items: [
       { href: "/app", label: "Dashboard", icon: "compass", exact: true },
       { href: "/app/daily", label: "Daily exams", icon: "play" },
+      { href: "/app/practice", label: "Custom tests", icon: "target" },
       { href: "/app/learn", label: "Learning centre", icon: "book" },
       { href: "/app/planner", label: "Planner", icon: "layers" },
     ],
@@ -26,6 +27,8 @@ const navGroups: { label: string; items: { href: string; label: string; icon: Ic
     label: "Progress",
     items: [
       { href: "/app/analytics", label: "Analytics", icon: "chart" },
+      { href: "/app/reports/weekly", label: "Report card", icon: "pulse" },
+      { href: "/app/reports/revision", label: "Revision sheet", icon: "pen" },
       { href: "/app/calendar", label: "Calendar", icon: "calendar" },
       { href: "/app/achievements", label: "Achievements", icon: "trophy" },
     ],
@@ -102,7 +105,7 @@ export function AppShell({ user, exams, activeCode, unread, pro, children }: App
         </Link>
 
         <nav className="tp-side-nav" aria-label="Workspace">
-          {navGroups.map((group) => (
+          {navGroups.slice(0, 2).map((group) => (
             <div key={group.label}>
               <div className="tp-side-label">{group.label}</div>
               {group.items.map((item) => (
@@ -113,6 +116,17 @@ export function AppShell({ user, exams, activeCode, unread, pro, children }: App
                 </Link>
               ))}
             </div>
+          ))}
+        </nav>
+
+        <nav className="tp-side-account" aria-label="Account">
+          <div className="tp-side-label">Account</div>
+          {navGroups[2].items.map((item) => (
+            <Link key={item.href} className="tp-side-link" href={item.href} data-active={isActive(item.href, item.exact)} aria-current={isActive(item.href, item.exact) ? "page" : undefined}>
+              <Icon name={item.icon} />
+              <span>{item.label}</span>
+              {item.href === "/app/notifications" && unread > 0 ? <span className="tp-count">{unread > 99 ? "99+" : unread}</span> : null}
+            </Link>
           ))}
         </nav>
 

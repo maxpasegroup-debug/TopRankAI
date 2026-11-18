@@ -15,7 +15,8 @@ const loop: { icon: IconName; title: string; body: string; points: string[] }[] 
     points: [
       "A separate preparation level per exam — Beginner, Intermediate, Advanced or Extreme.",
       "Beginner includes one paper a day, Intermediate two, Advanced three and Extreme four. You can schedule up to eight and choose an IST start time for each exam.",
-      "Papers above your level allowance need a monthly or yearly Pro plan from Subscriptions. Each level also sets a daily study target.",
+      "Papers above your level allowance need a monthly or yearly Pro plan from Subscriptions. Pro also adds custom tests, advanced analytics, a weekly report card, a formula and mistake sheet and two streak freezes a month.",
+      "Each level also sets a daily study target.",
       "You can change exams, levels, start times and study minutes later from your workspace.",
     ],
   },
@@ -44,6 +45,7 @@ const loop: { icon: IconName; title: string; body: string; points: string[] }[] 
     title: "4 · Study and revise",
     body: "Each wrong answer enters the revision queue with a due date based on your performance.",
     points: [
+      "Every wrong answer enters the revision queue, and Pro can also print a sheet of the last 30 days of mistakes with the exam's published formulas.",
       "Topic progress is tracked as not started, learning, completed or needs revision.",
       "Choose Revise topic in the planner to open the exact syllabus topic behind a mistake — not the old exam result.",
       "The learning centre holds every official unit, chapter and topic, with the official source passage, your saved topics and AI-assisted notes where available.",

@@ -9,6 +9,7 @@ import { requireAuth } from "@/server/auth/session";
 import { getTopicView } from "@/server/platform/insights";
 import { getOfficialSyllabusExcerpt, getSyllabusDocuments } from "@/server/platform/syllabus-sources";
 import { getOfficialStudyResources } from "@/server/platform/study-resources";
+import { formulaText } from "@/server/platform/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Topic" };
@@ -194,7 +195,7 @@ export default async function TopicPage({ params, searchParams }: { params: Prom
             {topic.formulas ? (
               <>
                 <h3 style={{ fontSize: 15, margin: "22px 0 8px" }}>Formulas</h3>
-                <div className="tp-formula">{topic.formulas}</div>
+                <div className="tp-formula">{formulaText(topic.formulas)}</div>
               </>
             ) : null}
             {topic.examples ? (

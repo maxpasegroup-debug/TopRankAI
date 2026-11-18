@@ -5,6 +5,8 @@ import { prisma } from "@/server/db";
 import { getActiveExam } from "@/server/platform/active";
 import { getSyllabusCompletion } from "@/server/platform/candidate";
 import { getSyllabusView } from "@/server/platform/insights";
+import { getProSubscription } from "@/server/platform/pro";
+import { ProUpsell } from "@/components/platform/app/ProUpsell";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Learning centre" };
@@ -37,6 +39,7 @@ export default async function LearnPage({
   }
 
   const [view, completion] = await Promise.all([getSyllabusView(user.id, exam), getSyllabusCompletion(user.id, exam.examId)]);
+  const pro = Boolean(await getProSubscription(user.id));
   const officialSources = await prisma.syllabusSource.findMany({
     where: { examId: exam.examId, status: "IMPORTED" },
     orderBy: { fetchedAt: "desc" },
@@ -96,6 +99,15 @@ export default async function LearnPage({
           <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/app/planner">Planner</Link>
         </div>
       </div>
+
+      {!pro ? (
+        <ProUpsell
+          compact
+          title="Turn study into marks"
+          body="Finish a chapter, then build a custom test on it. Pro adds custom tests, printable formula and mistake sheets and a weekly report card."
+          points={["Custom tests on any topic", "Formula and mistake sheets", "Weekly report card"]}
+        />
+      ) : null}
 
       <form className="tp-row tp-gap-8 tp-wrap tp-mb-20" action="/app/learn" method="get" role="search">
         <label className="tp-sr" htmlFor="topic-search">Search topics</label>

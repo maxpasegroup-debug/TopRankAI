@@ -2,14 +2,15 @@ import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { ExamScheduleList } from "@/components/platform/app/ExamScheduleList";
 import { NextPaperNotice } from "@/components/platform/app/NextPaperNotice";
+import { ProUpsell } from "@/components/platform/app/ProUpsell";
 import { getPaperSchedule } from "@/server/platform/paper-schedule";
 import { EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
 import { requireAuth } from "@/server/auth/session";
 import { getCandidateExams, getSelectedExam, computeStreak } from "@/server/platform/candidate";
 import { getActiveExam } from "@/server/platform/active";
-import { getDailyHistory, readPaperMeta } from "@/server/platform/daily-exam";
-import { formatDate, formatDateTime, todayDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
+import { getProSubscription } from "@/server/platform/pro";
+import { getDailyHistory, readPaperMeta } from "@/server/platform/daily-exam";import { formatDate, formatDateTime, todayDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Daily exams" };
@@ -60,6 +61,7 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
   }
 
   const day = todayDate();
+  const pro = Boolean(await getProSubscription(user.id));
   const [history, schedule, allExams, streak] = await Promise.all([
     getDailyHistory(user.id, exam.examId),
     getPaperSchedule(user.id, exam, day),
@@ -87,6 +89,15 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
         </div>
         <span className="tp-pill"><Icon name="flame" size={14} /> {streak}-day streak</span>
       </div>
+
+      {!pro ? (
+        <ProUpsell
+          compact
+          title="Want more than today's papers?"
+          body="Pro raises the limit to eight papers a day and adds custom tests, a weekly report card and streak freezes."
+          points={["Choose your own subject and difficulty", "Weekly report card", "2 streak freezes a month"]}
+        />
+      ) : null}
 
       <div className="tp-grid tp-grid-3 tp-mb-24">
         <div className="tp-stat">

@@ -53,7 +53,7 @@ export async function getAnalytics(userId: string, exam: CandidateExam) {
       take: 40,
       select: {
         id: true, submittedAt: true, accuracy: true, scorePercent: true, correctCount: true, incorrectCount: true,
-        unansweredCount: true, timeTakenSeconds: true, subjectBreakdown: true, topicBreakdown: true,
+        unansweredCount: true, timeTakenSeconds: true, negativeMarks: true, subjectBreakdown: true, topicBreakdown: true,
         dailyExam: { select: { id: true, title: true, scheduledDate: true } },
       },
     }),
@@ -93,6 +93,36 @@ export async function getAnalytics(userId: string, exam: CandidateExam) {
     .sort((left, right) => left.accuracy - right.accuracy)
     .slice(0, 8);
 
+  const negativeMarksLost = attempts.reduce((sum, attempt) => sum + toNumber(attempt.negativeMarks), 0);
+  const totalAnswered = attempts.reduce((sum, attempt) => sum + attempt.correctCount + attempt.incorrectCount + attempt.unansweredCount, 0);
+  const totalTime = attempts.reduce((sum, attempt) => sum + attempt.timeTakenSeconds, 0);
+  const averageTimePerQuestion = totalAnswered ? Math.round(totalTime / totalAnswered) : 0;
+
+  // Momentum compares the newest five papers with the five before them. It is
+  // only shown for a subject that has answered questions in both windows.
+  const recent = attempts.slice(0, 5);
+  const earlier = attempts.slice(5, 10);
+  const momentum = new Map<string, { recentCorrect: number; recentTotal: number; earlierCorrect: number; earlierTotal: number }>();
+  for (const [slice, key] of [[recent, "recent"], [earlier, "earlier"]] as const) {
+    for (const attempt of slice) {
+      for (const [name, row] of Object.entries((attempt.subjectBreakdown as unknown as Breakdown) ?? {})) {
+        const bucket = momentum.get(name) ?? { recentCorrect: 0, recentTotal: 0, earlierCorrect: 0, earlierTotal: 0 };
+        bucket[`${key}Correct`] += row.correct;
+        bucket[`${key}Total`] += row.correct + row.incorrect;
+        momentum.set(name, bucket);
+      }
+    }
+  }
+  const subjectMomentum = [...momentum.entries()]
+    .filter(([, row]) => row.recentTotal >= 2 && row.earlierTotal >= 2)
+    .map(([name, row]) => ({
+      name,
+      recent: Math.round((row.recentCorrect / row.recentTotal) * 1000) / 10,
+      earlier: Math.round((row.earlierCorrect / row.earlierTotal) * 1000) / 10,
+      delta: Math.round(((row.recentCorrect / row.recentTotal) - (row.earlierCorrect / row.earlierTotal)) * 1000) / 10,
+    }))
+    .sort((left, right) => right.delta - left.delta);
+
   return {
     attempts,
     records: records.reverse(),
@@ -104,6 +134,9 @@ export async function getAnalytics(userId: string, exam: CandidateExam) {
     averageAccuracy: attempts.length ? attempts.reduce((sum, attempt) => sum + toNumber(attempt.accuracy), 0) / attempts.length : 0,
     bestScore: attempts.reduce((best, attempt) => Math.max(best, toNumber(attempt.scorePercent)), 0),
     totalStudyMinutes: records.reduce((sum, record) => sum + record.studyMinutes, 0),
+    negativeMarksLost: Math.round(negativeMarksLost * 100) / 100,
+    averageTimePerQuestion,
+    subjectMomentum,
   };
 }
 

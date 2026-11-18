@@ -3,6 +3,10 @@ import { Icon } from "@/components/platform/Icon";
 import { requireAuth } from "@/server/auth/session";
 import { getActiveExam } from "@/server/platform/active";
 import { getAnalytics } from "@/server/platform/insights";
+import { getProSubscription } from "@/server/platform/pro";
+import { ProUpsell } from "@/components/platform/app/ProUpsell";
+import { StreakFreezeCard } from "@/components/platform/app/StreakFreezeCard";
+import { getFreezeState } from "@/server/platform/streak-freeze";
 import { formatDate, levelLabel, toNumber } from "@/server/platform/utils";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +32,10 @@ export default async function AnalyticsPage() {
   }
 
   const data = await getAnalytics(user.id, exam);
+  const [pro, freeze] = await Promise.all([
+    getProSubscription(user.id),
+    getFreezeState(user.id, exam.examId),
+  ]);
   const trend = data.records.slice(-16);
 
   return (
@@ -99,9 +107,61 @@ export default async function AnalyticsPage() {
             )}
           </section>
 
+          {pro ? (
+            <section className="tp-card tp-card-pad tp-advanced">
+              <div className="tp-row-between tp-gap-10 tp-wrap" style={{ marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ fontSize: 17 }}>Advanced analytics</h3>
+                  <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>Pro reads the same submitted papers, in more detail.</p>
+                </div>
+                <span className="tp-pro-badge"><Icon name="crown" size={12} /> Pro</span>
+              </div>
+              <div className="tp-grid tp-grid-2">
+                <div className="tp-advanced-stat">
+                  <span className="tp-advanced-label"><Icon name="alert" size={14} /> Negative marks lost</span>
+                  <strong>{data.negativeMarksLost}</strong>
+                  <p>Total marks deducted for wrong answers across every submitted paper.</p>
+                </div>
+                <div className="tp-advanced-stat">
+                  <span className="tp-advanced-label"><Icon name="clock" size={14} /> Average time per question</span>
+                  <strong>{data.averageTimePerQuestion}s</strong>
+                  <p>Total time in papers divided by every question you saw.</p>
+                </div>
+              </div>
+              <div className="tp-mt-16">
+                <div className="tp-row-between" style={{ marginBottom: 8 }}>
+                  <h4 style={{ fontSize: 14 }}>Subject momentum</h4>
+                  <span className="tp-xs tp-faint">Last 5 papers vs the 5 before</span>
+                </div>
+                {data.subjectMomentum.length ? (
+                  <div className="tp-stack tp-gap-10">
+                    {data.subjectMomentum.map((subject) => (
+                      <div className="tp-row-between tp-gap-12 tp-small" key={subject.name}>
+                        <span style={{ fontWeight: 600 }}>{subject.name}</span>
+                        <span className="tp-row tp-gap-8">
+                          <span className="tp-faint">{subject.earlier.toFixed(1)}% → {subject.recent.toFixed(1)}%</span>
+                          <span className={`tp-pill ${subject.delta > 0 ? "tp-pill-ok" : subject.delta < 0 ? "tp-pill-danger" : ""}`}>
+                            {subject.delta > 0 ? "+" : ""}{subject.delta.toFixed(1)} pt
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="tp-small tp-muted">A subject needs at least two answered questions in both five-paper windows.</p>
+                )}
+              </div>
+            </section>
+          ) : (
+            <ProUpsell
+              compact
+              title="Advanced analytics with Pro"
+              body="See negative marks lost, average time per question and which subjects are moving up or down over your last ten papers."
+            />
+          )}
+
           <section className="tp-card tp-card-pad">
-            <h3 style={{ fontSize: 17, marginBottom: 14 }}>Subject accuracy</h3>
-            {data.subjects.length ? (
+            <h3 style={{ fontSize: 17, marginBottom: 14 }}>Subject accuracy</h3>            {data.subjects.length ? (
               <div className="tp-stack tp-gap-14">
                 {data.subjects.map((subject) => (
                   <div key={subject.name}>
@@ -171,6 +231,23 @@ export default async function AnalyticsPage() {
         </div>
 
         <aside className="tp-stack tp-gap-20">
+          <StreakFreezeCard
+            state={{
+              code: exam.code,
+              pro: freeze.pro,
+              allowance: freeze.allowance,
+              used: freeze.used,
+              remaining: freeze.remaining,
+              frozenDates: freeze.frozenDates.map((item) => ({
+                date: formatDate(item.date, { day: "numeric", month: "short" }),
+                createdAt: formatDate(item.createdAt, { day: "numeric", month: "short" }),
+              })),
+              yesterday: formatDate(freeze.yesterday, { day: "numeric", month: "short" }),
+              canProtectYesterday: freeze.canProtectYesterday,
+              reason: freeze.reason,
+            }}
+          />
+
           <section className="tp-card tp-card-pad">
             <div className="tp-row-between" style={{ marginBottom: 12 }}>
               <h3 style={{ fontSize: 17 }}>Readiness breakdown</h3>

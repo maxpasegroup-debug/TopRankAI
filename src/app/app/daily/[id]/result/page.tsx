@@ -65,19 +65,23 @@ export default async function DailyExamResultPage({
           </p>
           {paperMeta ? (
             <div className="tp-row tp-gap-8 tp-wrap" style={{ marginTop: 10 }}>
-              <span className={`tp-pill ${paperMeta.mode === "FULL_MOCK" ? "tp-pill-ok" : "tp-pill-warn"}`}>
-                {paperMeta.mode === "FULL_MOCK" ? "Full official mock" : "Practice set"}
+              <span className={`tp-pill ${paperMeta.mode === "FULL_MOCK" ? "tp-pill-ok" : paperMeta.mode === "CUSTOM_TEST" ? "tp-pill-brand" : "tp-pill-warn"}`}>
+                {paperMeta.mode === "FULL_MOCK" ? "Full official mock" : paperMeta.mode === "CUSTOM_TEST" ? "Custom test" : "Practice set"}
               </span>
               <span className="tp-pill">
                 {paperMeta.mode === "FULL_MOCK"
                   ? `${paperMeta.officialTotal} questions · official pattern`
-                  : `${review.length} of ${paperMeta.officialTotal} official questions`}
+                  : paperMeta.mode === "CUSTOM_TEST"
+                    ? `${review.length} questions · your selection`
+                    : `${review.length} of ${paperMeta.officialTotal} official questions`}
               </span>
             </div>
           ) : null}
         </div>
         <div className="tp-row tp-gap-8 tp-wrap">
-          <Link className="tp-btn tp-btn-ghost" href="/app/daily">All papers</Link>
+          <Link className="tp-btn tp-btn-ghost" href={paperMeta?.mode === "CUSTOM_TEST" ? "/app/practice" : "/app/daily"}>
+            {paperMeta?.mode === "CUSTOM_TEST" ? "Custom tests" : "All papers"}
+          </Link>
           <Link className="tp-btn" href="/app/analytics">Analytics <Icon name="arrow-right" size={15} /></Link>
         </div>
       </div>

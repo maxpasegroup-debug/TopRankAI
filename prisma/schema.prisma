@@ -219,6 +219,7 @@ model User {
   performanceRecords  PerformanceRecord[]
   notifications       Notification[]
   mockPayments        MockPayment[]
+  streakFreezes       StreakFreeze[]
   achievements        UserAchievement[]
   subscription        Subscription?
   aiUsageLogs         AIUsageLog[]
@@ -391,6 +392,7 @@ model Exam {
   performanceRecords PerformanceRecord[]
   calendarEvents  ExamCalendar[]
   syllabusSources SyllabusSource[]
+  streakFreezes   StreakFreeze[]
 
   @@index([status, active])
   @@index([categoryId, active])
@@ -1306,17 +1308,40 @@ model UserAchievement {
 }
 
 model MockPayment {
-  id          String   @id
-  userId      String
-  plan        String
-  amountPaise Int
-  currency    String   @default("INR")
-  status      String
-  endsAt      DateTime?
-  createdAt   DateTime @default(now())
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id
+  userId        String
+  plan          String
+  amountPaise   Int
+  currency      String   @default("INR")
+  status        String
+  method        String?
+  reference     String?
+  payerName     String?
+  failureReason String?
+  endsAt        DateTime?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+/// A Pro streak freeze protects one missed day without adding a day to the
+/// streak. Two are available per calendar month and they are written only by
+/// the server when the candidate asks to protect yesterday.
+model StreakFreeze {
+  id         String   @id @default(cuid())
+  userId     String
+  examId     String
+  freezeDate DateTime @db.Date
+  monthKey   String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId, freezeDate])
+  @@index([userId, examId, monthKey])
+  @@index([userId, monthKey])
 }
 
 model Subscription {

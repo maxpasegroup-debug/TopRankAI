@@ -23,6 +23,10 @@ export function levelLabel(level: string | null | undefined) {
   return LEVEL_LABELS[level ?? ""] ?? "Beginner";
 }
 
+export function formulaText(value: string) {
+  return value.replace(/\\n/g, "\n");
+}
+
 export function toNumber(value: unknown): number {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;

@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
+import { ProUpsell } from "@/components/platform/app/ProUpsell";
 import { requireAuth } from "@/server/auth/session";
 import { getActiveExam } from "@/server/platform/active";
-import { getSubscription } from "@/server/platform/subscriptions";
+import { getProSubscription } from "@/server/platform/pro";
 import { getDashboardData } from "@/server/platform/candidate";
 import { readPaperMeta } from "@/server/platform/daily-exam";
 import { getReadiness } from "@/server/platform/insights";
@@ -23,7 +24,7 @@ function greeting() {
 
 export default async function DashboardPage() {
   const user = await requireAuth();
-  await getSubscription(user.id);
+  const pro = Boolean(await getProSubscription(user.id));
   const active = await getActiveExam(user.id);
   const [data, readiness] = await Promise.all([
     getDashboardData(user.id, active?.code ?? null),
@@ -83,6 +84,15 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
+      {!pro ? (
+        <ProUpsell
+          compact
+          title="Make today count with Pro"
+          body="Add papers, build a custom test for a weak topic, print your weekly report card and protect a missed day."
+          points={["Up to 8 papers a day", "Custom tests and weekly report card", "2 streak freezes a month"]}
+        />
+      ) : null}
 
       <div className="tp-dash">
         <div className="tp-stack tp-gap-20">

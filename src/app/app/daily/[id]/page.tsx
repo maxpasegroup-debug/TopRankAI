@@ -37,13 +37,15 @@ export default async function DailyExamPlayerPage({ params }: { params: Promise<
             <p>{formatDate(daily.scheduledDate, { weekday: "long", day: "numeric", month: "long" })}</p>
             {meta ? (
               <div className="tp-row tp-gap-8 tp-wrap" style={{ marginTop: 10 }}>
-                <span className={`tp-pill ${meta.mode === "FULL_MOCK" ? "tp-pill-ok" : "tp-pill-warn"}`}>
-                  {meta.mode === "FULL_MOCK" ? "Full official mock" : "Practice set"}
+                <span className={`tp-pill ${meta.mode === "FULL_MOCK" ? "tp-pill-ok" : meta.mode === "CUSTOM_TEST" ? "tp-pill-brand" : "tp-pill-warn"}`}>
+                  {meta.mode === "FULL_MOCK" ? "Full official mock" : meta.mode === "CUSTOM_TEST" ? "Custom test" : "Practice set"}
                 </span>
                 <span className="tp-pill">
                   {meta.mode === "FULL_MOCK"
                     ? `${daily.questionIds.length} questions · ${daily.durationMinutes} minutes`
-                    : `${daily.questionIds.length} of ${meta.officialTotal} official questions`}
+                    : meta.mode === "CUSTOM_TEST"
+                      ? `${daily.questionIds.length} questions · ${daily.durationMinutes} minutes · your selection`
+                      : `${daily.questionIds.length} of ${meta.officialTotal} official questions`}
                 </span>
               </div>
             ) : null}
@@ -81,7 +83,7 @@ export default async function DailyExamPlayerPage({ params }: { params: Promise<
             </div>
             <div className="tp-note tp-mt-16">
               <strong>Scoring.</strong> Marks and accuracy are calculated from the stored answer key on submission.
-              {daily.slot > 0 ? " This follow-up set fits the time reserved between study breaks." : meta?.mode === "PRACTICE_SET" ? " This paper is a practice set because the reviewed bank does not yet cover the full official question count." : ""}
+              {daily.slot > 0 ? " This follow-up set fits the time reserved between study breaks." : meta?.mode === "PRACTICE_SET" ? " This paper is a practice set because the reviewed bank does not yet cover the full official question count." : meta?.mode === "CUSTOM_TEST" ? " You chose the subjects, difficulty and time for this paper. It does not replace a daily paper." : ""}
             </div>
           </aside>
         </div>
