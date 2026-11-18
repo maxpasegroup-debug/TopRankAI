@@ -27,6 +27,7 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
   // The public site deliberately stays public for administrators. They have a
   // separate console at /login/admin that is not linked from public pages.
   const workspace = user && user.role !== "PLATFORM_ADMIN" ? "/app" : null;
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <header className="sticky top-0 z-[80] border-b border-[color-mix(in_srgb,var(--tp-line)_70%,transparent)] bg-[color-mix(in_srgb,var(--tp-bg)_78%,transparent)] backdrop-blur-[18px] backdrop-saturate-[1.3]">
@@ -41,8 +42,8 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-full px-[13px] py-2 text-sm font-[550] text-muted transition-colors hover:bg-surface-3 hover:text-ink data-[active=true]:bg-surface-3 data-[active=true]:text-ink"
-              data-active={pathname === link.href || pathname.startsWith(`${link.href}/`)}
+              className="tp-nav-link rounded-full px-[13px] py-2 text-sm font-[550] text-muted transition-colors hover:bg-surface-3 hover:text-ink"
+              aria-current={isActive(link.href) ? "page" : undefined}
             >
               {link.label}
             </Link>
@@ -83,7 +84,8 @@ export function SiteHeader({ user }: { user: HeaderUser }) {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-sm px-3.5 py-3 font-semibold text-muted hover:bg-surface-3 hover:text-ink"
+              className="tp-nav-link rounded-sm px-3.5 py-3 font-semibold text-muted hover:bg-surface-3 hover:text-ink"
+              aria-current={isActive(link.href) ? "page" : undefined}
             >
               {link.label}
             </Link>

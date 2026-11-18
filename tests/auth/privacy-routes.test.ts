@@ -1,3 +1,4 @@
+vi.mock("@/server/platform/public-cache", () => ({ invalidatePublicContent: vi.fn() }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET, POST, PATCH } from "@/app/api/account/privacy-requests/route";
 import { GET as queue, PATCH as decide } from "@/app/api/admin/privacy-requests/route";

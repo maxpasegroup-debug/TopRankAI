@@ -7,7 +7,6 @@ import { prisma } from "@/server/db";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { createSession, revokeSession, sessionCookieOptions, SESSION_COOKIE } from "@/server/auth/session";
 import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
-import { notify } from "@/server/platform/notifications";
 import { ageFromDate } from "@/server/platform/utils";
 import { readExamPattern } from "@/server/platform/patterns";
 import { registrationSchema } from "@/server/platform/validation";
@@ -34,10 +33,13 @@ export async function registerCandidate(raw: unknown): Promise<AuthActionResult>
   }
   if (age > 100) return { ok: false, message: "Enter a valid date of birth.", field: "dateOfBirth" };
 
-  const exams = await prisma.exam.findMany({
-    where: { id: { in: input.exams.map((exam) => exam.examId) }, active: true, status: "PUBLISHED" },
-    select: { id: true, code: true, name: true, configuration: { select: { sections: true } } },
-  });
+  const [exams, existing] = await Promise.all([
+    prisma.exam.findMany({
+      where: { id: { in: input.exams.map((exam) => exam.examId) }, active: true, status: "PUBLISHED" },
+      select: { id: true, code: true, name: true, configuration: { select: { sections: true } } },
+    }),
+    prisma.user.findUnique({ where: { email: input.email }, select: { id: true } }),
+  ]);
   if (exams.length !== input.exams.length) {
     return { ok: false, message: "One or more selected exams are no longer available. Refresh and choose again." };
   }
@@ -57,7 +59,6 @@ export async function registerCandidate(raw: unknown): Promise<AuthActionResult>
     partByExam.set(selection.examId, part?.code ?? null);
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: input.email }, select: { id: true } });
   if (existing) return { ok: false, message: "An account with this email already exists. Try signing in instead.", field: "email" };
 
   const passwordHash = await hashPassword(input.password);
@@ -65,9 +66,9 @@ export async function registerCandidate(raw: unknown): Promise<AuthActionResult>
   const first = input.exams[0];
   const firstExam = examById.get(first.examId);
 
-  let userId: string;
+  let session: Awaited<ReturnType<typeof createSession>>;
   try {
-    userId = await prisma.$transaction(async (tx) => {
+    session = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           email: input.email,
@@ -90,6 +91,7 @@ export async function registerCandidate(raw: unknown): Promise<AuthActionResult>
           onboardingCompletedAt: new Date(),
           lastActiveAt: new Date(),
         },
+        select: { id: true },
       });
       await tx.accountConsent.create({
         data: {
@@ -126,16 +128,18 @@ export async function registerCandidate(raw: unknown): Promise<AuthActionResult>
       await tx.auditEvent.create({
         data: { actorId: user.id, action: "ACCOUNT_REGISTERED", entity: "User", entityId: user.id, detail: JSON.stringify({ exams: input.exams.map((exam) => exam.examId) }) },
       });
-      return user.id;
+      await tx.notification.createMany({
+        data: [
+          { userId: user.id, type: "TARGET", title: "Your preparation plan is ready", body: `${input.exams.length} exam${input.exams.length === 1 ? "" : "s"} added. Your first daily exam will be prepared for ${firstExam?.name ?? "your target exam"}.`, href: "/app" },
+          { userId: user.id, type: "SYSTEM", title: "Welcome to TopRank", body: "Start with today's daily exam, then review every explanation. Your readiness score grows from real activity only.", href: "/app" },
+        ],
+      });
+      return createSession(user.id, tx);
     }, { timeout: 20_000 });
   } catch (error) {
     return { ok: false, message: "We could not create the account. The email or phone number may already be in use." };
   }
 
-  await notify(userId, "TARGET", "Your preparation plan is ready", `${input.exams.length} exam${input.exams.length === 1 ? "" : "s"} added. Your first daily exam will be prepared for ${firstExam?.name ?? "your target exam"}.`, "/app");
-  await notify(userId, "SYSTEM", "Welcome to TopRank", "Start with today's daily exam, then review every explanation. Your readiness score grows from real activity only.", "/app");
-
-  const session = await createSession(userId);
   const store = await cookies();
   store.set(SESSION_COOKIE, session.token, sessionCookieOptions(session.expiresAt));
   return { ok: true, redirectTo: "/app" };
@@ -150,10 +154,12 @@ export async function loginUser(raw: { email: string; password: string }): Promi
   if (user.role === "PLATFORM_ADMIN") return { ok: false, message: "Administrators must sign in at /login/admin." };
   if (!(await verifyPassword(password, user.passwordHash))) return { ok: false, message: "Invalid email or password." };
 
-  const session = await createSession(user.id);
+  const [session] = await Promise.all([
+    createSession(user.id),
+    prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } }),
+  ]);
   const store = await cookies();
   store.set(SESSION_COOKIE, session.token, sessionCookieOptions(session.expiresAt));
-  await prisma.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } });
   return { ok: true, redirectTo: "/app" };
 }
 

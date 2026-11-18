@@ -17,6 +17,7 @@ import { profileUpdateSchema, syllabusProgressSchema, attemptAnswerSchema, examS
 import { ACTIVE_EXAM_COOKIE } from "@/server/platform/cookies";
 import { includedPapers, MAX_DAILY_PAPERS, mockMonthlyActive } from "@/shared/daily-workload";
 import { targetWorkload } from "@/server/platform/target-workload";
+import { isExamFeedbackPending } from "@/server/platform/exam-feedback";
 import { ValidationApiError } from "@/server/api/errors";
 import { z } from "zod";
 
@@ -26,8 +27,11 @@ export type PlatformActionResult<T = undefined> =
 
 export async function setActiveExam(code: string) {
   const user = await requireAuth();
-  const exams = await getCandidateExams(user.id);
-  if (!exams.some((exam) => exam.code === code)) return { ok: false as const, message: "That exam is not in your plan." };
+  const target = await prisma.candidateExamTarget.findFirst({
+    where: { userId: user.id, active: true, exam: { code, active: true } },
+    select: { id: true },
+  });
+  if (!target) return { ok: false as const, message: "That exam is not in your plan." };
   const store = await cookies();
   store.set(ACTIVE_EXAM_COOKIE, code, { httpOnly: false, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 365 });
   return { ok: true as const };
@@ -67,6 +71,15 @@ export async function submitExamAttempt(attemptId: string, answers: unknown) {
   } catch (error) {
     return { ok: false as const, message: error instanceof Error ? error.message : "Could not submit the paper." };
   }
+}
+
+export async function getExamFeedbackStatus(attemptId: string) {
+  const user = await requireAuth();
+  const attempt = await prisma.examAttempt.findFirst({
+    where: { id: attemptId, userId: user.id, status: "SUBMITTED" },
+    select: { aiFeedback: true, submittedAt: true },
+  });
+  return { pending: attempt ? isExamFeedbackPending(attempt.aiFeedback, attempt.submittedAt) : false };
 }
 
 export async function updateTopicProgress(raw: unknown) {

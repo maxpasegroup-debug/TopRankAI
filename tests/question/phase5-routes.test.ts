@@ -1,3 +1,4 @@
+vi.mock("@/server/platform/public-cache", () => ({ invalidatePublicContent: vi.fn() }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ user: vi.fn(), manage: vi.fn(), question: vi.fn(), source: vi.fn(), revision: vi.fn(), mutate: vi.fn(), state: vi.fn() }));
 vi.mock("@/server/auth/session", () => ({ getCurrentUser: mocks.user }));

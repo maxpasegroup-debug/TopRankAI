@@ -1,7 +1,10 @@
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/server/db";
-import { generateExamFeedback, fallbackFeedback, type ExamFeedback } from "@/server/ai/tasks";
+import { fallbackFeedback, type ExamFeedback } from "@/server/ai/tasks";
+import { after } from "next/server";
+import { aiConfiguration } from "@/server/env";
+import { finishExamFeedback, isExamFeedbackPending } from "./exam-feedback";
 import { evaluateAchievements } from "./achievements";
 import { EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
 import { checkPaperSlot } from "./paper-schedule";
@@ -777,6 +780,35 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
 
   const target = (await getCandidateExams(userId)).find((entry) => entry.examId === attempt.examId);
   const submittedAt = new Date();
+  const weakestSubjects = Object.entries(subjectBreakdown)
+    .filter(([, row]) => row.incorrect > 0)
+    .map(([name, row]) => ({ name, accuracy: row.correct + row.incorrect ? (row.correct / (row.correct + row.incorrect)) * 100 : 0 }))
+    .sort((left, right) => left.accuracy - right.accuracy)
+    .slice(0, 3);
+  const weakestTopics = Object.entries(topicBreakdown)
+    .filter(([, row]) => row.incorrect > 0)
+    .map(([title, row]) => ({ title, accuracy: row.correct + row.incorrect ? (row.correct / (row.correct + row.incorrect)) * 100 : 0 }))
+    .sort((left, right) => left.accuracy - right.accuracy)
+    .slice(0, 3);
+
+  const feedbackInput = {
+    examName: attempt.exam.name,
+    level: attempt.dailyExam.configSnapshot && typeof attempt.dailyExam.configSnapshot === "object" && "level" in attempt.dailyExam.configSnapshot
+      ? String((attempt.dailyExam.configSnapshot as Record<string, unknown>).level)
+      : "INTERMEDIATE",
+    totalQuestions: attempt.dailyExam.questionIds.length,
+    correct: correctCount,
+    incorrect: incorrectCount,
+    unanswered: unansweredCount,
+    accuracy,
+    scorePercent,
+    timeTakenSeconds,
+    durationMinutes: attempt.dailyExam.durationMinutes,
+    weakestSubjects,
+    weakestTopics,
+    userId,
+    examId: attempt.examId,
+  };
   const recorded = await prisma.$transaction(async (tx) => {
     const claimed = await tx.examAttempt.updateMany({ where: { id: attemptId, status: "IN_PROGRESS" }, data: { status: "SUBMITTED" } });
     if (!claimed.count) return false;
@@ -798,6 +830,7 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
         scorePercent,
         subjectBreakdown: subjectBreakdown as Prisma.InputJsonValue,
         topicBreakdown: topicBreakdown as Prisma.InputJsonValue,
+        aiFeedback: { ...fallbackFeedback(feedbackInput), source: aiConfiguration().enabled ? "PENDING" : "DETERMINISTIC" } as unknown as Prisma.InputJsonValue,
       },
     });
     await tx.dailyExam.update({
@@ -897,55 +930,7 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
   }, { timeout: 60_000 });
   if (!recorded) return { attemptId, alreadySubmitted: true };
 
-  const weakestSubjects = Object.entries(subjectBreakdown)
-    .filter(([, row]) => row.incorrect > 0)
-    .map(([name, row]) => ({ name, accuracy: row.correct + row.incorrect ? (row.correct / (row.correct + row.incorrect)) * 100 : 0 }))
-    .sort((left, right) => left.accuracy - right.accuracy)
-    .slice(0, 3);
-  const weakestTopics = Object.entries(topicBreakdown)
-    .filter(([, row]) => row.incorrect > 0)
-    .map(([title, row]) => ({ title, accuracy: row.correct + row.incorrect ? (row.correct / (row.correct + row.incorrect)) * 100 : 0 }))
-    .sort((left, right) => left.accuracy - right.accuracy)
-    .slice(0, 3);
-
-  const feedbackInput = {
-    examName: attempt.exam.name,
-    level: attempt.dailyExam.configSnapshot && typeof attempt.dailyExam.configSnapshot === "object" && "level" in attempt.dailyExam.configSnapshot
-      ? String((attempt.dailyExam.configSnapshot as Record<string, unknown>).level)
-      : "INTERMEDIATE",
-    totalQuestions: attempt.dailyExam.questionIds.length,
-    correct: correctCount,
-    incorrect: incorrectCount,
-    unanswered: unansweredCount,
-    accuracy,
-    scorePercent,
-    timeTakenSeconds,
-    durationMinutes: attempt.dailyExam.durationMinutes,
-    weakestSubjects,
-    weakestTopics,
-    userId,
-    examId: attempt.examId,
-  };
-  // Feedback is a bonus layer: a slow or failed AI call must never break the
-  // submission that has already been scored and stored.
-  let feedback: ExamFeedback;
-  let aiGenerated = false;
-  try {
-    const result = await generateExamFeedback(feedbackInput);
-    feedback = result.feedback;
-    aiGenerated = result.aiGenerated;
-  } catch {
-    feedback = fallbackFeedback(feedbackInput);
-    aiGenerated = false;
-  }
-  try {
-    await prisma.examAttempt.update({
-      where: { id: attemptId },
-      data: { aiFeedback: { ...feedback, source: aiGenerated ? "AI" : "DETERMINISTIC" } as unknown as Prisma.InputJsonValue },
-    });
-  } catch {
-    // The score is already committed; feedback can be regenerated on view.
-  }
+  if (aiConfiguration().enabled) after(() => finishExamFeedback(attemptId, feedbackInput));
 
   await evaluateAchievements(userId);
   if (scorePercent === 100) {
@@ -1038,6 +1023,7 @@ export async function getAttemptResult(userId: string, attemptId: string) {
     .map(([title, row]) => ({ title, accuracy: (row.correct / (row.correct + row.incorrect)) * 100 }))
     .sort((left, right) => left.accuracy - right.accuracy)
     .slice(0, 3);
+  const feedbackPending = isExamFeedbackPending(attempt.aiFeedback, attempt.submittedAt);
   const shownFeedback = feedback?.source === "AI"
     ? feedback
     : {
@@ -1059,6 +1045,7 @@ export async function getAttemptResult(userId: string, attemptId: string) {
           userId,
           examId: attempt.examId,
         }),
+        ...(feedbackPending ? { summary: "Your score and revision advice are ready. AI feedback is being prepared." } : {}),
         source: "DETERMINISTIC" as const,
       };
 
@@ -1083,6 +1070,7 @@ export async function getAttemptResult(userId: string, attemptId: string) {
       negativeMarks: toNumber(attempt.negativeMarks),
       aiFeedback: shownFeedback,
       feedbackSource: feedback?.source === "AI" ? "AI" : "DETERMINISTIC",
+      feedbackPending,
     },
     review,
     paperMeta: readPaperMeta(attempt.dailyExam.configSnapshot),

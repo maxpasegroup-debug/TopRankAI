@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Icon, type IconName } from "../Icon";
 import { LogoMark } from "../Logo";
 import { ThemeCycle } from "../ThemeCycle";
 import { logoutUser } from "@/server/actions/auth";
 import { setActiveExam } from "@/server/actions/platform";
+import { toast } from "../AppToaster";
 
 export type ShellExam = { code: string; label: string; level: string };
 
@@ -60,7 +61,6 @@ function titleForPath(pathname: string) {
 
 export function AppShell({ user, exams, activeCode, unread, children }: AppShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -77,7 +77,7 @@ export function AppShell({ user, exams, activeCode, unread, children }: AppShell
     if (code === activeCode) return;
     startTransition(async () => {
       const result = await setActiveExam(code);
-      if (result.ok) router.refresh();
+      if (!result.ok) toast.error(result.message);
     });
   }
 
@@ -104,7 +104,7 @@ export function AppShell({ user, exams, activeCode, unread, children }: AppShell
             <div key={group.label}>
               <div className="tp-side-label">{group.label}</div>
               {group.items.map((item) => (
-                <Link key={item.href} className="tp-side-link" href={item.href} data-active={isActive(item.href, item.exact)}>
+                <Link key={item.href} className="tp-side-link" href={item.href} data-active={isActive(item.href, item.exact)} aria-current={isActive(item.href, item.exact) ? "page" : undefined}>
                   <Icon name={item.icon} />
                   <span>{item.label}</span>
                   {item.href === "/app/notifications" && unread > 0 ? <span className="tp-count">{unread > 99 ? "99+" : unread}</span> : null}

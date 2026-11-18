@@ -3,6 +3,7 @@ import { cache } from "react";
 import { prisma } from "@/server/db";
 import { findExamPart, readExamPattern, type PatternPart } from "./patterns";
 import { addDays, percent, todayDate, toNumber } from "./utils";
+import { getUnreadNotificationCount } from "./notifications";
 
 export type CandidateExam = {
   targetId: string;
@@ -156,7 +157,7 @@ export async function getDashboardData(userId: string, examCode?: string | null)
     computeStreak(userId),
     prisma.revisionQueue.count({ where: { userId, status: "PENDING", dueDate: { lte: today } } }),
     prisma.dailyGoal.findMany({ where: { userId, examId: selected.examId, goalDate: today }, orderBy: { order: "asc" } }),
-    prisma.notification.count({ where: { userId, readAt: null } }),
+    getUnreadNotificationCount(userId),
     getSyllabusCompletion(userId, selected.examId),
     prisma.examCalendar.findFirst({
       where: { examId: { in: exams.map((exam) => exam.examId) }, startDate: { gte: today }, status: { in: ["CONFIRMED", "TENTATIVE"] } },

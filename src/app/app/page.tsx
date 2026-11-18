@@ -23,9 +23,12 @@ function greeting() {
 export default async function DashboardPage() {
   const user = await requireAuth();
   const active = await getActiveExam(user.id);
-  const data = await getDashboardData(user.id, active?.code ?? null);
+  const [data, readiness] = await Promise.all([
+    getDashboardData(user.id, active?.code ?? null),
+    active ? getReadiness(user.id, active) : Promise.resolve(null),
+  ]);
 
-  if (!data.selected) {
+  if (!data.selected || !readiness) {
     return (
       <>
         <div className="tp-page-head">
@@ -46,7 +49,6 @@ export default async function DashboardPage() {
   }
 
   const exam = data.selected;
-  const readiness = await getReadiness(user.id, exam);
   const daily = data.dailyExams.find((paper) => paper.status === "IN_PROGRESS")
     ?? data.dailyExams.find((paper) => paper.status === "SCHEDULED" && paper.slot < exam.papersPerDay)
     ?? data.dailyExams.at(-1) ?? null;

@@ -14,6 +14,7 @@ export type AuthUser = {
   email: string;
   name: string;
   role: UserRole;
+  avatarUrl?: string | null;
   requiresLegalConsent?: boolean;
 };
 
@@ -109,6 +110,7 @@ export const getCurrentUser = cache(async (allowConsentOnly = false): Promise<Au
     email: session.user.email,
     name: session.user.name,
     role: session.user.role,
+    avatarUrl: session.user.avatarUrl,
     requiresLegalConsent,
   };
 });

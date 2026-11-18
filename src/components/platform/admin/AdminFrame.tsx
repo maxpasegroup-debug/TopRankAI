@@ -81,7 +81,7 @@ export function AdminFrame({ user, children }: AdminFrameProps) {
             <div key={group.label}>
               <div className="tp-side-label">{group.label}</div>
               {group.items.map((item) => (
-                <Link key={item.href} className="tp-side-link" href={item.href} data-active={isActive(item.href, item.exact)}>
+                <Link key={item.href} className="tp-side-link" href={item.href} data-active={isActive(item.href, item.exact)} aria-current={isActive(item.href, item.exact) ? "page" : undefined}>
                   <Icon name={item.icon} />
                   <span>{item.label}</span>
                 </Link>

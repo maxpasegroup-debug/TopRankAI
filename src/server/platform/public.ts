@@ -1,4 +1,7 @@
 import { prisma } from "@/server/db";
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
+import { PUBLIC_CONTENT_TAG } from "./public-cache";
 import { readExamPattern, type PatternPart } from "./patterns";
 import { toNumber } from "./utils";
 
@@ -64,7 +67,7 @@ function mapExam(exam: {
   };
 }
 
-export async function getPublicCatalogue() {
+export const getPublicCatalogue = cache(unstable_cache(async () => {
   const published = { active: true, status: "PUBLISHED" as const };
   const [categories, exams] = await Promise.all([
     prisma.examCategory.findMany({
@@ -95,9 +98,9 @@ export async function getPublicCatalogue() {
       }))
       .filter((group) => group.exams.length > 0),
   };
-}
+}, ["public-catalogue-v1"], { tags: [PUBLIC_CONTENT_TAG], revalidate: 60 }));
 
-export async function getPublicExam(code: string) {
+export const getPublicExam = cache(async (code: string) => {
   const exam = await prisma.exam.findFirst({
     where: { code: code.toUpperCase(), active: true, status: "PUBLISHED" },
     include: {
@@ -143,9 +146,9 @@ export async function getPublicExam(code: string) {
       sourceLabel: event.sourceLabel,
     })),
   };
-}
+});
 
-export async function getPlatformStats() {
+export const getPlatformStats = cache(unstable_cache(async () => {
   const [exams, topics, questions, achievements, categories] = await Promise.all([
     prisma.exam.count({ where: { active: true, status: "PUBLISHED" } }),
     prisma.syllabusTopic.count({ where: { active: true } }),
@@ -154,7 +157,7 @@ export async function getPlatformStats() {
     prisma.examCategory.count({ where: { active: true } }),
   ]);
   return { exams, topics, questions, achievements, categories };
-}
+}, ["public-platform-stats-v1"], { tags: [PUBLIC_CONTENT_TAG], revalidate: 60 }));
 
 export async function getRegistrationOptions() {
   const { grouped } = await getPublicCatalogue();

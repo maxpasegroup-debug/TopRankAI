@@ -31,6 +31,7 @@ import {
   syllabusImportSchema,
 } from "@/server/platform/validation";
 import { z } from "zod";
+import { invalidatePublicContent } from "@/server/platform/public-cache";
 
 export type AdminActionResult = { ok: true; message: string } | { ok: false; message: string };
 export type AiDraftActionResult = { ok: true; message: string; created: number } | { ok: false; message: string };
@@ -47,6 +48,7 @@ export async function createCategoryAction(raw: unknown): Promise<AdminActionRes
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the category details." };
   try {
     await createExamCategory(parsed.data);
+    invalidatePublicContent();
     revalidatePath("/admin/exams");
     revalidatePath("/exams");
     return { ok: true, message: "Category created." };
@@ -61,6 +63,7 @@ export async function createExamAction(raw: unknown): Promise<AdminActionResult>
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the exam details." };
   try {
     await createExamWithConfiguration(parsed.data);
+    invalidatePublicContent();
     revalidatePath("/admin/exams");
     revalidatePath("/exams");
     return { ok: true, message: "Exam created and published." };
@@ -79,6 +82,7 @@ export async function updateExamAction(examId: string, raw: unknown): Promise<Ad
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the exam details." };
   try {
     await updateExamConfiguration({ examId, ...parsed.data });
+    invalidatePublicContent();
     revalidatePath("/admin/exams");
     revalidatePath("/exams");
     return { ok: true, message: "Exam configuration saved." };
@@ -93,6 +97,7 @@ export async function createQuestionAction(raw: unknown): Promise<AdminActionRes
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the question details." };
   try {
     await createQuestionRecord(parsed.data, { approvedById: admin.id });
+    invalidatePublicContent();
     revalidatePath("/admin/questions");
     return { ok: true, message: "Question published to the bank." };
   } catch (error) {
@@ -104,6 +109,7 @@ export async function approveQuestionAction(questionId: string): Promise<AdminAc
   const admin = await requireRole(adminRoles);
   try {
     await approveQuestionRecord(questionId, admin.id);
+    invalidatePublicContent();
     revalidatePath("/admin/questions");
     return { ok: true, message: "Question approved." };
   } catch (error) {
@@ -115,6 +121,7 @@ export async function archiveQuestionAction(questionId: string): Promise<AdminAc
   await requireRole(adminRoles);
   try {
     await archiveQuestionRecord(questionId);
+    invalidatePublicContent();
     revalidatePath("/admin/questions");
     return { ok: true, message: "Question archived." };
   } catch (error) {
@@ -128,6 +135,7 @@ export async function addSyllabusAction(raw: unknown): Promise<AdminActionResult
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the syllabus details." };
   try {
     await addSyllabusTopic(parsed.data);
+    invalidatePublicContent();
     revalidatePath("/admin/syllabus");
     return { ok: true, message: "Syllabus topic saved." };
   } catch (error) {
@@ -141,6 +149,7 @@ export async function addCalendarAction(raw: unknown): Promise<AdminActionResult
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the calendar details." };
   try {
     await addCalendarEvent(parsed.data);
+    invalidatePublicContent();
     revalidatePath("/admin/calendar");
     revalidatePath("/app/calendar");
     revalidatePath("/exams");
@@ -156,6 +165,7 @@ export async function importSyllabusAction(raw: unknown): Promise<AdminActionRes
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the import payload." };
   try {
     const result = await importSyllabusBundle(parsed.data);
+    invalidatePublicContent();
     revalidatePath("/admin/syllabus");
     revalidatePath("/app/learn");
     return { ok: true, message: `Imported ${result.units} units, ${result.chapters} chapters and ${result.topics} topics.` };
@@ -170,6 +180,7 @@ export async function importCalendarAction(raw: unknown): Promise<AdminActionRes
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Check the import payload." };
   try {
     const result = await importCalendarBundle(parsed.data);
+    invalidatePublicContent();
     revalidatePath("/admin/calendar");
     revalidatePath("/app/calendar");
     revalidatePath("/exams");
@@ -205,6 +216,7 @@ export async function saveAiDraftAction(input: {
   const admin = await requireRole(adminRoles);
   try {
     await saveAiQuestionDraft({ ...input, adminId: admin.id });
+    invalidatePublicContent();
     revalidatePath("/admin/questions");
     return { ok: true, message: "AI draft saved for review." };
   } catch (error) {
@@ -259,6 +271,7 @@ export async function generateExamPatternAction(examId: string): Promise<AdminAc
         active: true,
       },
     });
+    invalidatePublicContent();
     revalidatePath("/admin/exams");
     revalidatePath("/exams");
     return { ok: true, message: `AI generated ${parts.length} paper part${parts.length === 1 ? "" : "s"}. It is marked “needs verification” until a human checks the official source.` };
@@ -318,6 +331,7 @@ export async function generateAiDraftsAction(input: {
       await saveAiQuestionDraft({ examId: exam.id, subjectId: subject.id, topicId: topic.id, draft, adminId: admin.id });
       created += 1;
     }
+    invalidatePublicContent();
     revalidatePath("/admin/questions");
     return { ok: true, message: `${created} AI draft${created === 1 ? "" : "s"} created for review. Approve each one before it enters a paper.`, created };
   } catch (error) {
