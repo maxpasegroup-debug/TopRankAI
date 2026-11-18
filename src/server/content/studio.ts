@@ -3,7 +3,6 @@ import { prisma } from "@/server/db";
 import type { AuthUser } from "@/server/auth/session";
 import { assertPlatformAdmin } from "@/server/admin/authorization";
 import { ConflictApiError, ValidationApiError } from "@/server/api/errors";
-import { configuredKnowledgeAdapter } from "@/server/sia/knowledge-adapter";
 import { assertReviewedPublication, editorialFingerprint, readEditorialRecord } from "./editorial";
 import { studioMutationSchema, type StudioMutation } from "./studio-validation";
 type Tx = Prisma.TransactionClient;
@@ -97,7 +96,7 @@ export async function mutateStudio(user: AuthUser, raw: StudioMutation) {
     const fingerprint = knowledgeFingerprint(source);
     const existing = await tx.contentKnowledgeJob.findUnique({ where: { sourceId_fingerprint: { sourceId: source.id, fingerprint } } });
     if (existing && !["FAILED", "STALE"].includes(existing.state)) return existing;
-    const reason = configuredKnowledgeAdapter() ? "Ingestion worker is not enabled" : "No knowledge ingestion provider or worker configured";
+    const reason = "Knowledge ingestion is not available yet";
     const data = { state: "BLOCKED", reason, requestedById: user.id, completedAt: null };
     const job = existing ? await tx.contentKnowledgeJob.update({ where: { id: existing.id }, data }) : await tx.contentKnowledgeJob.create({ data: { sourceId: source.id, fingerprint, ...data } });
     await audit(tx, user, "KNOWLEDGE_JOB", job.id, "STUDIO_SIA_REFRESH_REQUESTED", { state: job.state }); return job;

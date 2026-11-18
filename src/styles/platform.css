@@ -1777,6 +1777,7 @@ body.body-platform {
   gap: 12px;
   width: 100%;
   max-width: 640px;
+  margin-inline: auto;
   padding: 12px 46px 13px 12px;
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--tp-alert-tone) 42%, var(--tp-line-strong));

@@ -105,9 +105,8 @@ export default function HowItWorksPage() {
                 <p><strong style={{ color: "var(--tp-ink)" }}>It never invents:</strong> exam dates, ranks, cut-offs or seat guarantees are outside its remit.</p>
               </div>
               <div className="tp-note tp-mt-24">
-                <strong>Provider.</strong> The current implementation uses Google Gemini through the
-                Generative Language API. It is free-tier friendly and enabled by setting <code>GEMINI_API_KEY</code>.
-                With no key, the app keeps working and uses deterministic fallbacks.
+                <strong>Provider.</strong> Google Gemini assists with feedback wording, study notes and draft questions.
+                Every score is calculated by the platform, never by the AI.
               </div>
             </div>
 

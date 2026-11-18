@@ -84,7 +84,7 @@ export default async function AboutPage() {
                 ["Framework", "Next.js 16 App Router, React 19, TypeScript"],
                 ["Database", "Neon PostgreSQL with Prisma 7"],
                 ["Auth", "Server sessions, bcrypt password hashing, Zod validation"],
-                ["AI", "Google Gemini (free tier) behind a validated task layer"],
+                ["AI", "Google Gemini behind a validated task layer"],
                 ["Motion", "GSAP with reduced-motion support"],
               ].map(([label, value]) => (
                 <div className="tp-row-between tp-small" key={label}>

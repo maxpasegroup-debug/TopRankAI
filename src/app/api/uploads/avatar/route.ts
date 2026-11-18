@@ -57,7 +57,7 @@ export async function GET() {
 export async function POST(request: Request) {
   if (!storageStatus().configured) {
     return NextResponse.json(
-      { error: "File storage is not configured yet.", code: "STORAGE_NOT_CONFIGURED" },
+      { error: "Image uploads are temporarily unavailable.", code: "STORAGE_NOT_CONFIGURED" },
       { status: 503 },
     );
   }

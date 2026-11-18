@@ -13,7 +13,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Which AI provider does the platform use?",
-    a: "Google Gemini through the Generative Language API. It is free-tier friendly. A deployment enables it by setting GEMINI_API_KEY; the default model is gemini-3.5-flash and can be overridden with GEMINI_MODEL. With no key, the platform uses deterministic fallbacks and clearly says so.",
+    a: "Google Gemini generates feedback wording, study notes and draft questions. It never calculates marks, accuracy or ranks — those always come from the platform’s own scoring code.",
   },
   {
     q: "Where do the syllabus and exam dates come from?",

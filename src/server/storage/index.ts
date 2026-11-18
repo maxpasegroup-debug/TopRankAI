@@ -44,7 +44,7 @@ export async function uploadAvatar(input: {
   extension: string;
 }): Promise<AvatarUpload> {
   const provider = activeProvider();
-  if (!provider) throw new Error("File storage is not configured.");
+  if (!provider) throw new Error("Image uploads are temporarily unavailable.");
 
   if (provider === "cloudinary") {
     const uploaded = await uploadToCloudinary(input);

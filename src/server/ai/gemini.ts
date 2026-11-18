@@ -83,7 +83,7 @@ export async function generateStructured<T>(request: StructuredRequest<T>): Prom
   const apiKey = env.GEMINI_API_KEY;
   const model = request.model?.trim() || env.GEMINI_MODEL;
   if (!apiKey) {
-    return { ok: false, code: "NOT_CONFIGURED", message: "AI is not configured. Add GEMINI_API_KEY to enable it." };
+    return { ok: false, code: "NOT_CONFIGURED", message: "AI assistance is currently unavailable." };
   }
   if (env.AI_FEATURES_ENABLED === "false") {
     return { ok: false, code: "NOT_CONFIGURED", message: "AI features are disabled by AI_FEATURES_ENABLED=false." };

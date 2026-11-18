@@ -34,5 +34,5 @@ export function ExamFeedbackStatus({ attemptId }: { attemptId: string }) {
     };
   }, [attemptId, router]);
 
-  return <p className="tp-xs tp-faint tp-mt-12" role="status">Your score is ready. AI feedback is being prepared and will appear here automatically.</p>;
+  return <p className="tp-xs tp-faint tp-mt-12" role="status">Your score is ready. Feedback is being prepared and will appear here automatically.</p>;
 }

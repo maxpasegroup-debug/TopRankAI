@@ -9,7 +9,6 @@ import type { StudyPlanSuggestion } from "@/server/ai/tasks";
 export function PlanGenerator({ code }: { code: string }) {
   const [pending, startTransition] = useTransition();
   const [plan, setPlan] = useState<StudyPlanSuggestion | null>(null);
-  const [aiGenerated, setAiGenerated] = useState(false);
 
   function generate() {
     const toastId = toast.loading("Building a study plan…");
@@ -20,7 +19,6 @@ export function PlanGenerator({ code }: { code: string }) {
         return;
       }
       setPlan(result.data.plan);
-      setAiGenerated(result.data.aiGenerated);
       toast.success("Study plan ready.", { id: toastId });
     });
   }
@@ -34,9 +32,8 @@ export function PlanGenerator({ code }: { code: string }) {
       {plan ? (
         <div className="tp-stack tp-gap-12 tp-mt-16">
           <div className="tp-note">
-            <div className="tp-row-between" style={{ marginBottom: 6 }}>
+            <div style={{ marginBottom: 6 }}>
               <strong>{plan.focus}</strong>
-              <span className={`tp-pill ${aiGenerated ? "tp-pill-brand" : ""}`}>{aiGenerated ? "AI-generated" : "Deterministic fallback"}</span>
             </div>
             <p>{plan.rationale}</p>
           </div>
@@ -49,12 +46,6 @@ export function PlanGenerator({ code }: { code: string }) {
               </div>
             </div>
           ))}
-          {!aiGenerated ? (
-            <p className="tp-xs tp-faint">
-              The AI provider is not configured or unavailable, so this plan was built from your recorded weak topics
-              by a deterministic rule set.
-            </p>
-          ) : null}
         </div>
       ) : null}
     </div>

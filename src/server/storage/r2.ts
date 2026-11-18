@@ -78,7 +78,7 @@ export async function uploadToR2(input: {
   extension: string;
 }): Promise<R2Upload> {
   const config = r2Config();
-  if (!config) throw new Error("R2 is not configured.");
+  if (!config) throw new Error("Image uploads are temporarily unavailable.");
 
   const now = new Date();
   const key = [

@@ -5,7 +5,7 @@ export const decimalPattern = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/;
 type Config = { type: string; mode: string | null; marks: string; negativeMarks: string;
   numericalAnswer: string | null; options: { id: string; isCorrect: boolean }[] };
 export function scoreAnswer(config: Config, answer: { optionIds?: string[]; numerical?: string }) {
-  const invalid = () => new ValidationApiError("Scoring is not configured for this question");
+  const invalid = () => new ValidationApiError("This question cannot be scored right now");
   let marks: Prisma.Decimal, penalty: Prisma.Decimal;
   try { marks = new Prisma.Decimal(config.marks); penalty = new Prisma.Decimal(config.negativeMarks); } catch { throw invalid(); }
   if (!marks.isFinite() || !penalty.isFinite() || marks.lte(0) || penalty.lt(0)) throw invalid();

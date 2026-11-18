@@ -383,7 +383,7 @@ export function DailyPlayer({
                 onChange={(event) => setNumerical(current, event.target.value)}
                 placeholder="Enter a number"
               />
-              <span className="tp-hint">Numerical answers are compared with a tolerance of 1e-6.</span>
+              <span className="tp-hint">Units are optional: 3, 3 A and 3A are all accepted. Values are compared with a tolerance of 1e-6.</span>
             </div>
           ) : (
             <div className="tp-options" role={current.type === "MULTIPLE_CHOICE" ? "group" : "radiogroup"} aria-label="Answer options">

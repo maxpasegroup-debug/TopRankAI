@@ -15,7 +15,7 @@ export async function transcribePdf(input: {
   timeoutMs?: number;
 }): Promise<{ ok: true; text: string } | { ok: false; message: string }> {
   const env = getEnv();
-  if (!env.GEMINI_API_KEY) return { ok: false, message: "GEMINI_API_KEY is not configured." };
+  if (!env.GEMINI_API_KEY) return { ok: false, message: "AI PDF transcription is currently unavailable." };
   if (env.AI_FEATURES_ENABLED === "false") return { ok: false, message: "AI features are disabled." };
   if (input.buffer.byteLength > 15 * 1024 * 1024) {
     return { ok: false, message: "PDF is larger than the 15 MB inline transcription limit." };

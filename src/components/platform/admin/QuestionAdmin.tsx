@@ -367,8 +367,8 @@ export function QuestionAdmin({
             </button>
           </form>
           <div className="tp-note tp-mt-16">
-            <strong>Provider.</strong> Google Gemini through <code>GEMINI_API_KEY</code>. When it is not configured the
-            action returns an honest error instead of inventing questions.
+            <strong>Provider.</strong> Google Gemini drafts the questions. Every draft stays unpublished until a human
+            administrator reviews it.
           </div>
         </section>
       </div>

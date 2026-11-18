@@ -423,11 +423,23 @@ function addToBreakdown(bucket: Breakdown, key: string, status: "CORRECT" | "INC
   bucket[key] = row;
 }
 
+function parseNumericAnswer(value: string) {
+  // Accept a trailing unit or symbol after the number: "3", "3 A" and "3A"
+  // are the same answer. A remainder that still contains digits (for example
+  // "3/4" or "3^2") is not treated as a unit.
+  const cleaned = value.trim().replace(/,/g, "").replace(/[−–]/g, "-");
+  const match = cleaned.match(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/);
+  if (!match) return null;
+  if (/\d/.test(cleaned.slice(match[0].length))) return null;
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function numericEqual(selected: string, expected: string | null) {
   if (!expected) return false;
-  const left = Number(selected.trim());
-  const right = Number(expected.trim());
-  if (Number.isFinite(left) && Number.isFinite(right)) return Math.abs(left - right) < 1e-6;
+  const left = parseNumericAnswer(selected);
+  const right = parseNumericAnswer(expected);
+  if (left !== null && right !== null) return Math.abs(left - right) < 1e-6;
   return selected.trim().toLowerCase() === expected.trim().toLowerCase();
 }
 

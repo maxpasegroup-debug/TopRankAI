@@ -38,7 +38,7 @@ const sections: { title: string; body: string[] }[] = [
     title: "4. AI processing",
     body: [
       "When AI features are enabled, the minimum context needed for the task is sent to the configured provider (Google Gemini). For feedback, that context is the already-calculated result and your weakest subjects and topics — not your password, phone number or email.",
-      "With no provider key configured, AI features are disabled and deterministic fallbacks are used.",
+      "When AI features are unavailable, these tasks are completed with deterministic rules.",
     ],
   },
   {

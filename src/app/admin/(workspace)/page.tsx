@@ -25,11 +25,11 @@ export default async function AdminOverviewPage() {
         <div>
           <div className="tp-eyebrow">Operations</div>
           <h1>Platform overview</h1>
-          <p>Live counts from the production database. No demo numbers are shown.</p>
+          <p>Platform activity at a glance.</p>
         </div>
         <div className="tp-row tp-gap-8 tp-wrap">
           <span className={`tp-pill ${data.ai.enabled ? "tp-pill-ok" : "tp-pill-warn"}`}>
-            <Icon name="cpu" size={13} /> AI {data.ai.enabled ? "connected" : "not configured"}
+            <Icon name="cpu" size={13} /> AI {data.ai.enabled ? "active" : "inactive"}
           </span>
           <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/admin/ai">AI details</Link>
         </div>
@@ -138,7 +138,7 @@ export default async function AdminOverviewPage() {
           <div>
             <h2 style={{ fontSize: 17 }}>Recent AI calls</h2>
             <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>
-              {data.ai.enabled ? `${data.ai.provider} Â· ${data.ai.model}` : "Provider not configured â€” deterministic fallbacks are used"}
+              {data.ai.enabled ? `${data.ai.provider} Â· ${data.ai.model}` : "AI-assisted wording is currently off"}
             </p>
           </div>
           <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/admin/ai">Open log</Link>

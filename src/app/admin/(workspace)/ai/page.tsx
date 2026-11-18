@@ -19,7 +19,7 @@ export default async function AdminAiPage() {
           <p>Provider status and an honest record of every AI call. AI never calculates marks or ranks.</p>
         </div>
         <span className={`tp-pill ${config.enabled ? "tp-pill-ok" : "tp-pill-warn"}`}>
-          <Icon name="cpu" size={14} /> {config.enabled ? "Configured" : "Not configured"}
+          <Icon name="cpu" size={14} /> {config.enabled ? "Active" : "Inactive"}
         </span>
       </div>
 
@@ -35,29 +35,23 @@ export default async function AdminAiPage() {
           <span>{failures} failed</span>
         </div>
         <div className="tp-admin-stat">
-          <span>API key</span>
-          <strong style={{ fontSize: 20 }}>{config.hasKey ? "Present" : "Missing"}</strong>
-          <span>Read from GEMINI_API_KEY</span>
-        </div>
-        <div className="tp-admin-stat">
-          <span>Fallback</span>
+          <span>Scoring</span>
           <strong style={{ fontSize: 20 }}>Deterministic</strong>
-          <span>Used when AI is unavailable</span>
+          <span>Never calculated by AI</span>
         </div>
       </div>
 
       <div className="tp-grid tp-grid-2 tp-mb-24" style={{ alignItems: "start" }}>
         <section className="tp-card tp-card-pad">
-          <h2 style={{ fontSize: 17, marginBottom: 10 }}>How to enable AI</h2>
-          <ol className="tp-stack tp-gap-10 tp-small tp-muted" style={{ paddingLeft: 18 }}>
-            <li>Create a free Google AI Studio API key at <a className="tp-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/app/apikey</a>.</li>
-            <li>Add <code>GEMINI_API_KEY=â€¦</code> to <code>.env</code> and restart the server.</li>
-            <li>Optionally set <code>GEMINI_MODEL</code> (default <code>gemini-3.5-flash</code>).</li>
-            <li>Set <code>AI_FEATURES_ENABLED=false</code> to turn every AI feature off without removing the key.</li>
-          </ol>
+          <h2 style={{ fontSize: 17, marginBottom: 10 }}>What AI handles</h2>
+          <div className="tp-stack tp-gap-10 tp-small tp-muted">
+            <p>Feedback wording for submitted papers.</p>
+            <p>Study notes and daily plan suggestions.</p>
+            <p>Draft questions that an administrator must review before publication.</p>
+          </div>
           <div className="tp-note tp-mt-16">
-            <strong>What AI does here.</strong> Feedback wording, study notes, plan suggestions and draft questions.
-            Marks, accuracy, readiness scores and streaks are computed by the deterministic server code.
+            <strong>Never scored by AI.</strong> Marks, accuracy, readiness scores and streaks are computed by the
+            deterministic server code.
           </div>
         </section>
 
@@ -82,14 +76,8 @@ export default async function AdminAiPage() {
               </table>
             </div>
           ) : (
-            <p className="tp-small tp-muted">No AI operation has been recorded yet. That is expected when the key is missing.</p>
+            <p className="tp-small tp-muted">No AI operation has been recorded yet.</p>
           )}
-          {!config.enabled ? (
-            <div className="tp-note tp-mt-16">
-              <strong>Current behaviour.</strong> Exam feedback uses a rule-based fallback, study plans are built from
-              recorded weak topics, and AI question drafting returns a clear not-configured message.
-            </div>
-          ) : null}
         </section>
       </div>
 

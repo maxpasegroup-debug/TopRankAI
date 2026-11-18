@@ -53,7 +53,7 @@ export async function uploadToCloudinary(input: {
   extension: string;
 }): Promise<CloudinaryUpload> {
   const config = cloudinaryConfig();
-  if (!config) throw new Error("Cloudinary is not configured.");
+  if (!config) throw new Error("Image uploads are temporarily unavailable.");
 
   const timestamp = String(Math.floor(Date.now() / 1000));
   // Only `folder` and `timestamp` are sent besides the file, key and signature,

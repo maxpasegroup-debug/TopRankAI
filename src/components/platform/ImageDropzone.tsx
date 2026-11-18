@@ -200,9 +200,7 @@ export function ImageDropzone({ value, onChange, onBusyChange, disabled = false,
 
       {config?.configured === false ? (
         <p className="text-xs leading-relaxed text-warn">
-          File storage is not configured on this deployment yet, so uploads are disabled. An administrator needs to add
-          the storage credentials to the server environment. You can finish your account without a picture and add one
-          later.
+          Image uploads are temporarily unavailable. You can finish your account without a picture and add one later.
         </p>
       ) : null}
     </div>

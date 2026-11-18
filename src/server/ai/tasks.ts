@@ -589,13 +589,14 @@ export async function generateExamFeedback(input: FeedbackInput): Promise<{ feed
     attempts: 1,
     schema: tolerantFeedbackSchema,
     responseSchema: feedbackResponseSchema,
-    system: `${SAFETY_RULE} All marks and percentages have already been calculated by the platform. Do not recalculate or dispute them. Interpret the numbers and give specific, actionable study advice. ${JSON_RULE}`,
+    system: `${SAFETY_RULE} All marks and percentages have already been calculated by the platform. Do not recalculate or dispute them. Interpret the numbers and give specific, actionable study advice. Numerical answers are graded on numeric value: a unit or symbol after the number, such as 3A for 3 or 12 V for 12, is accepted. Never describe a unit suffix as an error or as a wrong answer. ${JSON_RULE}`,
     prompt: [
       `Exam: ${input.examName} (${input.level} preparation level)`,
       `Deterministic result: ${input.correct} correct, ${input.incorrect} incorrect, ${input.unanswered} unanswered out of ${input.totalQuestions}.`,
       `Accuracy: ${input.accuracy.toFixed(2)}%. Score: ${input.scorePercent.toFixed(2)}%. Time: ${Math.round(input.timeTakenSeconds / 60)} of ${input.durationMinutes} minutes.`,
       `Weakest subjects: ${input.weakestSubjects.map((s) => `${s.name} (${s.accuracy.toFixed(0)}%)`).join(", ") || "none recorded"}.`,
       `Weakest topics: ${input.weakestTopics.map((t) => `${t.title} (${t.accuracy.toFixed(0)}%)`).join(", ") || "none recorded"}.`,
+      "Numerical answers may be written with or without units: 3, 3 A and 3A are the same answer.",
       "Give feedback that references these exact numbers.",
       "Format: {\"headline\":\"...\",\"summary\":\"...\",\"strengths\":[\"...\"],\"focusAreas\":[{\"topic\":\"...\",\"why\":\"...\",\"action\":\"...\"}],\"nextSteps\":[\"...\"]}",
     ].join("\n"),
@@ -616,7 +617,7 @@ export function fallbackFeedback(input: FeedbackInput): ExamFeedback {
   ];
   return {
     headline: input.accuracy >= 70 ? "A solid paper with clear next steps" : "A useful diagnostic paper",
-    summary: `${strength} AI commentary is unavailable right now, so this feedback is generated from your recorded answers. Act on these deterministic observations and retry later for a deeper narrative.`,
+    summary: `${strength} Use the subject and topic breakdown above to decide what to revise next.`,
     strengths: input.correct > 0 ? [`${input.correct} correct answers`, `${input.accuracy.toFixed(0)}% accuracy`] : [],
     focusAreas: input.weakestTopics.slice(0, 3).map((topic) => ({
       topic: topic.title,
