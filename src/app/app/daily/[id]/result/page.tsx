@@ -6,6 +6,7 @@ import { requireAuth } from "@/server/auth/session";
 import { getAttemptResult } from "@/server/platform/daily-exam";
 import { formatDate, formatDuration, percent } from "@/server/platform/utils";
 import { ExamFeedbackStatus } from "@/components/platform/app/ExamFeedbackStatus";
+import { ReviewPager } from "@/components/platform/app/ReviewPager";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Exam result" };
@@ -15,56 +16,6 @@ const statusPill: Record<string, string> = {
   INCORRECT: "tp-pill-danger",
   UNANSWERED: "",
 };
-
-function ReviewPager({
-  page,
-  totalPages,
-  hrefFor,
-}: {
-  page: number;
-  totalPages: number;
-  hrefFor: (target: number) => string;
-}) {
-  if (totalPages <= 1) return null;
-  const numbers: (number | "gap")[] = [];
-  for (let value = 1; value <= totalPages; value += 1) {
-    const near = Math.abs(value - page) <= 2 || value === 1 || value === totalPages;
-    if (near) {
-      numbers.push(value);
-    } else if (numbers[numbers.length - 1] !== "gap") {
-      numbers.push("gap");
-    }
-  }
-  return (
-    <nav className="tp-pager" aria-label="Question review pages">
-      {page > 1 ? (
-        <Link className="tp-pager-link" href={hrefFor(page - 1)} rel="prev">Previous</Link>
-      ) : (
-        <span className="tp-pager-link" data-disabled="true">Previous</span>
-      )}
-      {numbers.map((value, index) =>
-        value === "gap" ? (
-          <span className="tp-pager-gap" key={`gap-${index}`}>…</span>
-        ) : (
-          <Link
-            className="tp-pager-link"
-            href={hrefFor(value)}
-            key={value}
-            aria-current={value === page ? "page" : undefined}
-            data-active={value === page ? "true" : undefined}
-          >
-            {value}
-          </Link>
-        ),
-      )}
-      {page < totalPages ? (
-        <Link className="tp-pager-link" href={hrefFor(page + 1)} rel="next">Next</Link>
-      ) : (
-        <span className="tp-pager-link" data-disabled="true">Next</span>
-      )}
-    </nav>
-  );
-}
 
 export default async function DailyExamResultPage({
   params,
@@ -101,7 +52,7 @@ export default async function DailyExamResultPage({
   const page = Math.min(Math.max(1, Number.isFinite(requestedPage) ? Math.floor(requestedPage) : 1), totalPages);
   const pageStart = (page - 1) * pageSize;
   const pageItems = review.slice(pageStart, pageStart + pageSize);
-  const pagerHref = (target: number) => `/app/daily/${id}/result?page=${target}#review`;
+  const baseHref = `/app/daily/${id}/result`;
 
   return (
     <>
@@ -296,7 +247,6 @@ export default async function DailyExamResultPage({
               Showing {pageStart + 1}–{Math.min(review.length, pageStart + pageSize)} of {review.length} questions
             </p>
           </div>
-          <ReviewPager page={page} totalPages={totalPages} hrefFor={pagerHref} />
         </div>
         <div className="tp-card tp-card-pad">
           {pageItems.map((item) => (
@@ -367,7 +317,7 @@ export default async function DailyExamResultPage({
         {totalPages > 1 ? (
           <div className="tp-row-between tp-gap-12 tp-wrap tp-mt-16">
             <span className="tp-xs tp-faint">Page {page} of {totalPages}</span>
-            <ReviewPager page={page} totalPages={totalPages} hrefFor={pagerHref} />
+            <ReviewPager page={page} totalPages={totalPages} baseHref={baseHref} />
           </div>
         ) : null}
       </section>

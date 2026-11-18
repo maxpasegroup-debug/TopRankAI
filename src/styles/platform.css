@@ -1581,6 +1581,9 @@ body.body-platform {
   gap: 6px;
   flex-wrap: wrap;
 }
+#review {
+  scroll-margin-top: 92px;
+}
 .tp-pager-link {
   display: inline-flex;
   align-items: center;
