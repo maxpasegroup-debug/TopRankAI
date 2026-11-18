@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/platform/Icon";
+import { PasswordInput } from "@/components/platform/auth/PasswordInput";
 import { LogoMark } from "@/components/platform/Logo";
 import { toast } from "@/components/platform/AppToaster";
 import { ImageDropzone } from "@/components/platform/ImageDropzone";
@@ -345,9 +346,8 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
           <div className="grid gap-3 min-[420px]:grid-cols-2">
             <label className="tp-field">
               <span className="tp-label">Password</span>
-              <input
+              <PasswordInput
                 className="tp-input"
-                type="password"
                 value={account.password}
                 onChange={(event) => setAccount({ ...account, password: event.target.value })}
                 autoComplete="new-password"
@@ -358,9 +358,8 @@ export function RegisterConversation({ groups, currentYear }: { groups: Group[];
             </label>
             <label className="tp-field">
               <span className="tp-label">Confirm password</span>
-              <input
+              <PasswordInput
                 className="tp-input"
-                type="password"
                 value={account.confirm}
                 onChange={(event) => setAccount({ ...account, confirm: event.target.value })}
                 autoComplete="new-password"

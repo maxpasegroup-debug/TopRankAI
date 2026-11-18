@@ -163,68 +163,67 @@ export default async function DailyExamResultPage({
         </div>
       </section>
 
-      <div className="tp-grid tp-grid-2 tp-mt-24" style={{ alignItems: "stretch" }}>
-        <section className="tp-card tp-card-pad">
-          <div className="tp-row-between" style={{ marginBottom: 14 }}>
-            <h3 style={{ fontSize: 17 }}>Subject breakdown</h3>
-            <span className="tp-xs tp-faint">Calculated on the server</span>
-          </div>
-          {subjectBreakdown.length ? (
-            <div className="tp-stack tp-gap-12">
-              {subjectBreakdown.map((subject) => {
-                const answered = subject.correct + subject.incorrect;
-                const accuracy = answered ? (subject.correct / answered) * 100 : 0;
-                return (
-                  <div key={subject.name}>
-                    <div className="tp-row-between tp-small">
-                      <span style={{ fontWeight: 600 }}>{subject.name}</span>
-                      <span className="tp-faint">{subject.correct}/{subject.correct + subject.incorrect + subject.unanswered} correct · {accuracy.toFixed(0)}%</span>
-                    </div>
-                    <div className="tp-meter tp-mt-8"><span style={{ width: `${percent(subject.correct, subject.total)}%` }} /></div>
+      <section className="tp-card tp-card-pad tp-mt-24">
+        <div className="tp-row-between" style={{ marginBottom: 14 }}>
+          <h3 style={{ fontSize: 17 }}>Subject breakdown</h3>
+          <span className="tp-xs tp-faint">Calculated on the server</span>
+        </div>
+        {subjectBreakdown.length ? (
+          <div className="tp-grid tp-grid-3">
+            {subjectBreakdown.map((subject) => {
+              const answered = subject.correct + subject.incorrect;
+              const accuracy = answered ? (subject.correct / answered) * 100 : 0;
+              return (
+                <div key={subject.name}>
+                  <div className="tp-row-between tp-small">
+                    <span style={{ fontWeight: 600 }}>{subject.name}</span>
+                    <span className="tp-faint">{subject.correct}/{subject.correct + subject.incorrect + subject.unanswered} correct · {accuracy.toFixed(0)}%</span>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="tp-small tp-muted">No subject data recorded for this paper.</p>
-          )}
-        </section>
-
-        <section className="tp-card tp-card-pad">
-          <div className="tp-row-between" style={{ marginBottom: 14 }}>
-            <h3 style={{ fontSize: 17 }}>Topic focus</h3>
-            <Link className="tp-link tp-small" href="/app/analytics">Full report</Link>
+                  <div className="tp-meter tp-mt-8"><span style={{ width: `${percent(subject.correct, subject.total)}%` }} /></div>
+                </div>
+              );
+            })}
           </div>
-          {topicBreakdown.length ? (
-            <div className="tp-stack tp-gap-12">
-              {topicBreakdown.slice(0, 6).map((topic) => {
-                const answered = topic.correct + topic.incorrect;
-                const accuracy = answered ? (topic.correct / answered) * 100 : 0;
-                return (
-                  <div className="tp-progress-row" key={topic.title} style={{ borderBottom: 0, padding: 0 }}>
-                    <div className="tp-row-between tp-small">
-                      <span style={{ fontWeight: 600 }}>{topic.title}</span>
-                      <span className={`tp-pill ${accuracy >= 70 ? "tp-pill-ok" : accuracy >= 40 ? "tp-pill-warn" : "tp-pill-danger"}`}>{accuracy.toFixed(0)}%</span>
-                    </div>
-                    <div className="tp-xs tp-faint">{topic.correct} correct · {topic.incorrect} incorrect · {topic.unanswered} skipped</div>
+        ) : (
+          <p className="tp-small tp-muted">No subject data recorded for this paper.</p>
+        )}
+      </section>
+
+      <section className="tp-card tp-card-pad tp-mt-20">
+        <div className="tp-row-between" style={{ marginBottom: 14 }}>
+          <h3 style={{ fontSize: 17 }}>Topic focus</h3>
+          <Link className="tp-link tp-small" href="/app/analytics">Full report</Link>
+        </div>
+        {topicBreakdown.length ? (
+          <div className="tp-grid tp-grid-3">
+            {topicBreakdown.slice(0, 3).map((topic) => {
+              const answered = topic.correct + topic.incorrect;
+              const accuracy = answered ? (topic.correct / answered) * 100 : 0;
+              return (
+                <div className="tp-progress-row" key={topic.title} style={{ borderBottom: 0, padding: 0 }}>
+                  <div className="tp-row-between tp-small">
+                    <span style={{ fontWeight: 600 }}>{topic.title}</span>
+                    <span className={`tp-pill ${accuracy >= 70 ? "tp-pill-ok" : accuracy >= 40 ? "tp-pill-warn" : "tp-pill-danger"}`}>{accuracy.toFixed(0)}%</span>
+                  </div>
+                  <div className="tp-row-between tp-gap-8 tp-wrap" style={{ marginTop: 4 }}>
+                    <span className="tp-xs tp-faint">{topic.correct} correct · {topic.incorrect} incorrect · {topic.unanswered} skipped</span>
                     {topicByName.get(topic.title) ? (
-                      <Link className="tp-link tp-xs" href={topicByName.get(topic.title)!.href} style={{ display: "inline-block", marginTop: 6 }}>
-                        Revise this topic <Icon name="arrow-right" size={12} />
+                      <Link className="tp-link tp-xs tp-nowrap" href={topicByName.get(topic.title)!.href}>
+                        Revise <Icon name="arrow-right" size={12} />
                       </Link>
                     ) : null}
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="tp-small tp-muted">No topic data recorded.</p>
-          )}
-        </section>
-      </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="tp-small tp-muted">No topic data recorded.</p>
+        )}
+      </section>
 
       {feedback ? (
         <section className="tp-card tp-card-pad tp-mt-24">
-          {info.feedbackPending ? <ExamFeedbackStatus attemptId={info.id} /> : null}
           <div className="tp-row-between" style={{ marginBottom: 12 }}>
             <div>
               <h3 style={{ fontSize: 18 }}>{feedback.headline}</h3>
@@ -239,6 +238,7 @@ export default async function DailyExamResultPage({
               {info.feedbackSource === "AI" ? "AI-assisted feedback" : "Deterministic feedback"}
             </span>
           </div>
+          {info.feedbackPending ? <ExamFeedbackStatus attemptId={info.id} /> : null}
           <div className="tp-grid tp-grid-2" style={{ alignItems: "start" }}>
             <div>
               {feedback.strengths.length ? (

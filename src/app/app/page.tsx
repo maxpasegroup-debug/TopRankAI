@@ -70,7 +70,15 @@ export default async function DashboardPage() {
         </div>
         <div className="tp-row tp-gap-8 tp-wrap">
           <span className="tp-pill tp-pill-brand"><Icon name="target" size={14} /> {levelLabel(exam.level)}</span>
-          <span className="tp-pill"><Icon name="flame" size={14} /> {data.streak}-day streak</span>
+          {data.streaks.length > 1 ? (
+            data.streaks.map((entry) => (
+              <span className="tp-pill" key={entry.examId} title={`${entry.label} current streak`}>
+                <Icon name="flame" size={14} /> {entry.label}: {entry.streak}-day streak
+              </span>
+            ))
+          ) : (
+            <span className="tp-pill"><Icon name="flame" size={14} /> {data.streak}-day streak</span>
+          )}
         </div>
       </div>
 

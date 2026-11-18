@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { Icon } from "@/components/platform/Icon";
+import { PasswordInput } from "@/components/platform/auth/PasswordInput";
 import { toast } from "@/components/platform/AppToaster";
 import { loginUser } from "@/server/actions/auth";
 
 export function LoginForm() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [showPassword, setShowPassword] = useState(false);
 
   function onSubmit(formData: FormData) {
     const email = String(formData.get("email") ?? "");
@@ -37,29 +37,14 @@ export function LoginForm() {
 
       <div className="tp-field">
         <label className="tp-label" htmlFor="password">Password</label>
-        <div style={{ position: "relative" }}>
-          <input
-            className="tp-input"
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            required
-            placeholder="Your password"
-            style={{ paddingRight: 46 }}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((value) => !value)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            style={{
-              position: "absolute", right: 8, top: 8, width: 32, height: 32, display: "grid", placeItems: "center",
-              border: 0, background: "transparent", color: "var(--tp-faint)", cursor: "pointer",
-            }}
-          >
-            <Icon name="eye" size={17} />
-          </button>
-        </div>
+        <PasswordInput
+          className="tp-input"
+          id="password"
+          name="password"
+          autoComplete="current-password"
+          required
+          placeholder="Your password"
+        />
       </div>
 
       <button className="tp-btn tp-btn-lg tp-btn-block" type="submit" disabled={pending}>

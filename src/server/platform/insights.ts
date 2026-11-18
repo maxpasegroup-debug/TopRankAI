@@ -17,7 +17,7 @@ export async function getReadiness(userId: string, exam: CandidateExam) {
       take: 60,
       select: { submittedAt: true, correctCount: true, incorrectCount: true, unansweredCount: true, accuracy: true },
     }),
-    computeStreak(userId),
+    computeStreak(userId, exam.examId),
     getSyllabusCompletion(userId, exam.examId),
   ]);
   const last14 = attempts.filter((attempt) => attempt.submittedAt && daysBetween(attempt.submittedAt, new Date()) <= 14);

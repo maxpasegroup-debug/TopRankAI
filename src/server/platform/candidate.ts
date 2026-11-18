@@ -100,9 +100,9 @@ export async function assertExamTarget(userId: string, examId: string) {
   return target;
 }
 
-export const computeStreak = cache(async (userId: string): Promise<number> => {
+export const computeStreak = cache(async (userId: string, examId?: string): Promise<number> => {
   const records = await prisma.performanceRecord.findMany({
-    where: { userId, testsAttended: { gt: 0 } },
+    where: { userId, testsAttended: { gt: 0 }, ...(examId ? { examId } : {}) },
     orderBy: { recordDate: "desc" },
     take: 400,
     select: { recordDate: true },
@@ -139,10 +139,10 @@ export async function getDashboardData(userId: string, examCode?: string | null)
   const today = todayDate();
 
   if (!selected) {
-    return { exams, selected: null, today, dailyExams: [], recentAttempts: [], streak: 0, revisionDue: 0, goals: [], unreadNotifications: 0, syllabus: { total: 0, completed: 0, percent: 0 }, nextEvent: null, achievements: { earned: 0, total: 0 }, performance: [] };
+    return { exams, selected: null, today, dailyExams: [], recentAttempts: [], streak: 0, streaks: [], revisionDue: 0, goals: [], unreadNotifications: 0, syllabus: { total: 0, completed: 0, percent: 0 }, nextEvent: null, achievements: { earned: 0, total: 0 }, performance: [] };
   }
 
-  const [dailyExams, recentAttempts, streak, revisionDue, goals, unreadNotifications, syllabus, nextEvent, earnedAchievements, totalAchievements, performance] = await Promise.all([
+  const [dailyExams, recentAttempts, streaks, revisionDue, goals, unreadNotifications, syllabus, nextEvent, earnedAchievements, totalAchievements, performance] = await Promise.all([
     prisma.dailyExam.findMany({
       where: { userId, examId: selected.examId, scheduledDate: today },
       orderBy: { slot: "asc" },
@@ -154,7 +154,13 @@ export async function getDashboardData(userId: string, examCode?: string | null)
       take: 5,
       include: { exam: { select: { code: true, name: true } }, dailyExam: { select: { title: true, scheduledDate: true } } },
     }),
-    computeStreak(userId),
+    Promise.all(
+      exams.map(async (entry) => ({
+        examId: entry.examId,
+        label: entry.shortName ?? entry.name,
+        streak: await computeStreak(userId, entry.examId),
+      })),
+    ),
     prisma.revisionQueue.count({ where: { userId, status: "PENDING", dueDate: { lte: today } } }),
     prisma.dailyGoal.findMany({ where: { userId, examId: selected.examId, goalDate: today }, orderBy: { order: "asc" } }),
     getUnreadNotificationCount(userId),
@@ -175,7 +181,8 @@ export async function getDashboardData(userId: string, examCode?: string | null)
     today,
     dailyExams,
     recentAttempts,
-    streak,
+    streak: streaks.find((entry) => entry.examId === selected.examId)?.streak ?? 0,
+    streaks,
     revisionDue,
     goals,
     unreadNotifications,

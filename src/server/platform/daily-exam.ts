@@ -1090,6 +1090,6 @@ export async function getDailyHistory(userId: string, examId: string) {
     where: { userId, examId },
     orderBy: [{ scheduledDate: "desc" }, { slot: "asc" }],
     take: 30,
-    include: { attempt: { select: { id: true, status: true, accuracy: true, obtainedMarks: true, totalMarks: true, submittedAt: true } } },
+    include: { attempt: { select: { id: true, status: true, accuracy: true, obtainedMarks: true, totalMarks: true, submittedAt: true, correctCount: true, incorrectCount: true, unansweredCount: true } } },
   });
 }

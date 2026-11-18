@@ -70,7 +70,7 @@ export default async function AnalyticsPage() {
             <div className="tp-row-between" style={{ marginBottom: 16 }}>
               <div>
                 <h3 style={{ fontSize: 17 }}>Score trend</h3>
-                <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>{trend.length} recorded days, oldest left</p>
+                <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>{trend.length} recorded day{trend.length === 1 ? "" : "s"}, oldest left</p>
               </div>
               <span className="tp-pill tp-pill-brand">{data.readiness.score}/100 readiness</span>
             </div>
@@ -159,6 +159,15 @@ export default async function AnalyticsPage() {
               <p className="tp-small tp-muted">No submitted papers yet.</p>
             )}
           </section>
+
+          <section className="tp-card tp-card-pad">
+            <h3 style={{ fontSize: 17, marginBottom: 10 }}>Question bank</h3>
+            <p className="tp-small tp-muted">
+              {data.totalQuestions} reviewed questions are published for this exam. The daily paper rotates
+              deterministically through them.
+            </p>
+            <div className="tp-xs tp-faint tp-mt-8">Accuracy is always correct ÷ attempted, never inflated by skipped questions.</div>
+          </section>
         </div>
 
         <aside className="tp-stack tp-gap-20">
@@ -211,14 +220,6 @@ export default async function AnalyticsPage() {
             <Link className="tp-btn tp-btn-soft tp-btn-sm tp-btn-block tp-mt-16" href="/app/learn">Open learning centre</Link>
           </section>
 
-          <section className="tp-card tp-card-pad">
-            <h3 style={{ fontSize: 17, marginBottom: 10 }}>Question bank</h3>
-            <p className="tp-small tp-muted">
-              {data.totalQuestions} reviewed questions are published for this exam. The daily paper rotates
-              deterministically through them.
-            </p>
-            <div className="tp-xs tp-faint tp-mt-8">Accuracy is always correct ÷ attempted, never inflated by skipped questions.</div>
-          </section>
         </aside>
       </div>
     </>

@@ -6,7 +6,7 @@ import { getPaperSchedule } from "@/server/platform/paper-schedule";
 import { EXAM_BREAK_MINUTES } from "@/shared/daily-workload";
 import { PrepareExamButton } from "@/components/platform/app/PrepareExamButton";
 import { requireAuth } from "@/server/auth/session";
-import { getCandidateExams, getSelectedExam } from "@/server/platform/candidate";
+import { getCandidateExams, getSelectedExam, computeStreak } from "@/server/platform/candidate";
 import { getActiveExam } from "@/server/platform/active";
 import { getDailyHistory, readPaperMeta } from "@/server/platform/daily-exam";
 import { formatDate, formatDateTime, todayDate, levelLabel, percent, toNumber } from "@/server/platform/utils";
@@ -60,10 +60,11 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
   }
 
   const day = todayDate();
-  const [history, schedule, allExams] = await Promise.all([
+  const [history, schedule, allExams, streak] = await Promise.all([
     getDailyHistory(user.id, exam.examId),
     getPaperSchedule(user.id, exam, day),
     getCandidateExams(user.id),
+    computeStreak(user.id, exam.examId),
   ]);
   const todayPapers = history.filter((paper) => paper.scheduledDate.getTime() === day.getTime());
   const submitted = history.filter((item) => item.attempt?.status === "SUBMITTED");
@@ -84,12 +85,13 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
             {official ? ` · ${official.name}: ${official.totalQuestions} questions, ${official.durationMinutes} minutes, ${official.totalMarks} marks` : ""}
           </p>
         </div>
+        <span className="tp-pill"><Icon name="flame" size={14} /> {streak}-day streak</span>
       </div>
 
       <div className="tp-grid tp-grid-3 tp-mb-24">
         <div className="tp-stat">
           <div className="tp-stat-label"><Icon name="check" size={15} /> Submitted</div>
-          <div className="tp-stat-value">{submitted.length}<small> papers</small></div>
+          <div className="tp-stat-value">{submitted.length}<small> {submitted.length === 1 ? "paper" : "papers"}</small></div>
           <div className="tp-stat-note">Out of {history.length} generated</div>
         </div>
         <div className="tp-stat">
@@ -154,7 +156,7 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
               <tr>
                 <th>Date</th>
                 <th>Paper</th>
-                <th>Questions</th>
+                <th>Answered / total</th>
                 <th>Status</th>
                 <th>Marks</th>
                 <th>Accuracy</th>
@@ -168,7 +170,7 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
                   <tr key={item.id}>
                     <td className="tp-nowrap">{formatDate(item.scheduledDate, { day: "numeric", month: "short" })}</td>
                     <td>{item.title}</td>
-                    <td>{item.questionIds.length}</td>
+                    <td>{submittedPaper ? `${(item.attempt?.correctCount ?? 0) + (item.attempt?.incorrectCount ?? 0)} / ${item.questionIds.length}` : `— / ${item.questionIds.length}`}</td>
                     <td><span className={`tp-pill ${statusTone[item.status] ?? ""}`}>{statusLabel[item.status] ?? item.status}</span></td>
                     <td>{submittedPaper ? `${toNumber(item.attempt?.obtainedMarks)} / ${toNumber(item.attempt?.totalMarks)}` : "—"}</td>
                     <td>{submittedPaper ? `${toNumber(item.attempt?.accuracy).toFixed(1)}%` : "—"}</td>

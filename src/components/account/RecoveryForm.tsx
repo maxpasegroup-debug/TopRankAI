@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Brand } from "@/components/layout/Brand";
+import { PasswordInput } from "@/components/platform/auth/PasswordInput";
 
 export function RecoveryForm({ reset = false }: { reset?: boolean }) {
   const [token, setToken] = useState(""); const [busy, setBusy] = useState(false);
@@ -29,8 +30,8 @@ export function RecoveryForm({ reset = false }: { reset?: boolean }) {
     <Brand /><h1 className="section-title">{reset ? "Set a new password" : "Recover your account"}</h1>
     {!reset ? <label>Email<input className="input" name="email" type="email" autoComplete="email" required /></label> : <>
       {!token && !message && <p role="alert">Recovery link is missing. Request a new link.</p>}
-      <label>New password<input className="input" name="password" type="password" autoComplete="new-password" minLength={8} maxLength={72} required /></label>
-      <label>Confirm password<input className="input" name="confirmation" type="password" autoComplete="new-password" minLength={8} maxLength={72} required /></label>
+      <label>New password<PasswordInput className="input" name="password" autoComplete="new-password" minLength={8} maxLength={72} required /></label>
+      <label>Confirm password<PasswordInput className="input" name="confirmation" autoComplete="new-password" minLength={8} maxLength={72} required /></label>
     </>}
     {error && <p role="alert" className="form-error">{error}</p>}{message && <p role="status">{message}</p>}
     <button className="button button-primary" disabled={busy || reset && !token}>{busy ? "Please wait..." : reset ? "Update password" : "Request recovery"}</button>

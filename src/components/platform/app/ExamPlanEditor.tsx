@@ -240,7 +240,7 @@ export function ExamPlanEditor({ groups, initial, currentYear }: { groups: Group
                   >
                     <span>
                       <span style={{ fontWeight: 650, fontSize: 14, display: "block" }}>{group.name}</span>
-                      <span className="tp-xs tp-faint">{group.exams.length} exams</span>
+                      <span className="tp-xs tp-faint">{group.exams.length} {group.exams.length === 1 ? "exam" : "exams"}</span>
                     </span>
                     <span className="tp-row tp-gap-8">
                       {count ? <span className="tp-pill tp-pill-brand">{count} added</span> : null}

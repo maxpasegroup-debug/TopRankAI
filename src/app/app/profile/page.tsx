@@ -2,6 +2,7 @@ import { levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-wo
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { ProfileForm } from "@/components/platform/app/ProfileForm";
+import { PasswordSettings } from "@/components/platform/app/PasswordSettings";
 import { requireAuth } from "@/server/auth/session";
 import { getCandidateProfile } from "@/server/platform/insights";
 import { formatDate, levelLabel } from "@/server/platform/utils";
@@ -48,6 +49,7 @@ export default async function ProfilePage() {
               timezone: profile.timezone ?? "Asia/Kolkata",
             }}
           />
+          <PasswordSettings />
         </div>
 
         <aside className="tp-stack tp-gap-20">

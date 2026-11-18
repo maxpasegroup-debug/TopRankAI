@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/server/db";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
-import { createSession, revokeSession, sessionCookieOptions, SESSION_COOKIE } from "@/server/auth/session";
+import { createSession, requireAuth, revokeSession, sessionCookieOptions, SESSION_COOKIE } from "@/server/auth/session";
 import { ACCOUNT_POLICY_VERSION } from "@/shared/account-policy";
 import { ageFromDate } from "@/server/platform/utils";
 import { readExamPattern } from "@/server/platform/patterns";
@@ -227,4 +227,41 @@ export async function resetAdminPassword(raw: {
     prisma.session.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } }),
   ]);
   return { ok: true, message: "Administrator password updated. Sign in with the new password." };
+}
+
+export async function changeCandidatePassword(raw: {
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<AdminPasswordResult> {
+  const user = await requireAuth();
+  const newPassword = String(raw.newPassword ?? "");
+  const confirmPassword = String(raw.confirmPassword ?? "");
+
+  if (newPassword.length < 8) return { ok: false, message: "Use at least 8 characters for the new password." };
+  if (newPassword.length > 72) return { ok: false, message: "The new password is too long." };
+  if (newPassword !== confirmPassword) return { ok: false, message: "The new passwords do not match." };
+
+  const account = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { passwordHash: true },
+  });
+  if (!account) return { ok: false, message: "Account not found." };
+  if (await verifyPassword(newPassword, account.passwordHash)) {
+    return { ok: false, message: "The new password must be different from your current password." };
+  }
+
+  const passwordHash = await hashPassword(newPassword);
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: user.id }, data: { passwordHash } }),
+    prisma.auditEvent.create({
+      data: {
+        actorId: user.id,
+        action: "PASSWORD_CHANGED",
+        entity: "User",
+        entityId: user.id,
+        detail: JSON.stringify({ source: "candidate_profile" }),
+      },
+    }),
+  ]);
+  return { ok: true, message: "Password changed. Use the new password the next time you sign in." };
 }

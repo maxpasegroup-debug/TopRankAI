@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Icon } from "../Icon";
+import { PasswordInput } from "./PasswordInput";
 import { toast } from "../AppToaster";
 import { loginAdmin, resetAdminPassword } from "@/server/actions/auth";
 
@@ -71,7 +72,7 @@ export function AdminLoginForm() {
           </div>
           <div className="tp-field">
             <label className="tp-label" htmlFor="admin-password">Password</label>
-            <input id="admin-password" name="password" type="password" autoComplete="current-password" required className="tp-input" placeholder="Your administrator password" />
+            <PasswordInput id="admin-password" name="password" autoComplete="current-password" required className="tp-input" placeholder="Your administrator password" />
           </div>
           <button type="submit" className="tp-btn tp-btn-lg tp-btn-block" disabled={pending}>
             {pending ? "Signing in…" : "Open admin workspace"} {pending ? null : <Icon name="arrow-right" size={16} />}
@@ -85,16 +86,16 @@ export function AdminLoginForm() {
           </div>
           <div className="tp-field">
             <label className="tp-label" htmlFor="reset-current">Current password</label>
-            <input id="reset-current" name="currentPassword" type="password" autoComplete="current-password" required className="tp-input" />
+            <PasswordInput id="reset-current" name="currentPassword" autoComplete="current-password" required className="tp-input" />
             <span className="tp-hint">Password reset requires the current password. There is no email recovery in this build.</span>
           </div>
           <div className="tp-field">
             <label className="tp-label" htmlFor="reset-new">New password</label>
-            <input id="reset-new" name="newPassword" type="password" autoComplete="new-password" required minLength={8} maxLength={72} className="tp-input" />
+            <PasswordInput id="reset-new" name="newPassword" autoComplete="new-password" required minLength={8} maxLength={72} className="tp-input" />
           </div>
           <div className="tp-field">
             <label className="tp-label" htmlFor="reset-confirm">Confirm new password</label>
-            <input id="reset-confirm" name="confirmPassword" type="password" autoComplete="new-password" required minLength={8} maxLength={72} className="tp-input" />
+            <PasswordInput id="reset-confirm" name="confirmPassword" autoComplete="new-password" required minLength={8} maxLength={72} className="tp-input" />
           </div>
           <button type="submit" className="tp-btn tp-btn-lg tp-btn-block" disabled={pending}>
             {pending ? "Updating…" : "Update administrator password"} {pending ? null : <Icon name="lock" size={16} />}
