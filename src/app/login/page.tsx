@@ -32,7 +32,7 @@ export default async function LoginPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 items-start justify-center px-[clamp(14px,4vw,34px)] pb-14 pt-2 sm:pt-6" id="main">
+      <main className="tp-auth-main" id="main">
         <section
           className="w-full max-w-[460px] overflow-hidden rounded-xl border border-line bg-surface shadow-lg"
           aria-labelledby="login-title"

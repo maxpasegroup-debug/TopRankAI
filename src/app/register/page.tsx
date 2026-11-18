@@ -34,7 +34,7 @@ export default async function RegisterPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 items-start justify-center px-[clamp(14px,4vw,34px)] pb-14 pt-2 sm:pt-6" id="main">
+      <main className="tp-auth-main" id="main">
         <RegisterConversation groups={groups} currentYear={new Date().getFullYear()} />
       </main>
 

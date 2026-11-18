@@ -723,6 +723,7 @@ body.body-platform {
   position: relative;
   width: 100%;
   max-width: 34rem;
+  padding-block: 48px;
   justify-self: center;
   isolation: isolate;
 }
@@ -734,7 +735,7 @@ body.body-platform {
   background: linear-gradient(160deg, var(--tp-surface), var(--tp-surface-2));
   box-shadow: var(--tp-shadow-lg);
   margin-inline: clamp(4px, 1vw, 16px);
-  padding: clamp(16px, 2vw, 24px);
+  padding: 32px clamp(16px, 2vw, 24px);
   transform: rotate(1.4deg);
 }
 .tp-hero-float {
@@ -759,13 +760,13 @@ body.body-platform {
   font-size: 11px;
 }
 .tp-hero-float-a {
-  top: -46px;
-  left: -24px;
+  top: 0;
+  left: 0;
   animation: tp-bob 7s ease-in-out infinite;
 }
 .tp-hero-float-b {
-  bottom: -46px;
-  right: -16px;
+  bottom: 0;
+  right: 0;
   animation: tp-bob 8s ease-in-out infinite reverse;
 }
 @keyframes tp-bob {
@@ -2285,12 +2286,26 @@ details[open] > .tp-unit-head .tp-unit-chevron {
   isolation: isolate;
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   flex-direction: column;
   background:
     radial-gradient(1200px 620px at 12% -10%, color-mix(in srgb, var(--tp-brand) 24%, transparent), transparent 70%),
     radial-gradient(1000px 560px at 88% -4%, color-mix(in srgb, var(--tp-violet) 20%, transparent), transparent 72%),
     radial-gradient(900px 700px at 50% 120%, color-mix(in srgb, var(--tp-accent) 12%, transparent), transparent 70%),
     var(--tp-bg);
+}
+
+.tp-auth-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: clamp(16px, 3vw, 32px) clamp(14px, 4vw, 34px);
+}
+.tp-auth-main > section {
+  flex-shrink: 0;
+  margin-block: auto;
 }
 
 /* A faint plan grid, faded towards the edges, so the stage is not an empty field. */
@@ -2524,11 +2539,8 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 
 @media (max-width: 900px) {
   .tp-hero-grid { grid-template-columns: minmax(0, 1fr); }
-  .tp-hero-visual { display: flex; flex-direction: column; gap: 12px; max-width: 32rem; }
-  .tp-hero-card { order: 1; transform: none; margin-inline: 0; }
-  .tp-hero-float { position: static; max-width: 100%; align-self: flex-start; animation: none; }
-  .tp-hero-float-a { order: 2; }
-  .tp-hero-float-b { order: 3; align-self: flex-end; }
+  .tp-hero-visual { max-width: 32rem; }
+  .tp-hero-card { transform: none; margin-inline: 0; }
   .tp-menu-btn { display: grid; }
   .tp-app { grid-template-columns: 1fr; }
   .tp-sidebar {
@@ -2568,6 +2580,7 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 }
 
 @media (max-width: 640px) {
+  .tp-auth-main :is(input, select, textarea) { font-size: 16px; }
   .tp-hero-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tp-score-ring { width: 76px; height: 76px; flex: none; }
   .tp-exam-overview .tp-hero-actions > a { flex: 1 1 13rem; }
