@@ -54,9 +54,9 @@ export default async function PlannerPage() {
       {!freeze.pro ? (
         <ProUpsell
           compact
-          title="Plan further with Pro"
-          body="Run up to eight papers a day, build custom tests and protect a missed day with two streak freezes a month."
-          points={["Up to 8 daily papers per exam", "Custom tests and weekly report card", "2 streak freezes a month"]}
+          title="Plan further with a paid plan"
+          body="Run up to eight papers a day, build custom tests and protect a missed day with streak freezes."
+          points={["Up to 8 daily papers per exam", "Custom tests and report cards", "Up to 4 streak freezes a month"]}
         />
       ) : null}
 

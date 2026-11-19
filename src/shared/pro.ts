@@ -1,6 +1,6 @@
 import type { IconName } from "@/components/platform/Icon";
 
-/** Pro allowances. These are product limits, enforced on the server. */
+/** Scholar-tier defaults. Per-plan limits live in `shared/plans.ts`. */
 export const PRO_FREEZES_PER_MONTH = 2;
 export const PRO_CUSTOM_TESTS_PER_DAY = 5;
 export const CUSTOM_TEST_MIN_QUESTIONS = 5;
@@ -13,19 +13,19 @@ export type ProFeature = {
 };
 
 /**
- * Everything Pro adds. Kept in one place so the pricing page, the upgrade
- * prompts and the checkout always describe the same bundle.
+ * What every paid tier adds over Aspirant. Kept in one place so the pricing
+ * page and the upgrade prompts always describe the same bundle.
  */
 export const PRO_FEATURES: ProFeature[] = [
   {
     icon: "layers",
-    title: "Up to 8 papers a day",
-    body: "Every exam in your plan can run up to eight full official-pattern papers instead of your level's one to four.",
+    title: "More papers every day",
+    body: "Riser runs six papers a day, Scholar and Topper run eight — every exam in your plan, same official pattern.",
   },
   {
     icon: "target",
     title: "Custom tests",
-    body: "Build your own paper by subject and difficulty, choose the question count and set the clock. Up to five a day.",
+    body: "Build your own paper by subject, topic and difficulty, then set the clock. Two a day on Riser, more on higher tiers.",
   },
   {
     icon: "chart",
@@ -34,8 +34,8 @@ export const PRO_FEATURES: ProFeature[] = [
   },
   {
     icon: "calendar",
-    title: "Weekly report card",
-    body: "A seven-day report with the previous week beside it, ready to print or save as a PDF.",
+    title: "Report cards",
+    body: "A printable report on your submitted papers. Scholar and Topper add a weekly card with the previous week beside it.",
   },
   {
     icon: "book",
@@ -44,16 +44,16 @@ export const PRO_FEATURES: ProFeature[] = [
   },
   {
     icon: "flame",
-    title: "Two streak freezes a month",
-    body: "Protect one missed day without inventing a paper. The streak keeps its count and moves forward.",
+    title: "Streak freezes",
+    body: "Protect a missed day without inventing a paper. One a month on Riser, two on Scholar, four on Topper.",
   },
 ];
 
 export const PRO_CARD_POINTS = [
   "Up to 8 papers a day for every exam",
-  "Custom tests, weekly report card and revision sheets",
-  "Advanced analytics and 2 streak freezes a month",
-  "Everything already included in Free",
+  "Custom tests, report cards and revision sheets",
+  "Advanced analytics and streak freezes",
+  "Everything already included in Aspirant",
 ];
 
 export const FREE_CARD_POINTS = [

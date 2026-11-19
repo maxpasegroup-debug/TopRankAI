@@ -1,11 +1,12 @@
-"use server";
+﻿"use server";
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAuth } from "@/server/auth/session";
 import { prisma } from "@/server/db";
-import { mockMonthlyActive, MAX_DAILY_PAPERS } from "@/shared/daily-workload";
+import { MAX_DAILY_PAPERS, mockMonthlyActive } from "@/shared/daily-workload";
 import { MOCK_PLANS, renewalEnd } from "@/shared/subscriptions";
+import { planForCode } from "@/shared/plans";
 
 const scheduleSchema = z.object({
   targetId: z.string().min(1),
@@ -16,7 +17,7 @@ const scheduleSchema = z.object({
 const checkoutSchema = z.discriminatedUnion("method", [
   z.object({
     id: z.uuid(),
-    plan: z.enum(["MOCK_MONTHLY", "MOCK_YEARLY"]),
+    plan: z.enum(["RISER_MONTHLY", "SCHOLAR_MONTHLY", "TOPPER_MONTHLY"]),
     method: z.literal("CARD"),
     /** Only the last four digits ever leave the browser. */
     reference: z.string().regex(/^\d{4}$/),
@@ -25,7 +26,7 @@ const checkoutSchema = z.discriminatedUnion("method", [
   }),
   z.object({
     id: z.uuid(),
-    plan: z.enum(["MOCK_MONTHLY", "MOCK_YEARLY"]),
+    plan: z.enum(["RISER_MONTHLY", "SCHOLAR_MONTHLY", "TOPPER_MONTHLY"]),
     method: z.literal("UPI"),
     reference: z.string().min(3).max(120).regex(/^[a-zA-Z0-9._-]+@[a-zA-Z]{2,}$/),
     payerName: z.string().min(2).max(120),
@@ -57,8 +58,14 @@ export async function mockCheckout(raw: unknown) {
         return previous;
       }
       const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
-      if (subscription && !["FREE", "MOCK_MONTHLY", "MOCK_YEARLY"].includes(subscription.plan)) {
+      const knownPlans = ["FREE", "MOCK_MONTHLY", "MOCK_YEARLY", "RISER_MONTHLY", "SCHOLAR_MONTHLY", "TOPPER_MONTHLY"];
+      if (subscription && !knownPlans.includes(subscription.plan)) {
         throw new Error("Your existing plan cannot be replaced here.");
+      }
+      const plan = planForCode(input.plan);
+      const cap = plan.limits.dailyPapers;
+      if (input.schedule && input.schedule.count > cap) {
+        throw new Error(`${plan.name} includes up to ${cap} papers a day. Lower the schedule or choose a higher plan.`);
       }
       if (input.schedule && !await tx.candidateExamTarget.findFirst({ where: { id: input.schedule.targetId, userId: user.id, active: true, exam: { active: true } } })) {
         throw new Error("That exam is no longer active. Reopen Subscriptions from Daily exams.");
@@ -88,7 +95,7 @@ export async function mockCheckout(raw: unknown) {
         },
       });
       if (endsAt) {
-        const data = { plan: input.plan, status: "ACTIVE" as const, startsAt: mockMonthlyActive(subscription, now) ? subscription!.startsAt : now, endsAt, features: { mockPayment: true, maxDailyPapers: MAX_DAILY_PAPERS } };
+        const data = { plan: input.plan, status: "ACTIVE" as const, startsAt: mockMonthlyActive(subscription, now) ? subscription!.startsAt : now, endsAt, features: { mockPayment: true, planId: plan.id, maxDailyPapers: cap } };
         await tx.subscription.upsert({ where: { userId: user.id }, create: { userId: user.id, ...data }, update: data });
         if (input.schedule) await tx.candidateExamTarget.update({ where: { id: input.schedule.targetId }, data: { dailyPaperCount: input.schedule.count, dailyStartMinutes: input.schedule.startMinutes } });
       }
@@ -97,9 +104,9 @@ export async function mockCheckout(raw: unknown) {
           userId: user.id,
           type: "SYSTEM",
           href: "/app/subscriptions",
-          title: endsAt ? "Pro is now active" : "Payment declined",
+          title: endsAt ? `${plan.name} is now active` : "Payment declined",
           body: endsAt
-            ? `Your plan runs until ${endsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. You can now schedule up to 8 papers a day and use every Pro tool.`
+            ? `Your plan runs until ${endsAt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}. You can now schedule up to ${cap} papers a day and use every ${plan.name} tool.`
             : "Your plan was not changed and nothing was charged. Retry the payment from Subscriptions with another card or UPI ID.",
         },
       });
@@ -110,7 +117,7 @@ export async function mockCheckout(raw: unknown) {
     return {
       ok: payment.status === "SUCCESS",
       message: payment.status === "SUCCESS"
-        ? `Payment successful. Pro is active until ${endsAt}.`
+        ? `Payment successful. ${planForCode(payment.plan).name} is active until ${endsAt}.`
         : payment.failureReason ?? "The payment was declined. Your current access is unchanged.",
       paymentId: payment.id,
       endsAt,

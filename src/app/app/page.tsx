@@ -88,9 +88,9 @@ export default async function DashboardPage() {
       {!pro ? (
         <ProUpsell
           compact
-          title="Make today count with Pro"
-          body="Add papers, build a custom test for a weak topic, print your weekly report card and protect a missed day."
-          points={["Up to 8 papers a day", "Custom tests and weekly report card", "2 streak freezes a month"]}
+          title="Make today count with a paid plan"
+          body="Add papers, build a custom test for a weak topic, print your report card and protect a missed day."
+          points={["Up to 8 papers a day", "Custom tests and report cards", "Up to 4 streak freezes a month"]}
         />
       ) : null}
 

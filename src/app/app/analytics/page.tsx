@@ -112,9 +112,9 @@ export default async function AnalyticsPage() {
               <div className="tp-row-between tp-gap-10 tp-wrap" style={{ marginBottom: 14 }}>
                 <div>
                   <h3 style={{ fontSize: 17 }}>Advanced analytics</h3>
-                  <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>Pro reads the same submitted papers, in more detail.</p>
+                  <p className="tp-xs tp-faint" style={{ marginTop: 3 }}>Paid plans read the same submitted papers, in more detail.</p>
                 </div>
-                <span className="tp-pro-badge"><Icon name="crown" size={12} /> Pro</span>
+                <span className="tp-pro-badge"><Icon name="crown" size={12} /> Paid plan</span>
               </div>
               <div className="tp-grid tp-grid-2">
                 <div className="tp-advanced-stat">
@@ -155,7 +155,7 @@ export default async function AnalyticsPage() {
           ) : (
             <ProUpsell
               compact
-              title="Advanced analytics with Pro"
+              title="Advanced analytics with a paid plan"
               body="See negative marks lost, average time per question and which subjects are moving up or down over your last ten papers."
             />
           )}

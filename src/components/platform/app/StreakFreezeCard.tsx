@@ -50,7 +50,7 @@ export function StreakFreezeCard({ state }: { state: FreezeCardState }) {
           </div>
         </div>
         <span className={`tp-pro-badge ${state.pro ? "" : "tp-pro-badge-quiet"}`}>
-          <Icon name="crown" size={12} /> Pro
+          <Icon name="crown" size={12} /> Paid plan
         </span>
       </div>
 
@@ -103,11 +103,11 @@ export function StreakFreezeCard({ state }: { state: FreezeCardState }) {
       ) : (
         <>
           <p className="tp-small tp-muted">
-            Two freezes a month are part of Pro. They cover a missed day when the day before was an active study day,
+            Freezes are part of the paid plans: one a month on Riser, two on Scholar and four on Topper. They cover a missed day when the day before was an active study day,
             so the streak keeps its count.
           </p>
           <Link className="tp-btn tp-btn-sm tp-btn-block tp-mt-12" href="/app/subscriptions">
-            See Pro plans <Icon name="arrow-right" size={14} />
+            See plans <Icon name="arrow-right" size={14} />
           </Link>
         </>
       )}

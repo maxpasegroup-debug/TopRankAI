@@ -50,6 +50,7 @@ export type AppShellProps = {
   activeCode: string | null;
   unread: number;
   pro?: boolean;
+  planName?: string | null;
   children: React.ReactNode;
 };
 
@@ -64,7 +65,7 @@ function titleForPath(pathname: string) {
   return "Workspace";
 }
 
-export function AppShell({ user, exams, activeCode, unread, pro, children }: AppShellProps) {
+export function AppShell({ user, exams, activeCode, unread, pro, planName, children }: AppShellProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -138,7 +139,7 @@ export function AppShell({ user, exams, activeCode, unread, pro, children }: App
             <div className="tp-grow" style={{ minWidth: 0 }}>
               <div className="tp-small tp-row tp-gap-8" style={{ fontWeight: 650 }}>
                 <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.name}</span>
-                {pro ? <span className="tp-pro-badge" style={{ flexShrink: 0, padding: "4px 8px", fontSize: 9.5 }}><Icon name="crown" size={11} /> Pro</span> : null}
+                {pro ? <span className="tp-pro-badge" style={{ flexShrink: 0, padding: "4px 8px", fontSize: 9.5 }}><Icon name="crown" size={11} /> {planName ?? "Pro"}</span> : null}
               </div>
               <div className="tp-xs tp-faint" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{user.email}</div>
             </div>

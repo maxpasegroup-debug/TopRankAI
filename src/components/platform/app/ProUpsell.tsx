@@ -16,7 +16,7 @@ export function ProUpsell({
     <section className={`tp-pro-upsell ${compact ? "tp-pro-upsell-compact" : ""}`}>
       <div className="tp-pro-upsell-glow" aria-hidden="true" />
       <div className="tp-pro-upsell-copy">
-        <span className="tp-pro-badge"><Icon name="crown" size={12} /> Pro</span>
+        <span className="tp-pro-badge"><Icon name="crown" size={12} /> Paid plans</span>
         <h3>{title}</h3>
         <p>{body}</p>
         {points?.length ? (
@@ -28,7 +28,7 @@ export function ProUpsell({
         ) : null}
       </div>
       <Link className="tp-btn tp-btn-sm tp-pro-upsell-cta" href="/app/subscriptions">
-        See Pro plans <Icon name="arrow-right" size={14} />
+        See plans <Icon name="arrow-right" size={14} />
       </Link>
     </section>
   );

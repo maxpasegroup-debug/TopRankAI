@@ -955,7 +955,7 @@ export async function submitDailyExam(userId: string, attemptId: string, rawAnsw
   }, { timeout: 60_000 });
   if (!recorded) return { attemptId, alreadySubmitted: true };
 
-  if (aiConfiguration().enabled) after(() => finishExamFeedback(attemptId, feedbackInput));
+  if (aiConfiguration().enabled) after(() => finishExamFeedback(attemptId, feedbackInput, userId));
 
   await evaluateAchievements(userId);
   if (scorePercent === 100) {

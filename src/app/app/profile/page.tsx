@@ -1,4 +1,5 @@
 import { levelForPapers, mockMonthlyActive, paperCount } from "@/shared/daily-workload";
+import { planForCode } from "@/shared/plans";
 import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { ProfileForm } from "@/components/platform/app/ProfileForm";
@@ -20,7 +21,7 @@ export default async function ProfilePage() {
   }
 
   const monthly = mockMonthlyActive(profile.subscription);
-  const expiredMock = ["MOCK_MONTHLY", "MOCK_YEARLY"].includes(profile.subscription?.plan ?? "") && !monthly;
+  const expiredMock = ["MOCK_MONTHLY", "MOCK_YEARLY", "RISER_MONTHLY", "SCHOLAR_MONTHLY", "TOPPER_MONTHLY"].includes(profile.subscription?.plan ?? "") && !monthly;
   const initials = profile.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
 
   return (
@@ -63,8 +64,8 @@ export default async function ProfilePage() {
             <p className="tp-xs tp-muted">{profile.email}</p>
             <div className="tp-row tp-gap-8 tp-wrap" style={{ justifyContent: "center", marginTop: 12 }}>
               {monthly
-                ? <span className="tp-pro-badge"><Icon name="crown" size={13} /> Pro</span>
-                : <span className="tp-pill">{expiredMock ? "Pro expired" : "Free plan"}</span>}
+                ? <span className="tp-pro-badge"><Icon name="crown" size={13} /> {planForCode(profile.subscription?.plan).name}</span>
+                : <span className="tp-pill">{expiredMock ? "Plan expired" : "Aspirant plan"}</span>}
               <span className="tp-pill">{profile.accountConsent?.ageBand?.replace(/_/g, "+") ?? "18+"}</span>
             </div>
             {monthly ? (
@@ -95,7 +96,7 @@ export default async function ProfilePage() {
             <Link className="tp-btn tp-btn-soft tp-btn-sm tp-mb-16" href="/app/subscriptions">Manage subscription & payments</Link>
             <div className="tp-stack tp-gap-8">
               <div className="tp-row-between tp-small"><span className="tp-muted">Consent version</span><span style={{ fontWeight: 600 }}>{profile.accountConsent?.acceptedAt ? formatDate(profile.accountConsent.acceptedAt, { day: "numeric", month: "short", year: "numeric" }) : "—"}</span></div>
-              <div className="tp-row-between tp-small"><span className="tp-muted">Subscription</span><span style={{ fontWeight: 600 }}>{monthly ? `Pro · until ${formatDate(profile.subscription!.endsAt!, { day: "numeric", month: "short", year: "numeric" })}` : expiredMock ? "EXPIRED" : "FREE"}</span></div>
+              <div className="tp-row-between tp-small"><span className="tp-muted">Subscription</span><span style={{ fontWeight: 600 }}>{monthly ? `${planForCode(profile.subscription?.plan).name} · until ${formatDate(profile.subscription!.endsAt!, { day: "numeric", month: "short", year: "numeric" })}` : expiredMock ? "EXPIRED" : "FREE"}</span></div>
               <div className="tp-row-between tp-small"><span className="tp-muted">Study time</span><span style={{ fontWeight: 600 }}>{profile.dailyStudyMinutes ?? 45} min/day</span></div>
             </div>
             <div className="tp-row tp-gap-8 tp-mt-16 tp-wrap">

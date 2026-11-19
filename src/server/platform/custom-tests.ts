@@ -1,9 +1,10 @@
 import { prisma } from "@/server/db";
-import { getProSubscription } from "./pro";
+import { getActivePlan } from "./pro";
+import { isPaid } from "@/shared/plans";
 import { type CandidateExam } from "./candidate";
 import { addDays, formatDate, toNumber, todayDate } from "./utils";
 import { notify } from "./notifications";
-import { PRO_CUSTOM_TESTS_PER_DAY, CUSTOM_TEST_MAX_QUESTIONS, CUSTOM_TEST_MIN_QUESTIONS } from "@/shared/pro";
+import { CUSTOM_TEST_MAX_QUESTIONS, CUSTOM_TEST_MIN_QUESTIONS } from "@/shared/pro";
 
 export type CustomDifficulty = "ANY" | "EASY" | "MEDIUM" | "HARD";
 
@@ -110,9 +111,10 @@ async function loadPool(examId: string, input?: Pick<CustomTestInput, "subjectId
 
 export async function getCustomTestOptions(userId: string, exam: CandidateExam): Promise<CustomTestOptions> {
   const today = todayDate();
-  const [pool, usedToday] = await Promise.all([
+  const [pool, usedToday, { plan }] = await Promise.all([
     loadPool(exam.examId),
     prisma.dailyExam.count({ where: { userId, examId: exam.examId, scheduledDate: today, slot: { gte: CUSTOM_SLOT_BASE } } }),
+    getActivePlan(userId),
   ]);
   const subjectMap = new Map<string, { id: string; name: string; count: number }>();
   const topicMap = new Map<string, { id: string; title: string; subject: string; count: number }>();
@@ -134,21 +136,23 @@ export async function getCustomTestOptions(userId: string, exam: CandidateExam):
     difficulties,
     total: pool.length,
     usedToday,
-    remainingToday: Math.max(0, PRO_CUSTOM_TESTS_PER_DAY - usedToday),
+    remainingToday: Math.max(0, plan.limits.customTestsPerDay - usedToday),
     maxQuestions: Math.min(CUSTOM_TEST_MAX_QUESTIONS, pool.length),
   };
 }
 
 export async function createCustomTest(userId: string, exam: CandidateExam, input: CustomTestInput) {
-  if (!(await getProSubscription(userId))) {
-    throw new Error("Custom tests are part of Pro. Choose a plan in Subscriptions to build your own paper.");
+  const { plan } = await getActivePlan(userId);
+  if (!isPaid(plan) || plan.limits.customTestsPerDay === 0) {
+    throw new Error("Custom tests start on Riser. Choose a plan in Subscriptions to build your own paper.");
   }
+  const allowance = plan.limits.customTestsPerDay;
   const today = todayDate();
   const usedToday = await prisma.dailyExam.count({
     where: { userId, examId: exam.examId, scheduledDate: today, slot: { gte: CUSTOM_SLOT_BASE } },
   });
-  if (usedToday >= PRO_CUSTOM_TESTS_PER_DAY) {
-    throw new Error(`You have used today's ${PRO_CUSTOM_TESTS_PER_DAY} custom tests. Tomorrow's allowance resets at midnight IST.`);
+  if (usedToday >= allowance) {
+    throw new Error(`You have used today's ${allowance} custom tests. Tomorrow's allowance resets at midnight IST.`);
   }
 
   const pool = await loadPool(exam.examId, input);

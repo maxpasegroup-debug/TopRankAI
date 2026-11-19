@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { prisma } from "@/server/db";
 import { requireAuth } from "@/server/auth/session";
 import { generateStudyNotes, suggestStudyPlan, type StudyNotes, type StudyPlanSuggestion } from "@/server/ai/tasks";
+import { assertAiRoom } from "@/server/platform/ai-quota";
 import { evaluateAchievements } from "@/server/platform/achievements";
 import { getCandidateExams, getSelectedExam } from "@/server/platform/candidate";
 import { ensureDailyExam, startDailyExam, submitDailyExam } from "@/server/platform/daily-exam";
@@ -15,7 +16,8 @@ import { readExamPattern } from "@/server/platform/patterns";
 import { getOfficialSyllabusExcerpt } from "@/server/platform/syllabus-sources";
 import { profileUpdateSchema, syllabusProgressSchema, attemptAnswerSchema, examSelectionSchema } from "@/server/platform/validation";
 import { ACTIVE_EXAM_COOKIE } from "@/server/platform/cookies";
-import { includedPapers, MAX_DAILY_PAPERS, mockMonthlyActive } from "@/shared/daily-workload";
+import { includedPapers, MAX_DAILY_PAPERS } from "@/shared/daily-workload";
+import { isPaid, planForSubscription } from "@/shared/plans";
 import { targetWorkload } from "@/server/platform/target-workload";
 import { isExamFeedbackPending } from "@/server/platform/exam-feedback";
 import { ValidationApiError } from "@/server/api/errors";
@@ -153,6 +155,11 @@ export async function requestTopicNotes(topicId: string): Promise<PlatformAction
   if (!view.exam) return { ok: false, message: "This topic is not attached to an exam." };
   const target = await prisma.candidateExamTarget.findFirst({ where: { userId: user.id, examId: view.topic.chapter.unit.examId, active: true } });
   if (!target) return { ok: false, message: "This topic is outside your preparation plan." };
+  try {
+    await assertAiRoom(user.id, "notes");
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : "This month's AI notes allowance is spent." };
+  }
   const excerpt = await getOfficialSyllabusExcerpt(
     view.topic.chapter.unit.examId,
     view.topic.chapter.unit.subjectId,
@@ -230,6 +237,11 @@ export async function requestStudyPlan(code: string): Promise<PlatformActionResu
   const user = await requireAuth();
   const exam = await getSelectedExam(user.id, code);
   if (!exam) return { ok: false, message: "Choose an exam first." };
+  try {
+    await assertAiRoom(user.id, "plans");
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : "This month's AI plan allowance is spent." };
+  }
   const planner = await getPlannerData(user.id, exam);
   const result = await suggestStudyPlan({
     examName: exam.name,
@@ -285,8 +297,13 @@ export async function saveDailyWorkload(targetId: string, count: number, startMi
     const target = await tx.candidateExamTarget.findFirst({ where: { id: targetId, userId: user.id, active: true } });
     if (!target) return { ok: false, message: "Choose an active exam first." };
     const subscription = await tx.subscription.findUnique({ where: { userId: user.id } });
-    if (count > includedPapers(target.preparationLevel) && !mockMonthlyActive(subscription)) {
-      return { ok: false, message: "Choose a Pro plan in Subscriptions to add extra papers." };
+    const plan = planForSubscription(subscription);
+    const cap = plan.limits.dailyPapers;
+    if (count > cap) {
+      return { ok: false, message: `${plan.name} includes up to ${cap} papers a day. Choose a higher plan in Subscriptions to add more.` };
+    }
+    if (count > includedPapers(target.preparationLevel) && !isPaid(plan)) {
+      return { ok: false, message: "Choose a paid plan in Subscriptions to add extra papers." };
     }
     await tx.candidateExamTarget.update({
       where: { id: target.id },
@@ -295,7 +312,7 @@ export async function saveDailyWorkload(targetId: string, count: number, startMi
     return {
       ok: true,
       message: "Daily schedule saved.",
-      data: { mockPayment: false, monthlyUntil: mockMonthlyActive(subscription) ? subscription!.endsAt : null },
+      data: { mockPayment: isPaid(plan), monthlyUntil: isPaid(plan) ? subscription!.endsAt : null },
     };
   });
 }

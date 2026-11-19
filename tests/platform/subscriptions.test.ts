@@ -17,7 +17,14 @@ import { renewalEnd, renewalNotice } from "@/shared/subscriptions";
 import { mockMonthlyActive, paperCount } from "@/shared/daily-workload";
 import { getSubscription } from "@/server/platform/subscriptions";
 
-const input = { id: "f1234567-1234-4234-8234-123456789012", plan: "MOCK_YEARLY", outcome: "SUCCESS", schedule: { targetId: "target", count: 8, startMinutes: 600 } };
+const input = {
+  id: "f1234567-1234-4234-8234-123456789012",
+  plan: "SCHOLAR_MONTHLY",
+  method: "CARD",
+  reference: "4242",
+  payerName: "Owner Name",
+  schedule: { targetId: "target", count: 8, startMinutes: 600 },
+};
 beforeEach(() => {
   vi.resetAllMocks();
   vi.useFakeTimers(); vi.setSystemTime(new Date("2026-11-18T12:00:00Z"));
@@ -28,15 +35,15 @@ beforeEach(() => {
 });
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
-it("saves server-priced payment, Pro entitlement and owned schedule in one transaction", async () => {
+it("saves server-priced payment, plan entitlement and owned schedule in one transaction", async () => {
   expect((await mockCheckout({ ...input, amountPaise: 1 })).ok).toBe(true);
-  expect(mocks.tx.mockPayment.create).toHaveBeenCalledWith({ data: expect.objectContaining({ userId: "owner", amountPaise: 299900, endsAt: new Date("2027-11-18T12:00Z") }) });
+  expect(mocks.tx.mockPayment.create).toHaveBeenCalledWith({ data: expect.objectContaining({ userId: "owner", amountPaise: 29900, endsAt: new Date("2026-12-18T12:00Z") }) });
   expect(mocks.tx.candidateExamTarget.findFirst).toHaveBeenCalledWith({ where: expect.objectContaining({ userId: "owner", active: true }) });
   expect(mocks.tx.candidateExamTarget.update).toHaveBeenCalledWith({ where: { id: "target" }, data: { dailyPaperCount: 8, dailyStartMinutes: 600 } });
   expect(mocks.revalidate).toHaveBeenCalledWith("/app", "layout");
 });
 it("records declines without altering the subscription or daily schedule", async () => {
-  expect((await mockCheckout({ ...input, outcome: "FAILED" })).ok).toBe(false);
+  expect((await mockCheckout({ ...input, reference: "0002" })).ok).toBe(false);
   expect(mocks.tx.mockPayment.create).toHaveBeenCalledWith({ data: expect.objectContaining({ status: "FAILED", endsAt: null }) });
   expect(mocks.tx.subscription.upsert).not.toHaveBeenCalled();
   expect(mocks.tx.candidateExamTarget.update).not.toHaveBeenCalled();
@@ -58,16 +65,20 @@ it("rejects another user's or inactive exam before recording a payment", async (
   expect((await mockCheckout(input)).ok).toBe(false);
   expect(mocks.tx.mockPayment.create).not.toHaveBeenCalled();
 });
-it("preserves unexpired time when renewing or switching billing periods", async () => {
-  mocks.tx.subscription.findUnique.mockResolvedValue({ plan: "MOCK_MONTHLY", status: "ACTIVE", startsAt: new Date("2026-11-01"), endsAt: new Date("2026-12-01T09:00Z") });
+it("rejects a schedule above the chosen tier's paper cap", async () => {
+  expect((await mockCheckout({ ...input, plan: "RISER_MONTHLY" })).ok).toBe(false);
+  expect(mocks.tx.mockPayment.create).not.toHaveBeenCalled();
+});
+it("preserves unexpired time when renewing or switching tiers", async () => {
+  mocks.tx.subscription.findUnique.mockResolvedValue({ plan: "RISER_MONTHLY", status: "ACTIVE", startsAt: new Date("2026-11-01"), endsAt: new Date("2026-12-01T09:00Z") });
   await mockCheckout(input);
-  expect(mocks.tx.mockPayment.create).toHaveBeenCalledWith({ data: expect.objectContaining({ endsAt: new Date("2027-12-01T09:00Z") }) });
+  expect(mocks.tx.mockPayment.create).toHaveBeenCalledWith({ data: expect.objectContaining({ endsAt: new Date("2027-01-01T09:00Z") }) });
 });
 it("rejects forged plans, excess paper counts and invalid start times", async () => {
   for (const invalid of [{ ...input, plan: "FREE" }, { ...input, schedule: { ...input.schedule, count: 9 } }, { ...input, schedule: { ...input.schedule, startMinutes: 1440 } }]) expect((await mockCheckout(invalid)).ok).toBe(false);
   expect(mocks.transaction).not.toHaveBeenCalled();
 });
-it("does not replace non-mock paid plans", async () => {
+it("does not replace unknown paid plans", async () => {
   mocks.tx.subscription.findUnique.mockResolvedValue({ plan: "PREMIUM" });
   expect((await mockCheckout(input)).ok).toBe(false);
   expect(mocks.tx.mockPayment.create).not.toHaveBeenCalled();
@@ -76,17 +87,18 @@ it("clamps calendar renewals at month end and leap years", () => {
   expect(renewalEnd(new Date("2027-01-31T12:00Z"), 1).toISOString()).toBe("2027-02-28T12:00:00.000Z");
   expect(renewalEnd(new Date("2028-02-29T12:00Z"), 12).toISOString()).toBe("2029-02-28T12:00:00.000Z");
 });
-it("restores the level allowance exactly when yearly access expires", () => {
-  const plan = { plan: "MOCK_YEARLY", status: "ACTIVE", endsAt: new Date("2026-11-18T12:00Z") };
+it("restores the level allowance exactly when a paid plan expires", () => {
+  const plan = { plan: "SCHOLAR_MONTHLY", status: "ACTIVE", endsAt: new Date("2026-11-18T12:00Z") };
   expect(paperCount("BEGINNER", 8, mockMonthlyActive(plan))).toBe(1);
   expect(mockMonthlyActive(plan, new Date("2026-11-18T11:59Z"))).toBe(true);
   expect(mockMonthlyActive({ ...plan, status: "CANCELLED" })).toBe(false);
+  expect(mockMonthlyActive({ plan: "MOCK_YEARLY", status: "ACTIVE", endsAt: new Date("2026-11-18T12:00Z") }, new Date("2026-11-18T11:59Z"))).toBe(true);
 });
 it("reminds only within seven days and once per expiry period via a stable notification ID", async () => {
   expect(renewalNotice(new Date("2026-11-26T12:00Z"))).toBe(null);
   expect(renewalNotice(new Date("2026-11-25T12:00Z"))).toBe("renewal");
   expect(renewalNotice(new Date("2026-11-18T12:00Z"))).toBe("expired");
-  mocks.tx.subscription.findUnique.mockResolvedValue({ id: "sub", plan: "MOCK_YEARLY", status: "ACTIVE", endsAt: new Date("2026-11-20T12:00Z") });
+  mocks.tx.subscription.findUnique.mockResolvedValue({ id: "sub", plan: "SCHOLAR_MONTHLY", status: "ACTIVE", endsAt: new Date("2026-11-20T12:00Z") });
   await getSubscription("owner"); await getSubscription("owner");
   const calls = mocks.tx.notification.createMany.mock.calls;
   expect(calls[0][0].skipDuplicates).toBe(true);

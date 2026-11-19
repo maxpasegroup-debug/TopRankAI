@@ -104,8 +104,8 @@ export default async function LearnPage({
         <ProUpsell
           compact
           title="Turn study into marks"
-          body="Finish a chapter, then build a custom test on it. Pro adds custom tests, printable formula and mistake sheets and a weekly report card."
-          points={["Custom tests on any topic", "Formula and mistake sheets", "Weekly report card"]}
+          body="Finish a chapter, then build a custom test on it. Paid plans add custom tests, printable formula and mistake sheets and report cards."
+          points={["Custom tests on any topic", "Formula and mistake sheets", "Report cards"]}
         />
       ) : null}
 

@@ -52,7 +52,7 @@ export default async function WeeklyReportPage() {
           <span className="tp-pill">Free plan</span>
         </div>
         <ProUpsell
-          title="The weekly report card is part of Pro"
+          title="The weekly report card is part of the paid plans"
           body="A printable seven-day report built from your submitted papers: accuracy, marks, study time, subject movement and the topics that need another pass, with the previous week beside it."
           points={["This week compared with last week", "Subject and weak-topic accuracy", "Every paper listed with its score", "Print or save as a PDF"]}
         />
@@ -95,7 +95,7 @@ export default async function WeeklyReportPage() {
       <div className="tp-report-sheet">
         <header className="tp-report-head">
           <div>
-            <span className="tp-pro-badge"><Icon name="crown" size={13} /> Pro report</span>
+            <span className="tp-pro-badge"><Icon name="crown" size={13} /> Paid plan report</span>
             <h2>{exam.name}</h2>
             <p>{formatDate(report.from, { weekday: "long", day: "numeric", month: "long" })} to {formatDate(report.to, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
           </div>

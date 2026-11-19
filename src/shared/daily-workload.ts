@@ -1,5 +1,6 @@
-const levels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXTREME"] as const;
-export type DailyLevel = typeof levels[number];
+import { isPaid, planForSubscription } from "./plans";
+
+const levels = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXTREME"] as const;export type DailyLevel = typeof levels[number];
 export const EXAM_BREAK_MINUTES = 45;
 
 export const DAILY_PAPERS = { BEGINNER: 1, INTERMEDIATE: 2, ADVANCED: 3, EXTREME: 4 } as const;
@@ -16,7 +17,7 @@ export function levelForPapers(count: number) {
 }
 
 export function mockMonthlyActive(plan: { plan: string; status: string; endsAt: Date | null } | null, now = new Date()) {
-  return !!plan && ["MOCK_MONTHLY", "MOCK_YEARLY"].includes(plan.plan) && plan.status === "ACTIVE" && !!plan.endsAt && plan.endsAt > now;
+  return isPaid(planForSubscription(plan, now));
 }
 
 export function paperCount(level: DailyLevel, requested: number | null, monthly: boolean) {

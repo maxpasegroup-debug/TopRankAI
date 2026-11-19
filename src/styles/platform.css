@@ -1,5 +1,5 @@
-/* ============================================================================
-   TopRank AI — platform design system
+﻿/* ============================================================================
+   TopRank AI â€” platform design system
    Indigo / violet with a coral accent. Light, dark and system themes.
    Class prefix: tp-
    ========================================================================== */
@@ -2873,7 +2873,7 @@ details[open] > .tp-unit-head .tp-unit-chevron {
   line-height: 1;
 }
 .tp-faq details[open] summary::after {
-  content: "−";
+  content: "âˆ’";
 }
 .tp-faq p {
   padding-bottom: 18px;
@@ -3028,7 +3028,7 @@ details[open] > .tp-unit-head .tp-unit-chevron {
   .tp-brand { gap: 6px; }
 }
 /* Subscription checkout stays centered, with safe scrolling on small screens. */
-.tp-subscription-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.tp-subscription-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 18px; }
 .tp-subscription-plans > section { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 .tp-plan-card { position: relative; overflow: hidden; }
 .tp-plan-card-featured {
@@ -3090,17 +3090,22 @@ details[open] > .tp-unit-head .tp-unit-chevron {
 .tp-plan-features li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.5; color: var(--tp-muted); }
 .tp-plan-features li svg { flex: 0 0 auto; margin-top: 1px; color: var(--tp-ok); }
 .tp-plan-features-compact { margin: 16px 0; gap: 8px; }
-.tp-plan-table th:first-child { text-align: left; font-weight: 600; color: var(--tp-ink-soft); }
-.tp-plan-table th:nth-child(2),
-.tp-plan-table td:nth-child(2) { width: 170px; }
-.tp-plan-table th:nth-child(3),
-.tp-plan-table td:nth-child(3) { width: 130px; }
+.tp-plan-table th:first-child { text-align: left; font-weight: 600; color: var(--tp-ink-soft); min-width: 190px; }
+.tp-plan-table th:nth-child(n+2),
+.tp-plan-table td:nth-child(n+2) { min-width: 104px; white-space: nowrap; }
 .tp-plan-table-pro {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: #f5b942;
   font-weight: 750;
+}
+.tp-plan-table-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 650;
+  color: var(--tp-ink-soft);
 }
 .tp-plan-yes {
   display: inline-grid;

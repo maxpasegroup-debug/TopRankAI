@@ -60,7 +60,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
         <div className="tp-row tp-gap-8 tp-wrap">
           <strong>{row.name}</strong>
           {active ? <span className="tp-pill tp-pill-brand">Active</span> : null}
-          {row.monthlyUntil ? <span className="tp-pro-badge" style={{ padding: "4px 8px", fontSize: 9.5 }}><Icon name="crown" size={11} /> Pro</span> : null}
+          {row.monthlyUntil ? <span className="tp-pro-badge" style={{ padding: "4px 8px", fontSize: 9.5 }}><Icon name="crown" size={11} /> Paid</span> : null}
         </div>
         <div className="tp-xs tp-faint" style={{ marginTop: 3 }}>
           {row.durationMinutes} min official paper · starts {start} IST
@@ -81,7 +81,7 @@ function ScheduleRow({ row, active }: { row: ExamScheduleRow; active: boolean })
           >
             {Array.from({ length: MAX_DAILY_PAPERS }, (_, index) => {
               const value = index + 1;
-              return <option value={value} key={value}>{value}{value > row.included ? " (Pro)" : ""}</option>;
+              return <option value={value} key={value}>{value}{value > row.included ? " (Paid)" : ""}</option>;
             })}
           </select>
           <label className="tp-xs tp-muted" htmlFor={`start-${row.targetId}`}>Start</label>

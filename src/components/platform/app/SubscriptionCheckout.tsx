@@ -7,13 +7,14 @@ import { Icon } from "../Icon";
 import { toast } from "../AppToaster";
 import { mockCheckout } from "@/server/actions/subscriptions";
 import { MOCK_PLANS, formatPrice, renewalEnd, type MockPlan } from "@/shared/subscriptions";
-import { FREE_CARD_POINTS, PRO_CARD_POINTS } from "@/shared/pro";
+import { PLANS, PLAN_LIST, isPaid, type PlanId } from "@/shared/plans";
 
 type Stage = "form" | "processing" | "success" | "failed";
 type Method = "CARD" | "UPI";
 type Result = { ok: boolean; message: string; paymentId?: string; endsAt?: string | null } | null;
 
-const planEntries = Object.entries(MOCK_PLANS) as [MockPlan, (typeof MOCK_PLANS)[MockPlan]][];
+const paidEntries = Object.entries(MOCK_PLANS) as [MockPlan, (typeof MOCK_PLANS)[MockPlan]][];
+const planCodeFor = (id: PlanId): MockPlan => (id === "RISER" ? "RISER_MONTHLY" : id === "TOPPER" ? "TOPPER_MONTHLY" : "SCHOLAR_MONTHLY");
 
 function luhn(digits: string) {
   let sum = 0;
@@ -51,17 +52,15 @@ function expiryIsFuture(value: string) {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, schedule, yearlySaving, payer }: {
-  active: boolean;
-  currentPlan: MockPlan | null;
+export function SubscriptionCheckout({ currentPlanId, currentEndsAt, schedule, payer }: {
+  currentPlanId: PlanId;
   currentEndsAt?: string | null;
   schedule?: { targetId: string; count: number; startMinutes: number; name: string };
-  yearlySaving: number;
   payer: { name: string; email: string };
 }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
-  const [plan, setPlan] = useState<MockPlan>(currentPlan ?? "MOCK_YEARLY");
+  const [plan, setPlan] = useState<MockPlan>(planCodeFor(currentPlanId));
   const [stage, setStage] = useState<Stage>("form");
   const [method, setMethod] = useState<Method>("CARD");
   const [result, setResult] = useState<Result>(null);
@@ -78,8 +77,12 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
   const digits = card.replace(/\D/g, "");
   const brand = cardBrand(digits);
   const price = formatPrice(MOCK_PLANS[plan].amountPaise);
-  const yearly = plan === "MOCK_YEARLY";
-  const projectedEnd = useMemo(() => renewalEnd(active && currentEndsAt ? new Date(currentEndsAt) : new Date(), MOCK_PLANS[plan].months), [plan, active, currentEndsAt]);
+  const planId = plan === "RISER_MONTHLY" ? "RISER" : plan === "TOPPER_MONTHLY" ? "TOPPER" : "SCHOLAR";
+  const planName = PLANS[planId].name;
+  const cap = PLANS[planId].limits.dailyPapers;
+  const requestedCount = schedule?.count ?? 0;
+  const scheduleCount = requestedCount > cap ? cap : requestedCount;
+  const projectedEnd = useMemo(() => renewalEnd(currentEndsAt ? new Date(currentEndsAt) : new Date(), 1), [currentEndsAt]);
 
   useEffect(() => {
     if (stage !== "processing") return;
@@ -143,13 +146,20 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
     startTransition(async () => {
       try {
         const [response] = await Promise.all([
-          mockCheckout({ id: crypto.randomUUID(), plan, method, reference, payerName: holder.trim(), schedule }),
+          mockCheckout({
+            id: crypto.randomUUID(),
+            plan,
+            method,
+            reference,
+            payerName: holder.trim(),
+            schedule: schedule ? { ...schedule, count: scheduleCount } : undefined,
+          }),
           wait(2300),
         ]);
         setResult(response);
         if (response.ok) {
           setStage("success");
-          toast.success("Payment successful. Pro is active.");
+          toast.success(`Payment successful. ${planName} is active.`);
           router.refresh();
         } else {
           setStage("failed");
@@ -176,59 +186,51 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
         <div>
           <h2 style={{ fontSize: 19 }}>Choose a plan</h2>
           <p className="tp-small tp-muted" style={{ marginTop: 4 }}>
-            Same papers and scoring you already use — Pro adds more room to practise and the tools that make it count.
+            Every plan keeps the same papers and deterministic marking. Higher tiers add volume, reports and AI allowance.
           </p>
         </div>
-        {active ? <span className="tp-pill tp-pill-ok"><Icon name="crown" size={13} /> Pro active</span> : null}
+        {isPaid(currentPlanId) ? (
+          <span className="tp-pill tp-pill-ok"><Icon name="crown" size={13} /> {PLANS[currentPlanId].name} active</span>
+        ) : null}
       </div>
 
       {schedule ? (
         <div className="tp-note tp-mt-16">
-          After activation, <strong>{schedule.name}</strong> will run <strong>{schedule.count} papers a day</strong> starting at{" "}
+          After activation, <strong>{schedule.name}</strong> will run <strong>{scheduleCount} paper{scheduleCount === 1 ? "" : "s"} a day</strong> starting at{" "}
           {String(Math.floor(schedule.startMinutes / 60)).padStart(2, "0")}:{String(schedule.startMinutes % 60).padStart(2, "0")} IST.
-          Your requested schedule is saved only when the plan is activated.
+          {requestedCount > cap ? ` ${planName} tops out at ${cap} papers a day.` : ""} Your requested schedule is saved only when the plan is activated.
         </div>
       ) : null}
 
       <div className="tp-subscription-plans tp-mt-16">
-        {planEntries.map(([code, details]) => {
-          const isYearly = code === "MOCK_YEARLY";
-          const points = isYearly ? PRO_CARD_POINTS : FREE_CARD_POINTS;
+        {PLAN_LIST.map((tier) => {
+          const isCurrent = tier.id === currentPlanId;
+          const paid = isPaid(tier);
           return (
-            <section className={`tp-card tp-card-pad tp-plan-card ${isYearly ? "tp-plan-card-featured" : ""}`} key={code}>
+            <section className={`tp-card tp-card-pad tp-plan-card ${tier.highlight ? "tp-plan-card-featured" : ""}`} key={tier.id}>
               <div className="tp-row-between tp-gap-8 tp-wrap">
-                <span className={`tp-pro-badge ${isYearly ? "tp-pro-badge-gold" : "tp-pro-badge-quiet"}`}>
-                  <Icon name={isYearly ? "crown" : "check"} size={13} /> {isYearly ? "Pro" : "Free"}
+                <span className={`tp-pro-badge ${tier.highlight ? "" : "tp-pro-badge-quiet"}`}>
+                  <Icon name={tier.icon} size={13} /> {tier.name}
                 </span>
-                {isYearly
-                  ? <span className="tp-pill tp-pill-ok">Save {formatPrice(yearlySaving)}</span>
-                  : currentPlan === code ? <span className="tp-pill tp-pill-ok">Current plan</span> : null}
+                {isCurrent ? <span className="tp-pill tp-pill-ok">Current plan</span> : null}
               </div>
 
-              <h3 className="tp-plan-name">{isYearly ? "Pro · Yearly" : "Free"}</h3>
+              <h3 className="tp-plan-name">{tier.name}</h3>
               <div className="tp-plan-price">
-                {isYearly ? formatPrice(details.amountPaise) : formatPrice(0)}
-                <span>/ {isYearly ? "year" : "forever"}</span>
+                {formatPrice(tier.pricePaise)}
+                <span>/ {paid ? "month" : "forever"}</span>
               </div>
-              <p className="tp-small tp-muted">
-                {isYearly
-                  ? `${formatPrice(Math.round(details.amountPaise / 12))} a month, billed once a year. Extra papers, custom tests and Pro tools.`
-                  : "Everything you already use: official-pattern papers, learning centre, planner, revision and analytics."}
-              </p>
+              <p className="tp-small tp-muted">{tier.tagline}</p>
 
               <ul className="tp-plan-features">
-                {points.map((point) => (
+                {tier.points.map((point) => (
                   <li key={point}><Icon name="check" size={14} /> <span>{point}</span></li>
                 ))}
               </ul>
 
-              {isYearly ? (
-                <button
-                  type="button"
-                  className="tp-btn tp-btn-block tp-btn-accent"
-                  onClick={() => open(code)}
-                >
-                  {active ? (currentPlan === code ? "Extend Pro yearly" : "Switch to Pro yearly") : "Get Pro yearly"}
+              {paid ? (
+                <button type="button" className={`tp-btn tp-btn-block ${tier.highlight ? "tp-btn-accent" : ""}`} onClick={() => open(tier.code!)}>
+                  {isCurrent ? `Extend ${tier.name}` : `Choose ${tier.name}`}
                   <Icon name="arrow-right" size={15} />
                 </button>
               ) : (
@@ -241,14 +243,9 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
         })}
       </div>
 
-      <div className="tp-row-between tp-gap-12 tp-wrap tp-mt-16">
-        <p className="tp-xs tp-faint" style={{ margin: 0 }}>
-          Monthly Pro is {formatPrice(MOCK_PLANS.MOCK_MONTHLY.amountPaise)} and renews manually. Extra time is added after your current expiry.
-        </p>
-        <button type="button" className="tp-btn tp-btn-soft tp-btn-sm" onClick={() => open("MOCK_MONTHLY")}>
-          <Icon name="clock" size={14} /> Choose monthly
-        </button>
-      </div>
+      <p className="tp-xs tp-faint tp-mt-16" style={{ margin: 0 }}>
+        Plans are monthly and renew manually. Extra time is added after your current expiry.
+      </p>
 
       <dialog
         ref={dialog}
@@ -262,7 +259,7 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
             <span className="tp-checkout-lock"><Icon name="lock" size={16} /></span>
             <div>
               <strong id="checkout-title">Secure checkout</strong>
-              <div className="tp-xs tp-faint">Pro {MOCK_PLANS[plan].label} · {price}</div>
+              <div className="tp-xs tp-faint">{planName} · {price} a month</div>
             </div>
           </div>
           <button type="button" className="tp-btn tp-btn-ghost tp-btn-sm" aria-label="Close checkout" disabled={pending || stage === "processing"} onClick={close}>
@@ -281,10 +278,10 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
             </div>
             <h2>Payment successful</h2>
             <p className="tp-small tp-muted">
-              {result?.message ?? `Pro ${MOCK_PLANS[plan].label} is active.`} Your receipt is in Billing history.
+              {result?.message ?? `${planName} is active.`} Your receipt is in Billing history.
             </p>
             <div className="tp-pay-receipt">
-              <div><span>Plan</span><strong>Pro {MOCK_PLANS[plan].label}</strong></div>
+              <div><span>Plan</span><strong>{planName} · monthly</strong></div>
               <div><span>Paid</span><strong>{price}</strong></div>
               <div><span>Method</span><strong>{method === "CARD" ? `${brand} •••• ${digits.slice(-4)}` : upi}</strong></div>
               <div><span>Valid until</span><strong>{result?.endsAt ?? projectedEnd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</strong></div>
@@ -305,7 +302,7 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
             <h2>Payment declined</h2>
             <p className="tp-small tp-muted">{result?.message ?? "The payment could not be completed."}</p>
             <div className="tp-pay-receipt">
-              <div><span>Plan</span><strong>Pro {MOCK_PLANS[plan].label}</strong></div>
+              <div><span>Plan</span><strong>{planName} · monthly</strong></div>
               <div><span>Charged</span><strong>{formatPrice(0)}</strong></div>
               <div><span>Method</span><strong>{method === "CARD" ? `${brand || "Card"} •••• ${digits.slice(-4) || "—"}` : upi}</strong></div>
             </div>
@@ -321,9 +318,9 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
               <div>
                 <span className="tp-eyebrow">Order summary</span>
                 <div className="tp-checkout-plan">
-                  <span className="tp-pro-badge"><Icon name="crown" size={13} /> Pro</span>
+                  <span className="tp-pro-badge"><Icon name={PLANS[planId].icon} size={13} /> {planName}</span>
                   <div className="tp-checkout-tabs">
-                    {planEntries.map(([code, details]) => (
+                    {paidEntries.map(([code, details]) => (
                       <button
                         key={code}
                         type="button"
@@ -337,21 +334,18 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
                     ))}
                   </div>
                 </div>
-                <h3 className="tp-plan-price" style={{ fontSize: 30 }}>{price}<span>/ {yearly ? "year" : "month"}</span></h3>
+                <h3 className="tp-plan-price" style={{ fontSize: 30 }}>{price}<span>/ month</span></h3>
                 <p className="tp-xs tp-muted">
-                  {active
+                  {isPaid(currentPlanId)
                     ? `Added after your current expiry. Cover extends to about ${projectedEnd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}.`
                     : `Access begins immediately and runs to about ${projectedEnd.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}.`}
                 </p>
               </div>
               <ul className="tp-plan-features tp-plan-features-compact">
-                {PRO_CARD_POINTS.map((point) => (
+                {PLANS[planId].points.map((point) => (
                   <li key={point}><Icon name="check" size={14} /> <span>{point}</span></li>
                 ))}
               </ul>
-              {yearlySaving > 0 ? (
-                <p className="tp-xs tp-pill tp-pill-ok" style={{ alignSelf: "flex-start" }}>Yearly saves {formatPrice(yearlySaving)}</p>
-              ) : null}
               <p className="tp-xs tp-faint" style={{ margin: 0 }}>No card details are stored and there is no automatic renewal.</p>
             </aside>
 
@@ -363,7 +357,7 @@ export function SubscriptionCheckout({ active, currentPlan, currentEndsAt, sched
                   <ol className="tp-pay-steps" data-step={step}>
                     <li data-done={step > 0} data-active={step === 0}>Contacting your bank</li>
                     <li data-done={step > 1} data-active={step === 1}>Verifying the payment</li>
-                    <li data-active={step === 2}>Activating Pro</li>
+                    <li data-active={step === 2}>Activating {planName}</li>
                   </ol>
                   <p className="tp-xs tp-faint">Keep this window open. It takes a few seconds.</p>
                 </div>

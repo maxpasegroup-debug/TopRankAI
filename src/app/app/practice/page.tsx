@@ -1,8 +1,8 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Icon } from "@/components/platform/Icon";
 import { requireAuth } from "@/server/auth/session";
 import { getActiveExam } from "@/server/platform/active";
-import { getProSubscription } from "@/server/platform/pro";
+import { getActivePlan } from "@/server/platform/pro";
 import { getCustomTestOptions, listCustomTests } from "@/server/platform/custom-tests";
 import { CustomTestBuilder } from "@/components/platform/app/CustomTestBuilder";
 import { ProUpsell } from "@/components/platform/app/ProUpsell";
@@ -42,9 +42,10 @@ export default async function PracticePage() {
     );
   }
 
-  const pro = await getProSubscription(user.id);
+  const { plan } = await getActivePlan(user.id);
+  const canCustomTest = plan.limits.customTestsPerDay > 0;
 
-  if (!pro) {
+  if (!canCustomTest) {
     return (
       <>
         <div className="tp-page-head">
@@ -53,12 +54,12 @@ export default async function PracticePage() {
             <h1>Custom tests</h1>
             <p>Build a paper from the subjects, topics and difficulty you want to work on.</p>
           </div>
-          <span className="tp-pill">Free plan</span>
+          <span className="tp-pill">{plan.name} plan</span>
         </div>
         <ProUpsell
-          title="Custom tests are part of Pro"
-          body="Pick the subjects and difficulty, set the question count and clock, and practise exactly what you need. Up to five custom tests a day, marked with the same deterministic scoring as every daily paper."
-          points={["Choose subjects, topic and difficulty", "5 to 50 questions at a time", "Up to 5 custom tests a day", "Results and explanations in the normal review flow"]}
+          title="Custom tests start on Riser"
+          body="Pick the subjects and difficulty, set the question count and clock, and practise exactly what you need. Two a day on Riser, five on Scholar and ten on Topper, marked with the same deterministic scoring as every daily paper."
+          points={["Choose subjects, topic and difficulty", "5 to 50 questions at a time", "2 a day on Riser, 5 on Scholar, 10 on Topper", "Results and explanations in the normal review flow"]}
         />
         <section className="tp-card tp-card-pad tp-mt-24">
           <h2 style={{ fontSize: 18, marginBottom: 10 }}>What a custom test uses</h2>
@@ -85,12 +86,12 @@ export default async function PracticePage() {
     <>
       <div className="tp-page-head">
         <div>
-          <div className="tp-eyebrow">{exam.shortName ?? exam.name} · {options.remainingToday} of 5 left today</div>
+          <div className="tp-eyebrow">{exam.shortName ?? exam.name} Â· {options.remainingToday} of {plan.limits.customTestsPerDay} left today</div>
           <h1>Custom tests</h1>
           <p>Pick what to practise. The server selects the questions and marks the paper deterministically.</p>
         </div>
         <div className="tp-row tp-gap-8 tp-wrap">
-          <span className="tp-pro-badge"><Icon name="crown" size={13} /> Pro</span>
+          <span className="tp-pro-badge"><Icon name="crown" size={13} /> {plan.name}</span>
           <Link className="tp-btn tp-btn-ghost tp-btn-sm" href="/app/daily">Daily exams</Link>
         </div>
       </div>
@@ -132,8 +133,8 @@ export default async function PracticePage() {
                       <td>{test.title}</td>
                       <td>{test.questionIds.length}</td>
                       <td><span className={`tp-pill ${statusTone[test.status] ?? ""}`}>{statusLabel[test.status] ?? test.status}</span></td>
-                      <td>{submitted ? `${toNumber(test.attempt?.obtainedMarks)} / ${toNumber(test.attempt?.totalMarks)}` : "—"}</td>
-                      <td>{submitted ? `${score.toFixed(0)}% · ${toNumber(test.attempt?.accuracy).toFixed(1)}%` : "—"}</td>
+                      <td>{submitted ? `${toNumber(test.attempt?.obtainedMarks)} / ${toNumber(test.attempt?.totalMarks)}` : "â€”"}</td>
+                      <td>{submitted ? `${score.toFixed(0)}% Â· ${toNumber(test.attempt?.accuracy).toFixed(1)}%` : "â€”"}</td>
                       <td style={{ textAlign: "right" }}>
                         {submitted ? (
                           <Link className="tp-btn tp-btn-soft tp-btn-sm" href={`/app/daily/${test.id}/result`}>Result</Link>

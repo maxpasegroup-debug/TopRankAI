@@ -29,11 +29,11 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Can I schedule several papers at different times?",
-    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, and Pro raises that to eight.",
+    a: "Yes. Every exam in your plan has its own papers-per-day setting and IST start time on the daily page. The first paper opens at your chosen time; later papers follow after you submit the previous one and a 45-minute break. Your level includes one to four papers a day, Riser raises that to six, and Scholar or Topper raise it to eight.",
   },
   {
-    q: "What does Pro include?",
-    a: "Pro raises the daily paper limit to eight for every exam in your plan and adds the practice tools: custom tests by subject, topic and difficulty (up to five a day), advanced analytics with negative-mark loss, time per question and subject momentum, a printable weekly report card, a formula and mistake revision sheet, and two streak freezes a calendar month. Everything you already use stays available on Free: the learning centre, planner, revision queue, core analytics, paper history, AI-assisted notes and deterministic scoring. Monthly is ₹299 and yearly is ₹2,999. Checkout accepts card or UPI details; the card number and CVV are never stored. Renewal is manual — extra time is added after your current expiry.",
+    q: "What does each plan include?",
+    a: "There are four monthly tiers. Aspirant is free and includes one to four daily papers depending on your level, the learning centre, planner, revision queue, core analytics and a small AI allowance. Riser at ₹99 adds six papers a day, two custom tests a day, advanced analytics, the printable report card and revision sheet, one streak freeze a month and a larger AI allowance. Scholar at ₹299 adds eight papers a day, five custom tests a day, the weekly report card with the previous week beside it, two streak freezes, photo answer checks and more AI. Topper at ₹599 adds ten custom tests a day, four streak freezes, a four-week trend, one month of AI credit rollover and the largest AI allowance. AI never marks a paper: AI feedback is coaching, while every score stays deterministic. Checkout accepts card or UPI details; the card number and CVV are never stored. Renewal is manual — extra time is added after your current expiry.",
   },
   {
     q: "What is the learning centre?",
@@ -61,7 +61,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: "Is the platform free?",
-    a: "Free includes one to four daily papers depending on your level, plus the learning centre, planner, revision queue and core analytics. A monthly or yearly Pro plan raises that to eight papers a day for each exam and adds custom tests, advanced analytics, the weekly report card, the formula and mistake sheet and two streak freezes a month. Pro is activated from Subscriptions by card or UPI and does not renew automatically.",
+    a: "Aspirant is free and includes one to four daily papers depending on your level, plus the learning centre, planner, revision queue and core analytics. Riser, Scholar and Topper are monthly plans that raise the paper limit and add custom tests, reports, streak freezes and a larger AI allowance. A plan is activated from Subscriptions by card or UPI and does not renew automatically.",
   },
   {
     q: "How do I report a wrong question or date?",

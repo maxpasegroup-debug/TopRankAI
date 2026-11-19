@@ -1,8 +1,21 @@
+import { PAID_PLANS, planForCode } from "./plans";
+
+/**
+ * Checkout catalogue. Monthly only: every paid tier is one month per purchase.
+ * The prices live in `plans.ts` so the pricing page and the server cannot drift.
+ */
 export const MOCK_PLANS = {
-  MOCK_MONTHLY: { label: "Monthly", amountPaise: 29900, months: 1 },
-  MOCK_YEARLY: { label: "Yearly", amountPaise: 299900, months: 12 },
+  RISER_MONTHLY: { label: PAID_PLANS[0].name, amountPaise: PAID_PLANS[0].pricePaise, months: 1 },
+  SCHOLAR_MONTHLY: { label: PAID_PLANS[1].name, amountPaise: PAID_PLANS[1].pricePaise, months: 1 },
+  TOPPER_MONTHLY: { label: PAID_PLANS[2].name, amountPaise: PAID_PLANS[2].pricePaise, months: 1 },
 } as const;
 export type MockPlan = keyof typeof MOCK_PLANS;
+
+/** Human-readable label for a stored payment/subscription plan code, legacy included. */
+export function planLabel(code: string | null | undefined) {
+  if (code && code in MOCK_PLANS) return MOCK_PLANS[code as MockPlan].label;
+  return planForCode(code).name;
+}
 
 export function renewalEnd(start: Date, months: number) {
   const end = new Date(start);

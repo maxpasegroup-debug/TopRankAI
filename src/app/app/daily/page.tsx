@@ -94,8 +94,8 @@ export default async function DailyExamsPage({ searchParams }: { searchParams: P
         <ProUpsell
           compact
           title="Want more than today's papers?"
-          body="Pro raises the limit to eight papers a day and adds custom tests, a weekly report card and streak freezes."
-          points={["Choose your own subject and difficulty", "Weekly report card", "2 streak freezes a month"]}
+          body="Riser raises the limit to six papers a day; Scholar and Topper go to eight. Paid plans also add custom tests, report cards and streak freezes."
+          points={["Choose your own subject and difficulty", "Report cards and revision sheets", "Up to 4 streak freezes a month"]}
         />
       ) : null}
 

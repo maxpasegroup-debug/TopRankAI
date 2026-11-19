@@ -1,5 +1,6 @@
 import { getSubscription } from "@/server/platform/subscriptions";
 import { mockMonthlyActive } from "@/shared/daily-workload";
+import { planForSubscription } from "@/shared/plans";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/platform/app/AppShell";
 import { getUnreadNotificationCount } from "@/server/platform/notifications";
@@ -30,6 +31,7 @@ export default async function CandidateLayout({ children }: { children: React.Re
         activeCode={active?.code ?? null}
         unread={unread}
         pro={mockMonthlyActive(subscription)}
+        planName={mockMonthlyActive(subscription) ? planForSubscription(subscription).name : null}
       >
         {children}
       </AppShell>

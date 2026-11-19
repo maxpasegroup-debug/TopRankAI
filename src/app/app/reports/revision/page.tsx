@@ -42,7 +42,7 @@ export default async function RevisionSheetPage() {
           <span className="tp-pill">Free plan</span>
         </div>
         <ProUpsell
-          title="The revision sheet is part of Pro"
+          title="The revision sheet is part of the paid plans"
           body="Your last 30 days of wrong answers, grouped by topic with the correct answer and explanation, followed by the exam's published formulas. Print it or save it as a PDF before a revision sitting."
           points={["Every incorrect answer with the explanation", "Mistakes grouped by topic", "Formulas from the exam syllabus", "Print or save as a PDF"]}
         />
@@ -82,7 +82,7 @@ export default async function RevisionSheetPage() {
       <div className="tp-report-sheet">
         <header className="tp-report-head">
           <div>
-            <span className="tp-pro-badge"><Icon name="crown" size={13} /> Pro revision sheet</span>
+            <span className="tp-pro-badge"><Icon name="crown" size={13} /> Paid plan revision sheet</span>
             <h2>{exam.name}</h2>
             <p>Wrong answers and published formulas · {formatDate(new Date(), { day: "numeric", month: "long", year: "numeric" })}</p>
           </div>
